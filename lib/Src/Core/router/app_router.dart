@@ -6,7 +6,14 @@ import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/login_pa
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/register_page.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/splash_page.dart';
 import 'package:agente_vendas_saas/Src/Features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/lead_detail_page.dart';
+import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/lead_form_page.dart';
+import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/lead_import_page.dart';
+import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/leads_list_page.dart';
 import 'package:agente_vendas_saas/Src/Features/onboarding/presentation/pages/onboarding_page.dart';
+import 'package:agente_vendas_saas/Src/Features/pipeline/presentation/pages/opportunity_detail_page.dart';
+import 'package:agente_vendas_saas/Src/Features/pipeline/presentation/pages/opportunity_form_page.dart';
+import 'package:agente_vendas_saas/Src/Features/pipeline/presentation/pages/pipeline_page.dart';
 import 'package:agente_vendas_saas/Src/Features/shared/presentation/pages/app_shell.dart';
 import 'package:agente_vendas_saas/Src/Features/shared/presentation/pages/feature_placeholder_page.dart';
 import 'package:flutter/material.dart';
@@ -35,17 +42,57 @@ class AppRouter {
           },
           routes: <RouteBase>[
             GoRoute(path: '/dashboard', builder: (_, __) => const DashboardPage()),
-            _placeholder(
-              '/leads',
-              'Leads',
-              'Cadastre, importe, filtre e qualifique sua base comercial.',
-              Icons.groups_2_outlined,
+            GoRoute(
+              path: '/leads',
+              builder: (_, __) => const LeadsListPage(),
+              routes: <RouteBase>[
+                GoRoute(
+                  path: 'new',
+                  builder: (_, __) => const LeadFormPage(),
+                ),
+                GoRoute(
+                  path: 'import',
+                  builder: (_, __) => const LeadImportPage(),
+                ),
+                GoRoute(
+                  path: ':leadId',
+                  builder: (_, GoRouterState state) => LeadDetailPage(
+                    leadId: state.pathParameters['leadId']!,
+                  ),
+                  routes: <RouteBase>[
+                    GoRoute(
+                      path: 'edit',
+                      builder: (_, GoRouterState state) => LeadFormPage(
+                        leadId: state.pathParameters['leadId']!,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            _placeholder(
-              '/pipeline',
-              'Pipeline',
-              'Visualize e movimente oportunidades entre as etapas do funil.',
-              Icons.view_kanban_outlined,
+            GoRoute(
+              path: '/pipeline',
+              builder: (_, __) => const PipelinePage(),
+              routes: <RouteBase>[
+                GoRoute(
+                  path: 'new',
+                  builder: (_, __) => const OpportunityFormPage(),
+                ),
+                GoRoute(
+                  path: ':opportunityId',
+                  builder: (_, GoRouterState state) => OpportunityDetailPage(
+                    opportunityId: state.pathParameters['opportunityId']!,
+                  ),
+                  routes: <RouteBase>[
+                    GoRoute(
+                      path: 'edit',
+                      builder: (_, GoRouterState state) => OpportunityFormPage(
+                        opportunityId: state.pathParameters['opportunityId']!,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
             _placeholder(
               '/conversations',

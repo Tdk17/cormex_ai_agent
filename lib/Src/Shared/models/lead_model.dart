@@ -51,4 +51,24 @@ class LeadModel {
       updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ?? DateTime.now(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'id': id,
+      'workspaceId': workspaceId,
+      'name': name,
+      if (phone != null) 'phone': phone,
+      if (email != null) 'email': email,
+      if (company != null) 'company': company,
+      'source': source,
+      'status': status,
+      'tags': tags,
+      if (ownerId != null) 'ownerId': ownerId,
+      'score': score,
+      if (lastContactAt != null) 'lastContactAt': lastContactAt!.toIso8601String(),
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
+
 }

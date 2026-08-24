@@ -68,7 +68,8 @@ class AppShell extends SignalWidget {
                                 .map(
                                   (_NavItem item) => _SidebarItem(
                                     item: item,
-                                    selected: currentPath == item.path,
+                                    selected: currentPath == item.path ||
+                                        currentPath.startsWith('${item.path}/'),
                                     onTap: () => context.go(item.path),
                                   ),
                                 )
@@ -124,7 +125,8 @@ class AppShell extends SignalWidget {
                       children: _items
                           .map(
                             (_NavItem item) => ListTile(
-                              selected: currentPath == item.path,
+                              selected: currentPath == item.path ||
+                                  currentPath.startsWith('${item.path}/'),
                               selectedColor: AppColors.primary,
                               selectedTileColor: AppColors.primary.withValues(alpha: 0.08),
                               shape: RoundedRectangleBorder(

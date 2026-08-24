@@ -5,10 +5,6 @@ class AppConfig {
     'APP_ENV',
     defaultValue: 'development',
   );
-  static const bool useMockData = bool.fromEnvironment(
-    'USE_MOCK_DATA',
-    defaultValue: true,
-  );
   static const String parseServerUrl = String.fromEnvironment(
     'PARSE_SERVER_URL',
     defaultValue: 'https://parseapi.back4app.com',
@@ -23,10 +19,9 @@ class AppConfig {
   static bool get isProduction => environment == 'production';
 
   static void validate() {
-    if (useMockData) return;
     if (parseServerUrl.isEmpty || parseApplicationId.isEmpty) {
       throw StateError(
-        'PARSE_SERVER_URL e PARSE_APPLICATION_ID são obrigatórios fora do modo mock.',
+        'PARSE_SERVER_URL e PARSE_APPLICATION_ID são obrigatórios.',
       );
     }
   }

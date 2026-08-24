@@ -90,7 +90,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                               Expanded(
                                 flex: step > 0 ? 2 : 1,
                                 child: PrimaryLoadingButton(
-                                  label: step == 2 ? 'Criar workspace' : 'Continuar',
+                                  label: step == 2 ? 'Criar empresa' : 'Continuar',
                                   icon: Icons.arrow_forward_rounded,
                                   isLoading: controller.isLoading.value,
                                   onPressed: () async {
@@ -127,12 +127,12 @@ class _StepHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const titles = <String>[
-      'Vamos criar seu workspace',
+      'Vamos criar sua empresa',
       'Conte um pouco sobre a empresa',
       'Defina o primeiro objetivo do agente',
     ];
     const subtitles = <String>[
-      'O workspace mantém usuários, leads, conversas e métricas isolados.',
+      'Sua empresa manterá usuários, leads, conversas e métricas isolados.',
       'Essas informações ajudam a personalizar sua operação comercial.',
       'O agente nasce em modo assistido: sua equipe revisa antes de enviar.',
     ];

@@ -116,23 +116,36 @@ class RemoteAuthRepository implements AuthRepository {
     required String agentName,
     required String agentObjective,
   }) async {
+    if (currentSession.hasWorkspace) return currentSession;
+
     final workspaceResult = await _httpManager.cloudFunction(
       name: Endpoints.workspacesCreate,
       parameters: <String, dynamic>{
         'name': workspaceName.trim(),
         'timezone': timezone,
+        'companySegment': companySegment,
+        'idempotencyKey': 'onboarding:${currentSession.user.id}',
+        'initialAgent': <String, dynamic>{
+          'name': agentName.trim(),
+          'objective': agentObjective.trim(),
+          'mode': 'assist',
+        },
       },
     );
     final workspaceData = _unwrap(workspaceResult);
     final workspaceJson = workspaceData['workspace'] is Map
         ? Map<String, dynamic>.from(workspaceData['workspace'] as Map)
         : workspaceData;
-    final workspace = WorkspaceModel.fromJson(
-      <String, dynamic>{
-        ...workspaceJson,
-        'companySegment': companySegment,
-      },
-    );
+    final workspace = WorkspaceModel.fromJson(<String, dynamic>{
+      ...workspaceJson,
+      'companySegment': workspaceJson['companySegment'] ?? companySegment,
+    });
+    if (workspace.id.isEmpty) {
+      throw const ApiException(
+        code: 'INTERNAL_ERROR',
+        message: 'O servidor não retornou a empresa criada.',
+      );
+    }
     final membership = workspaceData['membership'] is Map
         ? MembershipModel.fromJson(
             Map<String, dynamic>.from(workspaceData['membership'] as Map),
@@ -150,16 +163,6 @@ class RemoteAuthRepository implements AuthRepository {
       selectedWorkspaceId: workspace.id,
     );
 
-    final agentResult = await _httpManager.cloudFunction(
-      name: Endpoints.agentUpdate,
-      parameters: <String, dynamic>{
-        'workspaceId': workspace.id,
-        'name': agentName.trim(),
-        'objective': agentObjective.trim(),
-        'mode': 'assist',
-      },
-    );
-    _unwrap(agentResult);
     await _sessionStorage.save(nextSession);
     return nextSession;
   }

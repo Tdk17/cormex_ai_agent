@@ -9,7 +9,7 @@ class Endpoints {
   static String cloudFunction(String name) => '/functions/$name';
 
   static const String authMe = 'auth.me';
-  static const String workspacesCreate = 'workspaces.create';
+  static const String workspacesCreate = 'v1-workspaces-create';
   static const String dashboardMetrics = 'dashboard.metrics';
   static const String leadsList = 'leads.list';
   static const String leadsGet = 'leads.get';
@@ -17,6 +17,9 @@ class Endpoints {
   static const String leadsUpdate = 'leads.update';
   static const String leadsImport = 'leads.import';
   static const String pipelineList = 'pipeline.list';
+  static const String pipelineGet = 'pipeline.get';
+  static const String pipelineCreate = 'pipeline.create';
+  static const String pipelineUpdate = 'pipeline.update';
   static const String pipelineMove = 'pipeline.move';
   static const String conversationsList = 'conversations.list';
   static const String conversationsGet = 'conversations.get';
