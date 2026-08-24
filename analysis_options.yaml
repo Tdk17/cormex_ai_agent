@@ -1,0 +1,16 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    invalid_use_of_protected_member: error
+    invalid_use_of_visible_for_testing_member: error
+  exclude:
+    - build/**
+
+linter:
+  rules:
+    avoid_print: true
+    always_declare_return_types: true
+    prefer_single_quotes: true
+    require_trailing_commas: true
+    use_super_parameters: true

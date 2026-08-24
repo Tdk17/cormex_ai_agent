@@ -1,0 +1,7 @@
+{
+  "APP_ENV": "development",
+  "USE_MOCK_DATA": "true",
+  "PARSE_SERVER_URL": "https://parseapi.back4app.com",
+  "PARSE_APPLICATION_ID": "",
+  "PARSE_REST_API_KEY": ""
+}
