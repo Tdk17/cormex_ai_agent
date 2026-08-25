@@ -5,6 +5,7 @@ import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/forgot_p
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/login_page.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/register_page.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/splash_page.dart';
+import 'package:agente_vendas_saas/Src/Features/conversations/presentation/pages/conversations_page.dart';
 import 'package:agente_vendas_saas/Src/Features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/lead_detail_page.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/lead_form_page.dart';
@@ -35,36 +36,37 @@ class AppRouter {
           path: '/forgot-password',
           builder: (_, __) => const ForgotPasswordPage(),
         ),
-        GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingPage()),
+        GoRoute(
+          path: '/onboarding',
+          builder: (_, __) => const OnboardingPage(),
+        ),
         ShellRoute(
           builder: (BuildContext context, GoRouterState state, Widget child) {
             return AppShell(child: child);
           },
           routes: <RouteBase>[
-            GoRoute(path: '/dashboard', builder: (_, __) => const DashboardPage()),
+            GoRoute(
+              path: '/dashboard',
+              builder: (_, __) => const DashboardPage(),
+            ),
             GoRoute(
               path: '/leads',
               builder: (_, __) => const LeadsListPage(),
               routes: <RouteBase>[
-                GoRoute(
-                  path: 'new',
-                  builder: (_, __) => const LeadFormPage(),
-                ),
+                GoRoute(path: 'new', builder: (_, __) => const LeadFormPage()),
                 GoRoute(
                   path: 'import',
                   builder: (_, __) => const LeadImportPage(),
                 ),
                 GoRoute(
                   path: ':leadId',
-                  builder: (_, GoRouterState state) => LeadDetailPage(
-                    leadId: state.pathParameters['leadId']!,
-                  ),
+                  builder: (_, GoRouterState state) =>
+                      LeadDetailPage(leadId: state.pathParameters['leadId']!),
                   routes: <RouteBase>[
                     GoRoute(
                       path: 'edit',
-                      builder: (_, GoRouterState state) => LeadFormPage(
-                        leadId: state.pathParameters['leadId']!,
-                      ),
+                      builder: (_, GoRouterState state) =>
+                          LeadFormPage(leadId: state.pathParameters['leadId']!),
                     ),
                   ],
                 ),
@@ -94,11 +96,17 @@ class AppRouter {
                 ),
               ],
             ),
-            _placeholder(
-              '/conversations',
-              'Conversas',
-              'Centralize o histórico de cada lead e alterne entre IA e atendimento humano.',
-              Icons.forum_outlined,
+            GoRoute(
+              path: '/conversations',
+              builder: (_, __) => const ConversationsPage(),
+              routes: <RouteBase>[
+                GoRoute(
+                  path: ':conversationId',
+                  builder: (_, GoRouterState state) => ConversationsPage(
+                    conversationId: state.pathParameters['conversationId']!,
+                  ),
+                ),
+              ],
             ),
             _placeholder(
               '/agent',
@@ -152,7 +160,10 @@ class AppRouter {
             children: <Widget>[
               const Icon(Icons.explore_off_outlined, size: 48),
               const SizedBox(height: 14),
-              Text('Página não encontrada', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'Página não encontrada',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 14),
               FilledButton(
                 onPressed: () => context.go('/dashboard'),
@@ -174,7 +185,8 @@ class AppRouter {
     final session = _authController.session.value;
     final path = state.uri.path;
     final atSplash = path == '/splash';
-    final atAuth = path == '/login' || path == '/register' || path == '/forgot-password';
+    final atAuth =
+        path == '/login' || path == '/register' || path == '/forgot-password';
     final atOnboarding = path == '/onboarding';
 
     if (status == AuthStatus.initial || status == AuthStatus.loading) {
