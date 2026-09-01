@@ -158,6 +158,7 @@ class HttpManager {
         ApiException(
           code: switch (parseCode) {
             101 => 'INVALID_CREDENTIALS',
+            141 => 'INVALID_FUNCTION',
             202 || 203 => 'CONFLICT',
             209 => 'UNAUTHENTICATED',
             _ => 'INTERNAL_ERROR',
