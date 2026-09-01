@@ -53,4 +53,13 @@ abstract interface class AcquisitionRepository {
     required String contentType,
     void Function(int sent, int total)? onSendProgress,
   });
+
+  Future<GoogleAdsConnectionStatus> googleAdsConnectionStatus({
+    required String workspaceId,
+  });
+
+  Future<GoogleAdsOAuthStart> startGoogleAdsOAuth({
+    required String workspaceId,
+    required String returnUrl,
+  });
 }
