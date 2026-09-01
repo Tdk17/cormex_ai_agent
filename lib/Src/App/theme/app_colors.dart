@@ -16,4 +16,14 @@ class AppColors {
   static const Color textSecondary = Color(0xFF627489);
   static const Color darkBackground = Color(0xFF0B1724);
   static const Color darkSurface = Color(0xFF122235);
+
+  // CormeX visual shell — mesma identidade da tela de entrada.
+  static const Color shellStart = Color(0xFF030712);
+  static const Color shellMiddle = Color(0xFF071A2E);
+  static const Color shellEnd = Color(0xFF073B4C);
+  static const Color shellCyan = Color(0xFF67E8F9);
+  static const Color shellCyanStrong = Color(0xFF00E5FF);
+  static const Color shellPurple = Color(0xFF7C3AED);
+  static const Color shellSidebar = Color(0xE6122235);
+  static const Color shellSurface = Color(0xFFF8FAFC);
 }
