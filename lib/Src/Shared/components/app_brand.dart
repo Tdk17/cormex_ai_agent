@@ -14,13 +14,24 @@ class AppBrand extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Container(
-          width: 42,
-          height: 42,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
-            color: light ? Colors.white.withValues(alpha: 0.16) : AppColors.primary,
-            borderRadius: BorderRadius.circular(13),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[Color(0xFF06B6D4), AppColors.shellPurple],
+            ),
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                color: AppColors.shellCyanStrong.withValues(alpha: 0.14),
+                blurRadius: 18,
+                spreadRadius: 1,
+              ),
+            ],
           ),
-          child: Icon(Icons.auto_awesome_rounded, color: light ? Colors.white : Colors.white),
+          child: const Icon(Icons.smart_toy_outlined, color: Colors.white, size: 25),
         ),
         if (!compact) ...<Widget>[
           const SizedBox(width: 12),
@@ -29,21 +40,23 @@ class AppBrand extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(
-                'Agente de Vendas',
+                'CormeX AI Agent',
                 style: TextStyle(
                   color: foreground,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w900,
                   fontSize: 16,
-                  letterSpacing: -0.2,
+                  letterSpacing: -0.35,
                 ),
               ),
               Text(
-                'IA comercial',
+                'INTELIGÊNCIA COMERCIAL',
                 style: TextStyle(
-                  color: foreground.withValues(alpha: 0.66),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.7,
+                  color: light
+                      ? AppColors.shellCyan.withValues(alpha: 0.88)
+                      : AppColors.primary,
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.9,
                 ),
               ),
             ],
