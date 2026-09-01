@@ -32,11 +32,16 @@ jobs:
         run: flutter pub get
 
       - name: Build Flutter Web
-        run: >-
-          flutter build web
-          --release
-          --base-href "/cormex_ai_agent/"
-          --dart-define-from-file=config/dev.json
+       env:
+    PARSE_APPLICATION_ID: ${{ secrets.PARSE_APPLICATION_ID }}
+    PARSE_REST_API_KEY: ${{ secrets.PARSE_REST_API_KEY }}
+  run: |
+    flutter build web --release \
+      --base-href "/cormex_ai_agent/" \
+      --dart-define=APP_ENV=production \
+      --dart-define=PARSE_SERVER_URL=https://parseapi.back4app.com \
+      --dart-define=PARSE_APPLICATION_ID="$PARSE_APPLICATION_ID" \
+      --dart-define=PARSE_REST_API_KEY="$PARSE_REST_API_KEY"
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
