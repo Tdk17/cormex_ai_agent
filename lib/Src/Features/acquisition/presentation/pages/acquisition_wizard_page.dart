@@ -200,7 +200,13 @@ class _AcquisitionWizardPageState extends State<AcquisitionWizardPage> {
     );
     if (confirmed != true) return;
     final success = await controller.publish();
-    if (!mounted || !success) return;
+    if (!mounted) return;
+    if (!success) {
+      if (controller.requiresGoogleAdsConnection.value) {
+        context.go('/integrations');
+      }
+      return;
+    }
     final id = controller.campaign.value?.id;
     context.go(id == null ? '/acquisition' : '/acquisition/$id');
   }
