@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:agente_vendas_saas/Src/Core/api/api_exception.dart';
 import 'package:agente_vendas_saas/Src/Core/utils/screen_state.dart';
@@ -10,6 +11,9 @@ import 'package:signals/signals.dart';
 
 class AcquisitionWizardController {
   AcquisitionWizardController(this._repository, this._authController);
+
+  static const int maxMediaBytes = 10 * 1024 * 1024;
+  static const int maxMediaItems = 6;
 
   final AcquisitionRepository _repository;
   final AuthController _authController;
@@ -26,6 +30,9 @@ class AcquisitionWizardController {
   final Signal<bool> isSaving = signal(false);
   final Signal<bool> isPublishing = signal(false);
   final Signal<bool> isGenerating = signal(false);
+  final Signal<bool> isUploadingMedia = signal(false);
+  final Signal<double> mediaUploadProgress = signal(0);
+  final Signal<String?> mediaUploadLabel = signal<String?>(null);
   final Signal<String?> errorMessage = signal<String?>(null);
   final Signal<String?> successMessage = signal<String?>(null);
   final Signal<String?> correlationId = signal<String?>(null);
@@ -102,15 +109,98 @@ class AcquisitionWizardController {
   }
 
   void setChannels(String value, bool selected) {
-    final next = <String>[...channels.value];
-    selected ? next.add(value) : next.remove(value);
-    channels.value = next.toSet().toList(growable: false);
+    final next = channels.value
+        .where((String item) => item != value)
+        .toList(growable: true);
+    if (selected) next.add(value);
+    channels.value = List<String>.unmodifiable(next);
+    errorMessage.value = null;
+  }
+
+  void toggleChannel(String value) {
+    setChannels(value, !channels.value.contains(value));
   }
 
   void setCaptureField(String value, bool selected) {
     final next = <String>[...captureFields.value];
     selected ? next.add(value) : next.remove(value);
     captureFields.value = next.toSet().toList(growable: false);
+  }
+
+  List<String> get mediaUrls => _lines(mediaUrlsText.value);
+
+  Future<bool> uploadMedia({
+    required String fileName,
+    required Uint8List bytes,
+    required String contentType,
+  }) async {
+    if (isUploadingMedia.value) return false;
+    final workspaceId = _workspaceId;
+    if (workspaceId == null) {
+      errorMessage.value = 'Selecione um workspace antes de enviar a mídia.';
+      return false;
+    }
+    if (mediaUrls.length >= maxMediaItems) {
+      errorMessage.value = 'Você pode adicionar até $maxMediaItems arquivos por campanha.';
+      return false;
+    }
+    if (bytes.isEmpty) {
+      errorMessage.value = 'O arquivo selecionado está vazio.';
+      return false;
+    }
+    if (bytes.length > maxMediaBytes) {
+      errorMessage.value = 'Cada imagem ou vídeo pode ter no máximo 10 MB.';
+      return false;
+    }
+    if (!contentType.startsWith('image/') && !contentType.startsWith('video/')) {
+      errorMessage.value = 'Selecione somente uma imagem ou um vídeo compatível.';
+      return false;
+    }
+
+    batch(() {
+      isUploadingMedia.value = true;
+      mediaUploadProgress.value = 0;
+      mediaUploadLabel.value = fileName;
+      errorMessage.value = null;
+      successMessage.value = null;
+    });
+
+    try {
+      final url = await _repository.uploadCampaignMedia(
+        workspaceId: workspaceId,
+        fileName: fileName,
+        bytes: bytes,
+        contentType: contentType,
+        onSendProgress: (int sent, int total) {
+          if (total <= 0) return;
+          mediaUploadProgress.value = (sent / total).clamp(0, 1).toDouble();
+        },
+      );
+      final next = <String>[...mediaUrls, url].toSet().toList(growable: false);
+      batch(() {
+        mediaUrlsText.value = next.join('\n');
+        mediaUploadProgress.value = 1;
+        successMessage.value = 'Mídia adicionada à campanha.';
+      });
+      return true;
+    } on ApiException catch (error) {
+      _setError(error.userMessage, error.correlationId);
+      return false;
+    } on Object {
+      _setError('Não foi possível enviar a mídia da campanha.', null);
+      return false;
+    } finally {
+      batch(() {
+        isUploadingMedia.value = false;
+        mediaUploadLabel.value = null;
+      });
+    }
+  }
+
+  void removeMedia(String url) {
+    final next = mediaUrls.where((String item) => item != url).toList(growable: false);
+    mediaUrlsText.value = next.join('\n');
+    successMessage.value = null;
   }
 
   bool nextStep() {
@@ -281,7 +371,7 @@ class AcquisitionWizardController {
     productDescription: productDescription.value,
     offer: offer.value,
     productUrl: productUrl.value,
-    mediaUrls: _lines(mediaUrlsText.value),
+    mediaUrls: mediaUrls,
     objective: objective.value,
     channels: channels.value,
     locations: _lines(locationsText.value),
