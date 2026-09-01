@@ -37,7 +37,7 @@ class RemoteAgentRepository implements AgentRepository {
       name: Endpoints.agentUpdate,
       parameters: <String, dynamic>{
         'workspaceId': workspaceId,
-        'config': input.toJson(),
+        ...input.toJson(),
       },
     );
     return switch (result) {
