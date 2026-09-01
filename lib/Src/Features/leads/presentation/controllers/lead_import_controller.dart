@@ -31,21 +31,12 @@ class LeadImportController {
 
   Future<void> pickCsv() async {
     try {
-      final selection = await FilePicker.platform.pickFiles(
+      final file = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: const <String>['csv'],
-        allowMultiple: false,
-        withData: true,
       );
-      if (selection == null || selection.files.isEmpty) return;
-      final file = selection.files.first;
-      final bytes = file.bytes;
-      if (bytes == null) {
-        throw const ApiException(
-          code: 'CSV_READ_ERROR',
-          message: 'Não foi possível ler o arquivo CSV selecionado.',
-        );
-      }
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
       final parsed = _parser.parse(bytes);
       batch(() {
         fileName.value = file.name;
