@@ -38,6 +38,7 @@ class ApiException implements Exception {
         'PAYMENT_ISSUE' =>
           'Revise a forma de pagamento da conta de anúncios.',
         'GOOGLE_OAUTH_ERROR' => message,
+        'INVALID_FUNCTION' => message,
         'AI_PROVIDER_ERROR' => 'O agente de IA está temporariamente indisponível.',
         'EXTERNAL_PROVIDER_ERROR' => 'Um serviço externo não respondeu como esperado.',
         _ => 'Não foi possível concluir a operação. Tente novamente.',
@@ -75,6 +76,7 @@ class ApiException implements Exception {
         return ApiException(
           code: switch (parseCode) {
             101 => 'INVALID_CREDENTIALS',
+            141 => 'INVALID_FUNCTION',
             202 || 203 => 'CONFLICT',
             209 => 'UNAUTHENTICATED',
             _ => _codeForStatus(exception.response?.statusCode),
