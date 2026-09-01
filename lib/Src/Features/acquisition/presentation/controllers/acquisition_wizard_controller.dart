@@ -33,6 +33,7 @@ class AcquisitionWizardController {
   final Signal<bool> isPublishing = signal(false);
   final Signal<bool> isGenerating = signal(false);
   final Signal<bool> isUploadingMedia = signal(false);
+  final Signal<bool> requiresGoogleAdsConnection = signal(false);
   final Signal<double> mediaUploadProgress = signal(0);
   final Signal<String?> mediaUploadLabel = signal<String?>(null);
   final Signal<String?> errorMessage = signal<String?>(null);
@@ -285,6 +286,7 @@ class AcquisitionWizardController {
   Future<bool> publish() async {
     if (isPublishing.value) return false;
 
+    requiresGoogleAdsConnection.value = false;
     final validationError = validateAll();
 
     if (validationError != null) {
@@ -293,15 +295,54 @@ class AcquisitionWizardController {
       return false;
     }
 
+    final workspaceId = _workspaceId;
+    if (workspaceId == null) return false;
+
+    if (channels.value.contains('google')) {
+      try {
+        final connection = await _repository.googleAdsConnectionStatus(
+          workspaceId: workspaceId,
+        );
+        correlationId.value = connection.correlationId;
+        if (!connection.connected) {
+          batch(() {
+            requiresGoogleAdsConnection.value = true;
+            errorMessage.value =
+                'Conecte sua conta do Google Ads antes de publicar.';
+          });
+          return false;
+        }
+      } on ApiException catch (error) {
+        if (error.code == 'ADS_ACCOUNT_NOT_CONNECTED' ||
+            error.code == 'INTEGRATION_NOT_CONNECTED' ||
+            error.code == 'AUTHORIZATION_ERROR') {
+          batch(() {
+            requiresGoogleAdsConnection.value = true;
+            errorMessage.value =
+                'Conecte ou renove sua conta do Google Ads antes de publicar.';
+            correlationId.value = error.correlationId;
+          });
+        } else {
+          _setError(error.userMessage, error.correlationId);
+        }
+        return false;
+      } on Object {
+        _setError(
+          'Não foi possível validar a conexão do Google Ads.',
+          null,
+        );
+        return false;
+      }
+    }
+
     // Primeiro salva e recebe do backend a versão atualizada.
     if (!await saveDraft(silent: true)) {
       return false;
     }
 
     final saved = campaign.value;
-    final workspaceId = _workspaceId;
 
-    if (saved == null || workspaceId == null) {
+    if (saved == null) {
       return false;
     }
 
@@ -355,6 +396,18 @@ class AcquisitionWizardController {
 
       return true;
     } on ApiException catch (error) {
+      if (error.code == 'ADS_ACCOUNT_NOT_CONNECTED' ||
+          error.code == 'INTEGRATION_NOT_CONNECTED' ||
+          error.code == 'AUTHORIZATION_ERROR') {
+        _clearPendingPublish();
+        requiresGoogleAdsConnection.value = true;
+        _setError(
+          'Conecte ou renove sua conta do Google Ads antes de publicar.',
+          error.correlationId,
+        );
+        return false;
+      }
+
       final conflictField = error.details['field']?.toString();
 
       /*
@@ -563,6 +616,7 @@ class AcquisitionWizardController {
     batch(() {
       errorMessage.value = null;
       successMessage.value = null;
+      requiresGoogleAdsConnection.value = false;
     });
   }
 
