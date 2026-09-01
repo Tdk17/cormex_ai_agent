@@ -27,7 +27,17 @@ class ApiException implements Exception {
         'CONFLICT' => message,
         'PLAN_LIMIT_REACHED' => 'O limite do seu plano foi atingido.',
         'RATE_LIMITED' => 'Muitas tentativas. Aguarde um instante e tente novamente.',
-        'INTEGRATION_NOT_CONNECTED' => 'Conecte a integração antes de continuar.',
+        'INTEGRATION_NOT_CONNECTED' =>
+          'Conecte a integração antes de continuar.',
+        'ADS_ACCOUNT_NOT_CONNECTED' =>
+          'Conecte sua conta de anúncios antes de publicar.',
+        'AUTHORIZATION_ERROR' =>
+          'A autorização da conta de anúncios expirou. Reconecte a conta.',
+        'PUBLICATION_ERROR' =>
+          'O provedor não conseguiu publicar a campanha. Tente novamente.',
+        'PAYMENT_ISSUE' =>
+          'Revise a forma de pagamento da conta de anúncios.',
+        'GOOGLE_OAUTH_ERROR' => message,
         'AI_PROVIDER_ERROR' => 'O agente de IA está temporariamente indisponível.',
         'EXTERNAL_PROVIDER_ERROR' => 'Um serviço externo não respondeu como esperado.',
         _ => 'Não foi possível concluir a operação. Tente novamente.',
