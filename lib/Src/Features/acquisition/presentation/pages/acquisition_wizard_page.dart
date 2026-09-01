@@ -5,6 +5,7 @@ import 'package:agente_vendas_saas/Src/Core/di/service_locator.dart';
 import 'package:agente_vendas_saas/Src/Core/utils/screen_state.dart';
 import 'package:agente_vendas_saas/Src/Features/acquisition/presentation/controllers/acquisition_wizard_controller.dart';
 import 'package:agente_vendas_saas/Src/Shared/components/form_error_banner.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -380,7 +381,7 @@ class _StepScroll extends StatelessWidget {
   }
 }
 
-class _ProductStep extends StatelessWidget {
+class _ProductStep extends SignalWidget {
   const _ProductStep({required this.controller});
 
   final AcquisitionWizardController controller;
@@ -423,17 +424,259 @@ class _ProductStep extends StatelessWidget {
           keyboardType: TextInputType.url,
           onChanged: (String value) => controller.productUrl.value = value,
         ),
-        _TextField(
-          label: 'Imagens e vídeos',
-          initialValue: controller.mediaUrlsText.value,
-          hint: 'Uma URL autorizada por linha',
-          minLines: 3,
-          maxLines: 6,
-          helper: 'O backend deve validar formato, tamanho e permissão antes da publicação.',
-          onChanged: (String value) => controller.mediaUrlsText.value = value,
-        ),
+        _CampaignMediaPicker(controller: controller),
       ],
     );
+  }
+}
+
+class _CampaignMediaPicker extends SignalWidget {
+  const _CampaignMediaPicker({required this.controller});
+
+  final AcquisitionWizardController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final urls = controller.mediaUrls;
+    final uploading = controller.isUploadingMedia.value;
+    final progress = controller.mediaUploadProgress.value;
+    final uploadLabel = controller.mediaUploadLabel.value;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Imagem ou vídeo do anúncio',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Envie JPG, PNG, WEBP, GIF, MP4, MOV ou WEBM. Máximo de 10 MB por arquivo.',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              FilledButton.tonalIcon(
+                onPressed: uploading ? null : () => _pickMedia(context),
+                icon: const Icon(Icons.upload_file_rounded),
+                label: const Text('Selecionar arquivo'),
+              ),
+            ],
+          ),
+          if (uploading) ...<Widget>[
+            const SizedBox(height: 16),
+            Text(
+              uploadLabel == null ? 'Enviando mídia...' : 'Enviando $uploadLabel...',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 7),
+            LinearProgressIndicator(value: progress <= 0 ? null : progress),
+          ],
+          const SizedBox(height: 14),
+          if (urls.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: const Column(
+                children: <Widget>[
+                  Icon(
+                    Icons.add_photo_alternate_outlined,
+                    color: AppColors.textSecondary,
+                    size: 34,
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Nenhuma mídia adicionada',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  SizedBox(height: 3),
+                  Text(
+                    'Escolha uma imagem ou um vídeo do seu dispositivo.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  ),
+                ],
+              ),
+            )
+          else
+            ...urls.map(
+              (String url) => Padding(
+                padding: const EdgeInsets.only(bottom: 9),
+                child: _CampaignMediaTile(
+                  url: url,
+                  onRemove: uploading ? null : () => controller.removeMedia(url),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickMedia(BuildContext context) async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      withData: true,
+      type: FileType.custom,
+      allowedExtensions: const <String>[
+        'jpg',
+        'jpeg',
+        'png',
+        'webp',
+        'gif',
+        'mp4',
+        'mov',
+        'webm',
+      ],
+    );
+    if (result == null || result.files.isEmpty) return;
+
+    for (final PlatformFile file in result.files) {
+      final bytes = file.bytes;
+      final contentType = _contentTypeFor(file.extension);
+      if (bytes == null || contentType == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Não foi possível ler o arquivo ${file.name}.')),
+          );
+        }
+        return;
+      }
+      final success = await controller.uploadMedia(
+        fileName: file.name,
+        bytes: bytes,
+        contentType: contentType,
+      );
+      if (!success) return;
+    }
+  }
+
+  static String? _contentTypeFor(String? extension) {
+    return switch (extension?.toLowerCase()) {
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'png' => 'image/png',
+      'webp' => 'image/webp',
+      'gif' => 'image/gif',
+      'mp4' => 'video/mp4',
+      'mov' => 'video/quicktime',
+      'webm' => 'video/webm',
+      _ => null,
+    };
+  }
+}
+
+class _CampaignMediaTile extends StatelessWidget {
+  const _CampaignMediaTile({required this.url, required this.onRemove});
+
+  final String url;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final fileName = _fileName(url);
+    final image = _isImage(url);
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: <Widget>[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(9),
+            child: SizedBox(
+              width: 62,
+              height: 62,
+              child: image
+                  ? Image.network(
+                      url,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const ColoredBox(
+                        color: AppColors.background,
+                        child: Icon(Icons.image_outlined, color: AppColors.textSecondary),
+                      ),
+                    )
+                  : const ColoredBox(
+                      color: AppColors.background,
+                      child: Icon(
+                        Icons.play_circle_outline_rounded,
+                        color: AppColors.primary,
+                        size: 31,
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  fileName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  image ? 'Imagem adicionada' : 'Vídeo adicionado',
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Remover mídia',
+            onPressed: onRemove,
+            icon: const Icon(Icons.delete_outline_rounded),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _fileName(String url) {
+    try {
+      final uri = Uri.parse(url);
+      if (uri.pathSegments.isNotEmpty) return uri.pathSegments.last;
+    } on FormatException {
+      // Mantém fallback abaixo.
+    }
+    return 'Mídia da campanha';
+  }
+
+  static bool _isImage(String url) {
+    final path = Uri.tryParse(url)?.path.toLowerCase() ?? url.toLowerCase();
+    return path.endsWith('.jpg') ||
+        path.endsWith('.jpeg') ||
+        path.endsWith('.png') ||
+        path.endsWith('.webp') ||
+        path.endsWith('.gif');
   }
 }
 
@@ -485,46 +728,40 @@ class _ObjectiveStep extends StatelessWidget {
   }
 }
 
-class _ChannelsStep extends StatelessWidget {
+class _ChannelsStep extends SignalWidget {
   const _ChannelsStep({required this.controller});
 
   final AcquisitionWizardController controller;
 
   @override
   Widget build(BuildContext context) {
+    final googleSelected = controller.channels.value.contains('google');
+    final metaSelected = controller.channels.value.contains('meta');
     return _StepSection(
       title: 'Onde a campanha será publicada?',
-      subtitle: 'Você pode usar um canal ou combinar os dois. A publicação exige uma conta autorizada.',
+      subtitle: 'Selecione Google Ads, Meta Ads ou os dois. Toque no card para marcar ou desmarcar.',
       children: <Widget>[
         _SelectCard(
-          selected: controller.channels.value.contains('google'),
+          selected: googleSelected,
           icon: Icons.ads_click_rounded,
           title: 'Google Ads',
           description: 'Pesquisa, display e formatos suportados pelo contrato da conta.',
-          trailing: Checkbox(
-            value: controller.channels.value.contains('google'),
-            onChanged: (bool? value) =>
-                controller.setChannels('google', value ?? false),
+          trailing: Icon(
+            googleSelected ? Icons.check_circle_rounded : Icons.circle_outlined,
+            color: googleSelected ? AppColors.primary : AppColors.textSecondary,
           ),
-          onTap: () => controller.setChannels(
-            'google',
-            !controller.channels.value.contains('google'),
-          ),
+          onTap: () => controller.toggleChannel('google'),
         ),
         _SelectCard(
-          selected: controller.channels.value.contains('meta'),
+          selected: metaSelected,
           icon: Icons.campaign_outlined,
           title: 'Meta Ads',
           description: 'Facebook e Instagram conforme a conta de anúncios selecionada.',
-          trailing: Checkbox(
-            value: controller.channels.value.contains('meta'),
-            onChanged: (bool? value) =>
-                controller.setChannels('meta', value ?? false),
+          trailing: Icon(
+            metaSelected ? Icons.check_circle_rounded : Icons.circle_outlined,
+            color: metaSelected ? AppColors.primary : AppColors.textSecondary,
           ),
-          onTap: () => controller.setChannels(
-            'meta',
-            !controller.channels.value.contains('meta'),
-          ),
+          onTap: () => controller.toggleChannel('meta'),
         ),
         const _InfoNote(
           icon: Icons.lock_outline_rounded,
@@ -927,6 +1164,7 @@ class _ReviewStep extends StatelessWidget {
         _ReviewGroup(
           title: 'Criativo e destino',
           items: <({String label, String value})>[
+            (label: 'Mídias', value: controller.mediaUrls.isEmpty ? 'Nenhuma' : '${controller.mediaUrls.length} arquivo(s)'),
             (label: 'Título', value: _fallback(controller.headline.value)),
             (label: 'Texto', value: _fallback(controller.primaryText.value)),
             (label: 'Destino', value: _destinationLabel(controller.destinationType.value)),
