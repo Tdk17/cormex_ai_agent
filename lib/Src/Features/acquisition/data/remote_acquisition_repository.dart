@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:agente_vendas_saas/Src/Core/api/api_exception.dart';
 import 'package:agente_vendas_saas/Src/Core/api/api_result.dart';
 import 'package:agente_vendas_saas/Src/Core/http/endpoints.dart';
 import 'package:agente_vendas_saas/Src/Core/http/http_manager.dart';
@@ -149,6 +152,41 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
                 .toList(growable: false),
             correlationId: meta.correlationId,
           );
+        }(),
+      ApiFailure<Map<String, dynamic>>(:final error) => throw error,
+    };
+  }
+
+  @override
+  Future<String> uploadCampaignMedia({
+    required String workspaceId,
+    required String fileName,
+    required Uint8List bytes,
+    required String contentType,
+    void Function(int sent, int total)? onSendProgress,
+  }) async {
+    if (workspaceId.trim().isEmpty) {
+      throw const ApiException(
+        code: 'WORKSPACE_REQUIRED',
+        message: 'Workspace inválido para upload de mídia.',
+      );
+    }
+    final result = await _httpManager.uploadParseFile(
+      fileName: 'campaign-${workspaceId.trim()}-$fileName',
+      bytes: bytes,
+      contentType: contentType,
+      onSendProgress: onSendProgress,
+    );
+    return switch (result) {
+      ApiSuccess<Map<String, dynamic>>(:final data) => () {
+          final url = data['url']?.toString().trim() ?? '';
+          if (url.isEmpty) {
+            throw const ApiException(
+              code: 'MEDIA_UPLOAD_ERROR',
+              message: 'O armazenamento não retornou a URL da mídia.',
+            );
+          }
+          return url;
         }(),
       ApiFailure<Map<String, dynamic>>(:final error) => throw error,
     };
