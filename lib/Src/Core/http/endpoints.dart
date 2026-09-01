@@ -57,4 +57,8 @@ class Endpoints {
   static const String acquisitionCampaignAction =
       'v1-acquisition-campaign-action';
   static const String acquisitionAiSuggest = 'v1-acquisition-ai-suggest';
+
+  static const String googleAdsConnectionStatus =
+      'v1-google-ads-connection-status';
+  static const String googleAdsOAuthStart = 'v1-google-ads-oauth-start';
 }
