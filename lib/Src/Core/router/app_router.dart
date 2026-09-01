@@ -12,6 +12,7 @@ import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/register
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/splash_page.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/presentation/pages/conversations_page.dart';
 import 'package:agente_vendas_saas/Src/Features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:agente_vendas_saas/Src/Features/integrations/presentation/pages/integrations_page.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/lead_detail_page.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/lead_form_page.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/lead_import_page.dart';
@@ -166,11 +167,9 @@ class AppRouter {
               'Convide usuários e gerencie os papéis owner, admin e seller.',
               Icons.group_outlined,
             ),
-            _placeholder(
-              '/integrations',
-              'Integrações',
-              'Conecte canais com credenciais mascaradas e acompanhe a sincronização.',
-              Icons.hub_outlined,
+            GoRoute(
+              path: '/integrations',
+              builder: (_, __) => const IntegrationsPage(),
             ),
             _placeholder(
               '/billing',
