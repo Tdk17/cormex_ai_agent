@@ -47,6 +47,7 @@ lib/
     Features/
       auth/{data,domain,presentation}
       onboarding/{data,domain,presentation}
+      acquisition/{data,domain,presentation}
       dashboard/{data,domain,presentation}
       leads/{data,domain,presentation}
       pipeline/{data,domain,presentation}
@@ -65,7 +66,11 @@ lib/
 
 ## Estado de tela
 
-Telas de consulta expõem `ScreenState.initial`, `loading`, `success`, `empty` e `error`. Controllers de mutação bloqueiam envio duplo pelo signal `isLoading`. O erro amigável é separado do `correlationId`, preservado apenas para diagnóstico.
+Telas de consulta expõem `ScreenState.initial`, `loading`, `success`, `empty` e `error`. Controllers de mutação bloqueiam envio duplo por signals como `isSaving`, `isPublishing` e `mutatingIds`. O erro amigável é separado do `correlationId`, preservado apenas para diagnóstico.
+
+## Landing autenticada
+
+Depois que `v1-auth-me` confirma uma membership ativa, o guard abre `/acquisition`. O Dashboard permanece em `/dashboard` como visão analítica; ele não é mais a porta de entrada operacional.
 
 ## Segurança
 
@@ -78,7 +83,7 @@ Telas de consulta expõem `ScreenState.initial`, `loading`, `success`, `empty` e
 
 ## Ambientes
 
-- `config/dev.json`: desenvolvimento com dados simulados.
+- `config/dev.json`: desenvolvimento conectado ao Back4App de desenvolvimento.
 - `config/staging.json`: integração ponta a ponta com credenciais de staging.
 - `config/production.json`: gerado pelo pipeline e nunca versionado.
 

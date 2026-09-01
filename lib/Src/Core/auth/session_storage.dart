@@ -7,7 +7,10 @@ import 'auth_session.dart';
 class SessionStorage {
   SessionStorage(this._storage);
 
-  static const String _sessionKey = 'agent_sales.auth_session.v1';
+  static const String _sessionKey = 'agent_sales.auth_session.v2';
+  static const List<String> _legacySessionKeys = <String>[
+    'agent_sales.auth_session.v1',
+  ];
 
   final SecureStorageService _storage;
   AuthSession? _cachedSession;
@@ -18,13 +21,20 @@ class SessionStorage {
   Future<AuthSession?> read() async {
     if (_cachedSession != null) return _cachedSession;
     final raw = await _storage.read(_sessionKey);
-    if (raw == null || raw.isEmpty) return null;
+    if (raw == null || raw.isEmpty) {
+      await _clearLegacySessions();
+      return null;
+    }
     try {
       _cachedSession = AuthSession.fromJson(
         Map<String, dynamic>.from(jsonDecode(raw) as Map),
       );
+      if (_cachedSession!.sessionToken.isEmpty || _cachedSession!.user.id.isEmpty) {
+        await clear();
+        return null;
+      }
       return _cachedSession;
-    } on FormatException {
+    } on Object {
       await clear();
       return null;
     }
@@ -32,11 +42,19 @@ class SessionStorage {
 
   Future<void> save(AuthSession session) async {
     _cachedSession = session;
+    await _clearLegacySessions();
     await _storage.write(_sessionKey, jsonEncode(session.toJson()));
   }
 
   Future<void> clear() async {
     _cachedSession = null;
     await _storage.delete(_sessionKey);
+    await _clearLegacySessions();
+  }
+
+  Future<void> _clearLegacySessions() async {
+    for (final key in _legacySessionKeys) {
+      await _storage.delete(key);
+    }
   }
 }

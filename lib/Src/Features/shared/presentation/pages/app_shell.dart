@@ -13,6 +13,7 @@ class AppShell extends SignalWidget {
   final Widget child;
 
   static const _items = <_NavItem>[
+    _NavItem('/acquisition', 'Central de Aquisição', Icons.rocket_launch_outlined),
     _NavItem('/dashboard', 'Visão geral', Icons.dashboard_outlined),
     _NavItem('/leads', 'Leads', Icons.groups_2_outlined),
     _NavItem('/pipeline', 'Pipeline', Icons.view_kanban_outlined),
@@ -51,10 +52,7 @@ class AppShell extends SignalWidget {
                       children: <Widget>[
                         const Padding(
                           padding: EdgeInsets.fromLTRB(20, 22, 20, 18),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: AppBrand(),
-                          ),
+                          child: Align(alignment: Alignment.centerLeft, child: AppBrand()),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -71,8 +69,7 @@ class AppShell extends SignalWidget {
                                 .map(
                                   (_NavItem item) => _SidebarItem(
                                     item: item,
-                                    selected:
-                                        currentPath == item.path ||
+                                    selected: currentPath == item.path ||
                                         currentPath.startsWith('${item.path}/'),
                                     onTap: () => context.go(item.path),
                                   ),
@@ -98,10 +95,6 @@ class AppShell extends SignalWidget {
         return Scaffold(
           appBar: AppBar(
             titleSpacing: 4,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.08),
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(15)),
-            ),
             title: Text(
               workspace?.name ?? 'Agente de Vendas',
               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
@@ -124,10 +117,7 @@ class AppShell extends SignalWidget {
                 children: <Widget>[
                   const Padding(
                     padding: EdgeInsets.fromLTRB(18, 16, 18, 12),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: AppBrand(),
-                    ),
+                    child: Align(alignment: Alignment.centerLeft, child: AppBrand()),
                   ),
                   const Divider(),
                   Expanded(
@@ -136,13 +126,10 @@ class AppShell extends SignalWidget {
                       children: _items
                           .map(
                             (_NavItem item) => ListTile(
-                              selected:
-                                  currentPath == item.path ||
+                              selected: currentPath == item.path ||
                                   currentPath.startsWith('${item.path}/'),
                               selectedColor: AppColors.primary,
-                              selectedTileColor: AppColors.primary.withValues(
-                                alpha: 0.08,
-                              ),
+                              selectedTileColor: AppColors.primary.withValues(alpha: 0.08),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(11),
                               ),
@@ -189,11 +176,7 @@ class _NavItem {
 }
 
 class _SidebarItem extends StatelessWidget {
-  const _SidebarItem({
-    required this.item,
-    required this.selected,
-    required this.onTap,
-  });
+  const _SidebarItem({required this.item, required this.selected, required this.onTap});
 
   final _NavItem item;
   final bool selected;
@@ -213,10 +196,7 @@ class _SidebarItem extends StatelessWidget {
         selectedTileColor: AppColors.primary.withValues(alpha: 0.08),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
         leading: Icon(item.icon, size: 21),
-        title: Text(
-          item.label,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
+        title: Text(item.label, style: const TextStyle(fontWeight: FontWeight.w600)),
         onTap: onTap,
       ),
     );
@@ -232,8 +212,7 @@ class _WorkspaceSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<WorkspaceModel> workspaces =
-        sl<AuthController>().session.value?.workspaces ??
-        const <WorkspaceModel>[];
+        sl<AuthController>().session.value?.workspaces ?? const <WorkspaceModel>[];
     return PopupMenuButton<String>(
       onSelected: onSelected,
       itemBuilder: (BuildContext context) => workspaces
@@ -253,28 +232,17 @@ class _WorkspaceSelector extends StatelessWidget {
         ),
         child: Row(
           children: <Widget>[
-            const Icon(
-              Icons.apartment_rounded,
-              size: 19,
-              color: AppColors.primary,
-            ),
+            const Icon(Icons.apartment_rounded, size: 19, color: AppColors.primary),
             const SizedBox(width: 9),
             Expanded(
               child: Text(
                 name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               ),
             ),
-            const Icon(
-              Icons.unfold_more_rounded,
-              size: 18,
-              color: AppColors.textSecondary,
-            ),
+            const Icon(Icons.unfold_more_rounded, size: 18, color: AppColors.textSecondary),
           ],
         ),
       ),
@@ -283,11 +251,7 @@ class _WorkspaceSelector extends StatelessWidget {
 }
 
 class _UserFooter extends StatelessWidget {
-  const _UserFooter({
-    required this.name,
-    required this.email,
-    required this.onLogout,
-  });
+  const _UserFooter({required this.name, required this.email, required this.onLogout});
 
   final String name;
   final String email;
@@ -306,10 +270,7 @@ class _UserFooter extends StatelessWidget {
             radius: 18,
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
-            child: Text(
-              AppShell._initials(name),
-              style: const TextStyle(fontSize: 12),
-            ),
+            child: Text(AppShell._initials(name), style: const TextStyle(fontSize: 12)),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -320,19 +281,13 @@ class _UserFooter extends StatelessWidget {
                   name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
                 ),
                 Text(
                   email,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 10,
-                  ),
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 10),
                 ),
               ],
             ),

@@ -31,7 +31,12 @@ class LoginController {
       email: email.value,
       password: password.value,
     );
-    if (!success) errorMessage.value = _authController.errorMessage.value;
+    if (success) {
+      password.value = '';
+      errorMessage.value = null;
+    } else {
+      errorMessage.value = _authController.errorMessage.value;
+    }
     return success;
   }
 

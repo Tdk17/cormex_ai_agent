@@ -99,7 +99,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                       return;
                                     }
                                     final success = await controller.finish();
-                                    if (success && context.mounted) context.go('/dashboard');
+                                    if (success && context.mounted) {
+                                      context.go('/acquisition');
+                                    }
                                   },
                                 ),
                               ),

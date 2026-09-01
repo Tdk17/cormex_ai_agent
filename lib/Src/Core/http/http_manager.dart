@@ -31,13 +31,21 @@ class HttpManager {
     Map<String, dynamic>? queryParameters,
     bool requiresAuth = true,
   }) async {
+    final sessionToken = _sessionStorage.sessionToken;
+    if (requiresAuth && (sessionToken == null || sessionToken.isEmpty)) {
+      return const ApiFailure<Map<String, dynamic>>(
+        ApiException(
+          code: 'UNAUTHENTICATED',
+          message: 'A operação exige uma sessão válida.',
+        ),
+      );
+    }
     try {
       final headers = <String, dynamic>{
         'X-Parse-Application-Id': AppConfig.parseApplicationId,
         if (AppConfig.parseRestApiKey.isNotEmpty)
           'X-Parse-REST-API-Key': AppConfig.parseRestApiKey,
-        if (requiresAuth && _sessionStorage.sessionToken != null)
-          'X-Parse-Session-Token': _sessionStorage.sessionToken,
+        if (requiresAuth) 'X-Parse-Session-Token': sessionToken,
       };
 
       final response = await _dio.request<dynamic>(
@@ -81,6 +89,21 @@ class HttpManager {
     if (body['ok'] == false && body['error'] is Map) {
       return ApiFailure<Map<String, dynamic>>(
         ApiException.fromMap(Map<String, dynamic>.from(body['error'] as Map)),
+      );
+    }
+
+    if (body['code'] != null || body['error'] != null) {
+      final parseCode = int.tryParse(body['code']?.toString() ?? '');
+      return ApiFailure<Map<String, dynamic>>(
+        ApiException(
+          code: switch (parseCode) {
+            101 => 'INVALID_CREDENTIALS',
+            202 || 203 => 'CONFLICT',
+            209 => 'UNAUTHENTICATED',
+            _ => 'INTERNAL_ERROR',
+          },
+          message: body['error']?.toString() ?? 'Falha na requisição.',
+        ),
       );
     }
 

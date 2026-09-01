@@ -58,7 +58,11 @@ class OnboardingController {
       agentName: agentName.value,
       agentObjective: agentObjective.value,
     );
-    if (!success) errorMessage.value = _authController.errorMessage.value;
+    if (success) {
+      reset();
+    } else {
+      errorMessage.value = _authController.errorMessage.value;
+    }
     return success;
   }
 

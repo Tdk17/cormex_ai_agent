@@ -1,6 +1,5 @@
 {
   "APP_ENV": "staging",
-  "USE_MOCK_DATA": "false",
   "PARSE_SERVER_URL": "https://parseapi.back4app.com",
   "PARSE_APPLICATION_ID": "SUBSTITUIR_NO_AMBIENTE",
   "PARSE_REST_API_KEY": "SUBSTITUIR_NO_AMBIENTE"

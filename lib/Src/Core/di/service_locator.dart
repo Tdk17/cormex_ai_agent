@@ -2,7 +2,15 @@ import 'package:agente_vendas_saas/Src/Core/auth/session_storage.dart';
 import 'package:agente_vendas_saas/Src/Core/http/http_manager.dart';
 import 'package:agente_vendas_saas/Src/Core/router/app_router.dart';
 import 'package:agente_vendas_saas/Src/Core/storage/secure_storage_service.dart';
-
+import 'package:agente_vendas_saas/Src/Features/agent/data/remote_agent_repository.dart';
+import 'package:agente_vendas_saas/Src/Features/agent/domain/agent_repository.dart';
+import 'package:agente_vendas_saas/Src/Features/agent/presentation/controllers/agent_settings_controller.dart';
+import 'package:agente_vendas_saas/Src/Features/agent/presentation/controllers/agent_test_controller.dart';
+import 'package:agente_vendas_saas/Src/Features/acquisition/data/remote_acquisition_repository.dart';
+import 'package:agente_vendas_saas/Src/Features/acquisition/domain/acquisition_repository.dart';
+import 'package:agente_vendas_saas/Src/Features/acquisition/presentation/controllers/acquisition_campaign_detail_controller.dart';
+import 'package:agente_vendas_saas/Src/Features/acquisition/presentation/controllers/acquisition_controller.dart';
+import 'package:agente_vendas_saas/Src/Features/acquisition/presentation/controllers/acquisition_wizard_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/data/remote_auth_repository.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/domain/auth_repository.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/controllers/auth_controller.dart';
@@ -40,41 +48,51 @@ void setupDependencies() {
     () => FlutterSecureStorageService(),
   );
   sl.registerLazySingleton<SessionStorage>(() => SessionStorage(sl()));
-  sl.registerLazySingleton<HttpManager>(
-    () => HttpManager(sessionStorage: sl()),
-  );
+  sl.registerLazySingleton<HttpManager>(() => HttpManager(sessionStorage: sl()));
 
   sl.registerLazySingleton<AuthRepository>(
     () => RemoteAuthRepository(httpManager: sl(), sessionStorage: sl()),
   );
-  //sl.registerLazySingleton<AgentRepository>(() => RemoteAgentRepository(sl()));
+  sl.registerLazySingleton<AcquisitionRepository>(
+    () => RemoteAcquisitionRepository(sl()),
+  );
+  sl.registerLazySingleton<AgentRepository>(() => RemoteAgentRepository(sl()));
   sl.registerLazySingleton<DashboardRepository>(
     () => RemoteDashboardRepository(sl()),
   );
   sl.registerLazySingleton<ConversationsRepository>(
     () => RemoteConversationsRepository(sl()),
   );
-  sl.registerLazySingleton<LeadsRepository>(() => RemoteLeadsRepository(sl()));
+  sl.registerLazySingleton<LeadsRepository>(
+    () => RemoteLeadsRepository(sl()),
+  );
   sl.registerLazySingleton<PipelineRepository>(
     () => RemotePipelineRepository(sl()),
   );
   sl.registerLazySingleton<CsvLeadParser>(() => CsvLeadParser());
 
   sl.registerLazySingleton<AuthController>(() => AuthController(sl()));
-  // sl.registerLazySingleton<AgentSettingsController>(
-  //   () => AgentSettingsController(sl(), sl()),
-  // );
-  // sl.registerFactory<AgentTestController>(
-  //   () => AgentTestController(sl(), sl()),
-  // );
+  sl.registerLazySingleton<AcquisitionController>(
+    () => AcquisitionController(sl(), sl()),
+  );
+  sl.registerFactory<AcquisitionCampaignDetailController>(
+    () => AcquisitionCampaignDetailController(sl(), sl()),
+  );
+  sl.registerFactory<AcquisitionWizardController>(
+    () => AcquisitionWizardController(sl(), sl()),
+  );
+  sl.registerLazySingleton<AgentSettingsController>(
+    () => AgentSettingsController(sl(), sl()),
+  );
+  sl.registerFactory<AgentTestController>(
+    () => AgentTestController(sl(), sl()),
+  );
   sl.registerLazySingleton<LoginController>(() => LoginController(sl()));
   sl.registerLazySingleton<CadastroController>(() => CadastroController(sl()));
   sl.registerLazySingleton<ForgotPasswordController>(
     () => ForgotPasswordController(sl()),
   );
-  sl.registerLazySingleton<OnboardingController>(
-    () => OnboardingController(sl()),
-  );
+  sl.registerLazySingleton<OnboardingController>(() => OnboardingController(sl()));
   sl.registerLazySingleton<DashboardController>(
     () => DashboardController(sl(), sl()),
   );

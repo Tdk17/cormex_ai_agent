@@ -43,25 +43,22 @@ class ConversationModel {
     return ConversationModel(
       id: (json['id'] ?? json['objectId'] ?? '').toString(),
       workspaceId: json['workspaceId']?.toString() ?? '',
-      leadId: (lead['id'] ?? lead['objectId'] ?? json['leadId'] ?? '')
-          .toString(),
+      leadId: (lead['id'] ?? lead['objectId'] ?? json['leadId'] ?? '').toString(),
       leadName: (lead['name'] ?? json['leadName'] ?? '').toString(),
       channel: json['channel']?.toString() ?? 'whatsapp',
       status: json['status']?.toString() ?? 'open',
       agentMode: (json['agentMode'] ?? json['mode'] ?? 'assist').toString(),
-      assignedUserId:
-          (assignedUser['id'] ??
-                  assignedUser['objectId'] ??
-                  json['assignedUserId'])
-              ?.toString(),
-      assignedUserName: (assignedUser['name'] ?? json['assignedUserName'])
+      assignedUserId: (assignedUser['id'] ??
+              assignedUser['objectId'] ??
+              json['assignedUserId'])
           ?.toString(),
-      lastMessagePreview:
-          (lastMessage['preview'] ??
-                  lastMessage['content'] ??
-                  json['lastMessagePreview'] ??
-                  '')
-              .toString(),
+      assignedUserName:
+          (assignedUser['name'] ?? json['assignedUserName'])?.toString(),
+      lastMessagePreview: (lastMessage['preview'] ??
+              lastMessage['content'] ??
+              json['lastMessagePreview'] ??
+              '')
+          .toString(),
       lastMessageAt: _date(lastMessage['sentAt'] ?? json['lastMessageAt']),
       updatedAt: _date(json['updatedAt']) ?? now,
       unreadCount: (json['unreadCount'] as num?)?.toInt() ?? 0,
@@ -87,12 +84,10 @@ class ConversationModel {
       channel: channel,
       status: status ?? this.status,
       agentMode: agentMode ?? this.agentMode,
-      assignedUserId: clearAssignment
-          ? null
-          : assignedUserId ?? this.assignedUserId,
-      assignedUserName: clearAssignment
-          ? null
-          : assignedUserName ?? this.assignedUserName,
+      assignedUserId:
+          clearAssignment ? null : assignedUserId ?? this.assignedUserId,
+      assignedUserName:
+          clearAssignment ? null : assignedUserName ?? this.assignedUserName,
       lastMessagePreview: lastMessagePreview ?? this.lastMessagePreview,
       lastMessageAt: lastMessageAt ?? this.lastMessageAt,
       updatedAt: updatedAt ?? this.updatedAt,

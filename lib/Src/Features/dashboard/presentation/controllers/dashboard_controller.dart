@@ -36,7 +36,7 @@ class DashboardController {
       );
       batch(() {
         metrics.value = data;
-        state.value = data.totalLeads == 0 ? ScreenState.empty : ScreenState.success;
+        state.value = data.isEmpty ? ScreenState.empty : ScreenState.success;
       });
     } on ApiException catch (error) {
       batch(() {

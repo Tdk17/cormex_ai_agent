@@ -6,6 +6,8 @@ import 'package:agente_vendas_saas/Src/Features/dashboard/presentation/controlle
 import 'package:agente_vendas_saas/Src/Shared/components/form_error_banner.dart';
 import 'package:agente_vendas_saas/Src/Shared/models/dashboard_metrics_model.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:signals/signals_flutter.dart';
 
 class DashboardPage extends SignalStatefulWidget {
@@ -126,28 +128,28 @@ class _DashboardContent extends StatelessWidget {
       _KpiData(
         label: 'Leads no período',
         value: _formatInt(metrics.totalLeads),
-        change: '+12,4%',
+        change: metrics.changes['totalLeads'],
         icon: Icons.groups_2_outlined,
         color: AppColors.blue,
       ),
       _KpiData(
         label: 'Conversas ativas',
         value: _formatInt(metrics.activeConversations),
-        change: '+8,1%',
+        change: metrics.changes['activeConversations'],
         icon: Icons.forum_outlined,
         color: AppColors.primary,
       ),
       _KpiData(
         label: 'Leads qualificados',
         value: _formatInt(metrics.qualifiedLeads),
-        change: '+15,7%',
+        change: metrics.changes['qualifiedLeads'],
         icon: Icons.verified_outlined,
         color: AppColors.accent,
       ),
       _KpiData(
         label: 'Taxa de conversão',
         value: '${metrics.conversionRate.toStringAsFixed(1).replaceAll('.', ',')}%',
-        change: '+2,3 p.p.',
+        change: metrics.changes['conversionRate'],
         icon: Icons.trending_up_rounded,
         color: AppColors.warning,
       ),
@@ -181,7 +183,9 @@ class _DashboardContent extends StatelessWidget {
                 children: <Widget>[
                   _FunnelCard(metrics: metrics),
                   const SizedBox(height: 16),
-                  const _RecentConversationsCard(),
+                  _RecentConversationsCard(
+                    items: metrics.recentConversations,
+                  ),
                 ],
               );
             }
@@ -190,13 +194,18 @@ class _DashboardContent extends StatelessWidget {
               children: <Widget>[
                 Expanded(flex: 6, child: _FunnelCard(metrics: metrics)),
                 const SizedBox(width: 16),
-                const Expanded(flex: 4, child: _RecentConversationsCard()),
+                Expanded(
+                  flex: 4,
+                  child: _RecentConversationsCard(
+                    items: metrics.recentConversations,
+                  ),
+                ),
               ],
             );
           },
         ),
         const SizedBox(height: 16),
-        const _SetupAlert(),
+        if (!metrics.hasConnectedChannel) const _SetupAlert(),
       ],
     );
   }
@@ -221,7 +230,7 @@ class _KpiData {
 
   final String label;
   final String value;
-  final String change;
+  final String? change;
   final IconData icon;
   final Color color;
 }
@@ -250,22 +259,24 @@ class _KpiCard extends StatelessWidget {
                   ),
                   child: Icon(data.icon, color: data.color, size: 21),
                 ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    data.change,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+                if (data.change != null && data.change!.isNotEmpty) ...<Widget>[
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      data.change!,
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
             const SizedBox(height: 18),
@@ -337,16 +348,12 @@ class _FunnelCard extends StatelessWidget {
 }
 
 class _RecentConversationsCard extends StatelessWidget {
-  const _RecentConversationsCard();
+  const _RecentConversationsCard({required this.items});
+
+  final List<DashboardConversationPreviewModel> items;
 
   @override
   Widget build(BuildContext context) {
-    const items = <(String, String, String, int)>[
-      ('Marina Souza', 'Quero entender os planos...', '2 min', 2),
-      ('Rafael Lima', 'Podemos marcar uma demonstração?', '9 min', 1),
-      ('Camila Martins', 'Obrigado pelo atendimento!', '24 min', 0),
-      ('Bruno Rocha', 'Qual o prazo de implantação?', '38 min', 3),
-    ];
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(22),
@@ -361,29 +368,55 @@ class _RecentConversationsCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
-                TextButton(onPressed: () {}, child: const Text('Ver inbox')),
+                TextButton(
+                  onPressed: () => context.go('/conversations'),
+                  child: const Text('Ver inbox'),
+                ),
               ],
             ),
             const SizedBox(height: 10),
-            ...items.map(
-              (item) => ListTile(
+            if (items.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 34),
+                child: Center(
+                  child: Text(
+                    'Nenhuma conversa recente.',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+              )
+            else
+              ...items.map(
+              (DashboardConversationPreviewModel item) => ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: CircleAvatar(
                   backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                   foregroundColor: AppColors.primary,
-                  child: Text(item.$1.substring(0, 1)),
+                  child: Text(
+                    item.leadName.trim().isEmpty
+                        ? '?'
+                        : item.leadName.trim()[0].toUpperCase(),
+                  ),
                 ),
-                title: Text(item.$1, maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: Text(item.$2, maxLines: 1, overflow: TextOverflow.ellipsis),
+                title: Text(
+                  item.leadName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  item.lastMessage,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 trailing: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
                     Text(
-                      item.$3,
+                      _relativeTime(item.lastMessageAt),
                       style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
                     ),
-                    if (item.$4 > 0)
+                    if (item.unreadCount > 0)
                       Container(
                         margin: const EdgeInsets.only(top: 5),
                         width: 20,
@@ -394,14 +427,14 @@ class _RecentConversationsCard extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                         child: Text(
-                          item.$4.toString(),
+                          item.unreadCount.toString(),
                           style: const TextStyle(color: Colors.white, fontSize: 10),
                         ),
                       ),
                   ],
                 ),
               ),
-            ),
+              ),
           ],
         ),
       ),
@@ -446,12 +479,27 @@ class _SetupAlert extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            OutlinedButton(onPressed: null, child: Text('Configurar integrações')),
+            OutlinedButton(
+              onPressed: () => context.go('/integrations'),
+              child: const Text('Configurar integrações'),
+            ),
           ],
         ),
       ),
     );
   }
+}
+
+String _relativeTime(DateTime? value) {
+  if (value == null) return '—';
+  final local = value.toLocal();
+  final difference = DateTime.now().difference(local);
+  if (difference.isNegative) return DateFormat('dd/MM HH:mm').format(local);
+  if (difference.inMinutes < 1) return 'agora';
+  if (difference.inMinutes < 60) return '${difference.inMinutes} min';
+  if (difference.inHours < 24) return '${difference.inHours} h';
+  if (difference.inDays < 7) return '${difference.inDays} d';
+  return DateFormat('dd/MM').format(local);
 }
 
 class _DashboardSkeleton extends StatelessWidget {

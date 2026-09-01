@@ -27,12 +27,9 @@ class RemoteAuthRepository implements AuthRepository {
 
     try {
       return await _loadCurrentUser(cached);
-    } on ApiException catch (error) {
-      if (error.code == 'UNAUTHENTICATED') {
-        await _sessionStorage.clear();
-        return null;
-      }
-      return cached;
+    } on Object {
+      await _sessionStorage.clear();
+      return null;
     }
   }
 
@@ -41,28 +38,29 @@ class RemoteAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    final result = await _httpManager.restRequest(
-      endpoint: Endpoints.login,
-      method: HttpMethod.get,
-      queryParameters: <String, dynamic>{
-        'username': email.trim().toLowerCase(),
-        'password': password,
-      },
-      requiresAuth: false,
-    );
-    final data = _unwrap(result);
-    final session = AuthSession(
-      sessionToken: data['sessionToken']?.toString() ?? '',
-      user: UserModel.fromJson(data),
-    );
-    if (session.sessionToken.isEmpty) {
-      throw const ApiException(
-        code: 'UNAUTHENTICATED',
-        message: 'O servidor não retornou uma sessão válida.',
+    await _sessionStorage.clear();
+    try {
+      final result = await _httpManager.restRequest(
+        endpoint: Endpoints.login,
+        method: HttpMethod.get,
+        queryParameters: <String, dynamic>{
+          'username': email.trim().toLowerCase(),
+          'password': password,
+        },
+        requiresAuth: false,
       );
+      final data = _unwrap(result);
+      final session = AuthSession(
+        sessionToken: data['sessionToken']?.toString() ?? '',
+        user: UserModel.fromJson(data),
+      );
+      _validateAuthenticatedSession(session);
+      await _sessionStorage.save(session);
+      return await _loadCurrentUser(session);
+    } on Object {
+      await _sessionStorage.clear();
+      rethrow;
     }
-    await _sessionStorage.save(session);
-    return _loadCurrentUser(session);
   }
 
   @override
@@ -71,29 +69,36 @@ class RemoteAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    final normalizedEmail = email.trim().toLowerCase();
-    final result = await _httpManager.restRequest(
-      endpoint: Endpoints.users,
-      method: HttpMethod.post,
-      body: <String, dynamic>{
-        'name': name.trim(),
-        'username': normalizedEmail,
-        'email': normalizedEmail,
-        'password': password,
-      },
-      requiresAuth: false,
-    );
-    final data = _unwrap(result);
-    final session = AuthSession(
-      sessionToken: data['sessionToken']?.toString() ?? '',
-      user: UserModel(
-        id: (data['objectId'] ?? data['id'] ?? '').toString(),
-        name: name.trim(),
-        email: normalizedEmail,
-      ),
-    );
-    await _sessionStorage.save(session);
-    return session;
+    await _sessionStorage.clear();
+    try {
+      final normalizedEmail = email.trim().toLowerCase();
+      final result = await _httpManager.restRequest(
+        endpoint: Endpoints.users,
+        method: HttpMethod.post,
+        body: <String, dynamic>{
+          'name': name.trim(),
+          'username': normalizedEmail,
+          'email': normalizedEmail,
+          'password': password,
+        },
+        requiresAuth: false,
+      );
+      final data = _unwrap(result);
+      final session = AuthSession(
+        sessionToken: data['sessionToken']?.toString() ?? '',
+        user: UserModel(
+          id: (data['objectId'] ?? data['id'] ?? '').toString(),
+          name: name.trim(),
+          email: normalizedEmail,
+        ),
+      );
+      _validateAuthenticatedSession(session);
+      await _sessionStorage.save(session);
+      return session;
+    } on Object {
+      await _sessionStorage.clear();
+      rethrow;
+    }
   }
 
   @override
@@ -146,25 +151,33 @@ class RemoteAuthRepository implements AuthRepository {
         message: 'O servidor não retornou a empresa criada.',
       );
     }
-    final membership = workspaceData['membership'] is Map
-        ? MembershipModel.fromJson(
-            Map<String, dynamic>.from(workspaceData['membership'] as Map),
-          )
-        : MembershipModel(
-            id: 'membership_${workspace.id}',
-            userId: currentSession.user.id,
-            workspaceId: workspace.id,
-            role: MembershipRole.owner,
-          );
-
-    final nextSession = currentSession.copyWith(
-      workspaces: <WorkspaceModel>[...currentSession.workspaces, workspace],
-      memberships: <MembershipModel>[...currentSession.memberships, membership],
-      selectedWorkspaceId: workspace.id,
+    if (workspaceData['membership'] is! Map) {
+      throw const ApiException(
+        code: 'INTERNAL_ERROR',
+        message: 'O servidor não confirmou o vínculo com a empresa.',
+      );
+    }
+    final membership = MembershipModel.fromJson(
+      Map<String, dynamic>.from(workspaceData['membership'] as Map),
     );
+    if (membership.id.isEmpty ||
+        membership.userId != currentSession.user.id ||
+        membership.workspaceId != workspace.id ||
+        membership.role != MembershipRole.owner) {
+      throw const ApiException(
+        code: 'INTERNAL_ERROR',
+        message: 'O servidor retornou um vínculo de empresa inválido.',
+      );
+    }
 
-    await _sessionStorage.save(nextSession);
-    return nextSession;
+    final refreshed = await _loadCurrentUser(currentSession);
+    if (!refreshed.workspaces.any((item) => item.id == workspace.id)) {
+      throw const ApiException(
+        code: 'INTERNAL_ERROR',
+        message: 'A empresa criada não foi confirmada na sessão.',
+      );
+    }
+    return refreshed;
   }
 
   @override
@@ -185,9 +198,20 @@ class RemoteAuthRepository implements AuthRepository {
   Future<AuthSession> _loadCurrentUser(AuthSession baseSession) async {
     final result = await _httpManager.cloudFunction(name: Endpoints.authMe);
     final data = _unwrap(result);
-    final userData = data['user'] is Map
-        ? Map<String, dynamic>.from(data['user'] as Map)
-        : baseSession.user.toJson();
+    if (data['user'] is! Map) {
+      throw const ApiException(
+        code: 'UNAUTHENTICATED',
+        message: 'A sessão não foi confirmada pelo servidor.',
+      );
+    }
+    final userData = Map<String, dynamic>.from(data['user'] as Map);
+    final user = UserModel.fromJson(userData);
+    if (user.id.isEmpty || user.id != baseSession.user.id) {
+      throw const ApiException(
+        code: 'UNAUTHENTICATED',
+        message: 'A identidade da sessão não foi confirmada.',
+      );
+    }
     final workspaces = (data['workspaces'] as List<dynamic>? ?? const <dynamic>[])
         .whereType<Map>()
         .map(
@@ -203,16 +227,41 @@ class RemoteAuthRepository implements AuthRepository {
               ),
             )
             .toList(growable: false);
+    final authorizedMemberships = memberships
+        .where((item) => item.userId == user.id)
+        .toList(growable: false);
+    final authorizedWorkspaceIds = authorizedMemberships
+        .map((item) => item.workspaceId)
+        .toSet();
+    final authorizedWorkspaces = workspaces
+        .where((item) => authorizedWorkspaceIds.contains(item.id))
+        .toList(growable: false);
+    final previousWorkspaceId = baseSession.selectedWorkspaceId;
+    final selectedWorkspaceId = previousWorkspaceId != null &&
+            authorizedWorkspaceIds.contains(previousWorkspaceId)
+        ? previousWorkspaceId
+        : authorizedWorkspaces.isEmpty
+            ? null
+            : authorizedWorkspaces.first.id;
     final session = AuthSession(
       sessionToken: baseSession.sessionToken,
-      user: UserModel.fromJson(userData),
-      workspaces: workspaces,
-      memberships: memberships,
-      selectedWorkspaceId: baseSession.selectedWorkspaceId ??
-          (workspaces.isEmpty ? null : workspaces.first.id),
+      user: user,
+      workspaces: authorizedWorkspaces,
+      memberships: authorizedMemberships,
+      selectedWorkspaceId: selectedWorkspaceId,
     );
+    _validateAuthenticatedSession(session);
     await _sessionStorage.save(session);
     return session;
+  }
+
+  static void _validateAuthenticatedSession(AuthSession session) {
+    if (session.sessionToken.isEmpty || session.user.id.isEmpty) {
+      throw const ApiException(
+        code: 'UNAUTHENTICATED',
+        message: 'O servidor não retornou uma sessão válida.',
+      );
+    }
   }
 
   Map<String, dynamic> _unwrap(ApiResult<Map<String, dynamic>> result) {

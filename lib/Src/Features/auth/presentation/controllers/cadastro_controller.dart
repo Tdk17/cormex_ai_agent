@@ -36,7 +36,18 @@ class CadastroController {
       email: email.value,
       password: password.value,
     );
-    if (!success) errorMessage.value = _authController.errorMessage.value;
+    if (success) {
+      batch(() {
+        name.value = '';
+        email.value = '';
+        password.value = '';
+        confirmPassword.value = '';
+        acceptedTerms.value = false;
+        errorMessage.value = null;
+      });
+    } else {
+      errorMessage.value = _authController.errorMessage.value;
+    }
     return success;
   }
 

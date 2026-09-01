@@ -43,6 +43,10 @@ class AuthController {
 
   Future<bool> signIn({required String email, required String password}) async {
     if (isLoading.value) return false;
+    batch(() {
+      session.value = null;
+      status.value = AuthStatus.unauthenticated;
+    });
     return _execute(
       () => _repository.signIn(email: email, password: password),
     );

@@ -1,5 +1,10 @@
 import 'dart:async';
 
+import 'package:agente_vendas_saas/Src/Features/acquisition/presentation/pages/acquisition_campaign_detail_page.dart';
+import 'package:agente_vendas_saas/Src/Features/acquisition/presentation/pages/acquisition_page.dart';
+import 'package:agente_vendas_saas/Src/Features/acquisition/presentation/pages/acquisition_wizard_page.dart';
+import 'package:agente_vendas_saas/Src/Features/agent/presentation/pages/agent_settings_page.dart';
+import 'package:agente_vendas_saas/Src/Features/agent/presentation/pages/agent_test_page.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/controllers/auth_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/login_page.dart';
@@ -36,37 +41,62 @@ class AppRouter {
           path: '/forgot-password',
           builder: (_, __) => const ForgotPasswordPage(),
         ),
-        GoRoute(
-          path: '/onboarding',
-          builder: (_, __) => const OnboardingPage(),
-        ),
+        GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingPage()),
         ShellRoute(
           builder: (BuildContext context, GoRouterState state, Widget child) {
             return AppShell(child: child);
           },
           routes: <RouteBase>[
             GoRoute(
-              path: '/dashboard',
-              builder: (_, __) => const DashboardPage(),
+              path: '/acquisition',
+              builder: (_, __) => const AcquisitionPage(),
+              routes: <RouteBase>[
+                GoRoute(
+                  path: 'new',
+                  builder: (_, __) => const AcquisitionWizardPage(),
+                ),
+                GoRoute(
+                  path: ':campaignId',
+                  builder: (_, GoRouterState state) =>
+                      AcquisitionCampaignDetailPage(
+                    campaignId: state.pathParameters['campaignId']!,
+                  ),
+                  routes: <RouteBase>[
+                    GoRoute(
+                      path: 'edit',
+                      builder: (_, GoRouterState state) =>
+                          AcquisitionWizardPage(
+                        campaignId: state.pathParameters['campaignId']!,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
+            GoRoute(path: '/dashboard', builder: (_, __) => const DashboardPage()),
             GoRoute(
               path: '/leads',
               builder: (_, __) => const LeadsListPage(),
               routes: <RouteBase>[
-                GoRoute(path: 'new', builder: (_, __) => const LeadFormPage()),
+                GoRoute(
+                  path: 'new',
+                  builder: (_, __) => const LeadFormPage(),
+                ),
                 GoRoute(
                   path: 'import',
                   builder: (_, __) => const LeadImportPage(),
                 ),
                 GoRoute(
                   path: ':leadId',
-                  builder: (_, GoRouterState state) =>
-                      LeadDetailPage(leadId: state.pathParameters['leadId']!),
+                  builder: (_, GoRouterState state) => LeadDetailPage(
+                    leadId: state.pathParameters['leadId']!,
+                  ),
                   routes: <RouteBase>[
                     GoRoute(
                       path: 'edit',
-                      builder: (_, GoRouterState state) =>
-                          LeadFormPage(leadId: state.pathParameters['leadId']!),
+                      builder: (_, GoRouterState state) => LeadFormPage(
+                        leadId: state.pathParameters['leadId']!,
+                      ),
                     ),
                   ],
                 ),
@@ -108,11 +138,15 @@ class AppRouter {
                 ),
               ],
             ),
-            _placeholder(
-              '/agent',
-              'Agente de IA',
-              'Configure persona, objetivo, tom, regras, horários e modo de operação.',
-              Icons.auto_awesome_outlined,
+            GoRoute(
+              path: '/agent',
+              builder: (_, __) => const AgentSettingsPage(),
+              routes: <RouteBase>[
+                GoRoute(
+                  path: 'test',
+                  builder: (_, __) => const AgentTestPage(),
+                ),
+              ],
             ),
             _placeholder(
               '/knowledge',
@@ -160,13 +194,10 @@ class AppRouter {
             children: <Widget>[
               const Icon(Icons.explore_off_outlined, size: 48),
               const SizedBox(height: 14),
-              Text(
-                'Página não encontrada',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text('Página não encontrada', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 14),
               FilledButton(
-                onPressed: () => context.go('/dashboard'),
+                onPressed: () => context.go('/acquisition'),
                 child: const Text('Voltar ao início'),
               ),
             ],
@@ -185,8 +216,7 @@ class AppRouter {
     final session = _authController.session.value;
     final path = state.uri.path;
     final atSplash = path == '/splash';
-    final atAuth =
-        path == '/login' || path == '/register' || path == '/forgot-password';
+    final atAuth = path == '/login' || path == '/register' || path == '/forgot-password';
     final atOnboarding = path == '/onboarding';
 
     if (status == AuthStatus.initial || status == AuthStatus.loading) {
@@ -194,7 +224,7 @@ class AppRouter {
     }
     if (session == null) return atAuth ? null : '/login';
     if (!session.hasWorkspace) return atOnboarding ? null : '/onboarding';
-    if (atSplash || atAuth || atOnboarding) return '/dashboard';
+    if (atSplash || atAuth || atOnboarding) return '/acquisition';
     return null;
   }
 
