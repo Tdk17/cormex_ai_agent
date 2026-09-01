@@ -192,6 +192,61 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
     };
   }
 
+  @override
+  Future<GoogleAdsConnectionStatus> googleAdsConnectionStatus({
+    required String workspaceId,
+  }) async {
+    final result = await _httpManager.cloudFunction(
+      name: Endpoints.googleAdsConnectionStatus,
+      parameters: <String, dynamic>{'workspaceId': workspaceId},
+    );
+    return switch (result) {
+      ApiSuccess<Map<String, dynamic>>(:final data, :final meta) => () {
+          final account = _map(data['account']);
+          return GoogleAdsConnectionStatus(
+            connected: data['connected'] == true,
+            status: data['status']?.toString() ??
+                (data['connected'] == true ? 'connected' : 'disconnected'),
+            accountName: account['name']?.toString() ?? data['accountName']?.toString(),
+            customerId: account['customerId']?.toString() ?? data['customerId']?.toString(),
+            correlationId: meta.correlationId,
+          );
+        }(),
+      ApiFailure<Map<String, dynamic>>(:final error) => throw error,
+    };
+  }
+
+  @override
+  Future<GoogleAdsOAuthStart> startGoogleAdsOAuth({
+    required String workspaceId,
+    required String returnUrl,
+  }) async {
+    final result = await _httpManager.cloudFunction(
+      name: Endpoints.googleAdsOAuthStart,
+      parameters: <String, dynamic>{
+        'workspaceId': workspaceId,
+        'returnUrl': returnUrl,
+      },
+    );
+    return switch (result) {
+      ApiSuccess<Map<String, dynamic>>(:final data, :final meta) => () {
+          final authorizationUrl =
+              data['authorizationUrl']?.toString().trim() ?? '';
+          if (authorizationUrl.isEmpty) {
+            throw const ApiException(
+              code: 'GOOGLE_OAUTH_ERROR',
+              message: 'A API não retornou a URL de autorização do Google.',
+            );
+          }
+          return GoogleAdsOAuthStart(
+            authorizationUrl: authorizationUrl,
+            correlationId: meta.correlationId,
+          );
+        }(),
+      ApiFailure<Map<String, dynamic>>(:final error) => throw error,
+    };
+  }
+
   Future<AcquisitionMutationResult> _mutate(
     String endpoint,
     Map<String, dynamic> parameters,
