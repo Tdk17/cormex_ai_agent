@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:agente_vendas_saas/Src/Core/api/api_exception.dart';
 import 'package:agente_vendas_saas/Src/Core/api/api_result.dart';
 import 'package:agente_vendas_saas/Src/Core/auth/session_storage.dart';
@@ -41,12 +43,10 @@ class HttpManager {
       );
     }
     try {
-      final headers = <String, dynamic>{
-        'X-Parse-Application-Id': AppConfig.parseApplicationId,
-        if (AppConfig.parseRestApiKey.isNotEmpty)
-          'X-Parse-REST-API-Key': AppConfig.parseRestApiKey,
-        if (requiresAuth) 'X-Parse-Session-Token': sessionToken,
-      };
+      final headers = _parseHeaders(
+        sessionToken: sessionToken,
+        requiresAuth: requiresAuth,
+      );
 
       final response = await _dio.request<dynamic>(
         endpoint,
@@ -55,6 +55,47 @@ class HttpManager {
         options: Options(method: method.name.toUpperCase(), headers: headers),
       );
 
+      return _normalizeResponse(response.data);
+    } on DioException catch (error) {
+      return ApiFailure<Map<String, dynamic>>(ApiException.fromDio(error));
+    } on Object catch (error) {
+      return ApiFailure<Map<String, dynamic>>(
+        ApiException(code: 'INTERNAL_ERROR', message: error.toString()),
+      );
+    }
+  }
+
+  Future<ApiResult<Map<String, dynamic>>> uploadParseFile({
+    required String fileName,
+    required Uint8List bytes,
+    required String contentType,
+    void Function(int sent, int total)? onSendProgress,
+  }) async {
+    final sessionToken = _sessionStorage.sessionToken;
+    if (sessionToken == null || sessionToken.isEmpty) {
+      return const ApiFailure<Map<String, dynamic>>(
+        ApiException(
+          code: 'UNAUTHENTICATED',
+          message: 'A operação exige uma sessão válida.',
+        ),
+      );
+    }
+
+    try {
+      final safeName = _safeFileName(fileName);
+      final response = await _dio.post<dynamic>(
+        '/files/${Uri.encodeComponent(safeName)}',
+        data: bytes,
+        options: Options(
+          headers: _parseHeaders(
+            sessionToken: sessionToken,
+            requiresAuth: true,
+          ),
+          contentType: contentType,
+          responseType: ResponseType.json,
+        ),
+        onSendProgress: onSendProgress,
+      );
       return _normalizeResponse(response.data);
     } on DioException catch (error) {
       return ApiFailure<Map<String, dynamic>>(ApiException.fromDio(error));
@@ -74,6 +115,25 @@ class HttpManager {
       method: HttpMethod.post,
       body: parameters,
     );
+  }
+
+  Map<String, dynamic> _parseHeaders({
+    required String? sessionToken,
+    required bool requiresAuth,
+  }) {
+    return <String, dynamic>{
+      'X-Parse-Application-Id': AppConfig.parseApplicationId,
+      if (AppConfig.parseRestApiKey.isNotEmpty)
+        'X-Parse-REST-API-Key': AppConfig.parseRestApiKey,
+      if (requiresAuth && sessionToken != null)
+        'X-Parse-Session-Token': sessionToken,
+    };
+  }
+
+  static String _safeFileName(String value) {
+    final normalized = value.trim().replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    if (normalized.isEmpty) return 'campaign-media';
+    return normalized.length <= 120 ? normalized : normalized.substring(normalized.length - 120);
   }
 
   ApiResult<Map<String, dynamic>> _normalizeResponse(dynamic raw) {
