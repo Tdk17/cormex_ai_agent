@@ -46,6 +46,32 @@ class AcquisitionAiSuggestion {
   final String? correlationId;
 }
 
+class GoogleAdsConnectionStatus {
+  const GoogleAdsConnectionStatus({
+    required this.connected,
+    required this.status,
+    this.accountName,
+    this.customerId,
+    this.correlationId,
+  });
+
+  final bool connected;
+  final String status;
+  final String? accountName;
+  final String? customerId;
+  final String? correlationId;
+}
+
+class GoogleAdsOAuthStart {
+  const GoogleAdsOAuthStart({
+    required this.authorizationUrl,
+    this.correlationId,
+  });
+
+  final String authorizationUrl;
+  final String? correlationId;
+}
+
 abstract final class AcquisitionCampaignStatus {
   static const String draft = 'draft';
   static const String preparing = 'preparing';
