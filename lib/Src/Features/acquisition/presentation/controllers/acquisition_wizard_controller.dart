@@ -20,6 +20,8 @@ class AcquisitionWizardController {
   String? _pendingSaveRequestId;
   String? _pendingPublishRequestId;
   String? _pendingAiRequestId;
+  String? _pendingPublishCampaignId;
+  int? _pendingPublishVersion;
   int _revision = 0;
 
   final Signal<ScreenState> state = signal(ScreenState.initial);
@@ -141,7 +143,8 @@ class AcquisitionWizardController {
       return false;
     }
     if (mediaUrls.length >= maxMediaItems) {
-      errorMessage.value = 'Você pode adicionar até $maxMediaItems arquivos por campanha.';
+      errorMessage.value =
+          'Você pode adicionar até $maxMediaItems arquivos por campanha.';
       return false;
     }
     if (bytes.isEmpty) {
@@ -152,8 +155,10 @@ class AcquisitionWizardController {
       errorMessage.value = 'Cada imagem ou vídeo pode ter no máximo 10 MB.';
       return false;
     }
-    if (!contentType.startsWith('image/') && !contentType.startsWith('video/')) {
-      errorMessage.value = 'Selecione somente uma imagem ou um vídeo compatível.';
+    if (!contentType.startsWith('image/') &&
+        !contentType.startsWith('video/')) {
+      errorMessage.value =
+          'Selecione somente uma imagem ou um vídeo compatível.';
       return false;
     }
 
@@ -198,7 +203,9 @@ class AcquisitionWizardController {
   }
 
   void removeMedia(String url) {
-    final next = mediaUrls.where((String item) => item != url).toList(growable: false);
+    final next = mediaUrls
+        .where((String item) => item != url)
+        .toList(growable: false);
     mediaUrlsText.value = next.join('\n');
     successMessage.value = null;
   }
@@ -269,24 +276,62 @@ class AcquisitionWizardController {
     }
   }
 
+  void _clearPendingPublish() {
+    _pendingPublishRequestId = null;
+    _pendingPublishCampaignId = null;
+    _pendingPublishVersion = null;
+  }
+
   Future<bool> publish() async {
     if (isPublishing.value) return false;
+
     final validationError = validateAll();
+
     if (validationError != null) {
       errorMessage.value = validationError.message;
       currentStep.value = validationError.step;
       return false;
     }
-    if (!await saveDraft(silent: true)) return false;
+
+    // Primeiro salva e recebe do backend a versão atualizada.
+    if (!await saveDraft(silent: true)) {
+      return false;
+    }
+
     final saved = campaign.value;
     final workspaceId = _workspaceId;
-    if (saved == null || workspaceId == null) return false;
+
+    if (saved == null || workspaceId == null) {
+      return false;
+    }
+
     batch(() {
       isPublishing.value = true;
       errorMessage.value = null;
       successMessage.value = null;
     });
-    _pendingPublishRequestId ??= _requestId('publish');
+
+    /*
+   * O clientRequestId só pode ser reutilizado se estivermos repetindo
+   * exatamente a mesma publicação:
+   *
+   * - mesma campanha
+   * - mesma versão
+   *
+   * Se o saveDraft alterou a versão, obrigatoriamente precisamos
+   * de um novo clientRequestId.
+   */
+    final isSamePublishOperation =
+        _pendingPublishRequestId != null &&
+        _pendingPublishCampaignId == saved.id &&
+        _pendingPublishVersion == saved.version;
+
+    if (!isSamePublishOperation) {
+      _pendingPublishRequestId = _requestId('publish');
+      _pendingPublishCampaignId = saved.id;
+      _pendingPublishVersion = saved.version;
+    }
+
     try {
       final result = await _repository.publishCampaign(
         workspaceId: workspaceId,
@@ -294,24 +339,74 @@ class AcquisitionWizardController {
         expectedVersion: saved.version,
         clientRequestId: _pendingPublishRequestId!,
       );
-      if (_workspaceId != workspaceId) return false;
-      _pendingPublishRequestId = null;
+
+      if (_workspaceId != workspaceId) {
+        return false;
+      }
+
+      // Operação concluída. Limpa a idempotência pendente.
+      _clearPendingPublish();
+
       batch(() {
         campaign.value = result.campaign;
         correlationId.value = result.correlationId;
         successMessage.value = 'Campanha enviada para publicação.';
       });
+
       return true;
     } on ApiException catch (error) {
-      _setError(
-        error.code == 'CONFLICT'
-            ? 'A campanha mudou antes da publicação. Atualize e revise novamente.'
-            : error.userMessage,
-        error.correlationId,
-      );
+      final conflictField = error.details['field']?.toString();
+
+      /*
+     * Esse conflito NÃO significa necessariamente que a versão
+     * da campanha mudou.
+     */
+      if (error.code == 'CONFLICT' && conflictField == 'clientRequestId') {
+        /*
+       * O ID ficou associado a outro payload.
+       * Descarta para a próxima tentativa gerar um novo.
+       */
+        _clearPendingPublish();
+
+        _setError(
+          'A tentativa de publicação anterior expirou. '
+          'Tente publicar novamente.',
+          error.correlationId,
+        );
+
+        return false;
+      }
+
+      if (error.code == 'CONFLICT') {
+        /*
+       * Aqui sim pode ser optimistic locking / expectedVersion.
+       */
+        _clearPendingPublish();
+
+        _setError(
+          'A campanha foi atualizada. Revise os dados e tente publicar novamente.',
+          error.correlationId,
+        );
+
+        return false;
+      }
+
+      _setError(error.userMessage, error.correlationId);
+
       return false;
     } on Object {
-      _setError('Não foi possível publicar a campanha.', null);
+      /*
+     * Não limpamos o requestId em erro de rede desconhecido.
+     *
+     * Assim, caso a API tenha recebido a publicação mas a resposta
+     * tenha se perdido, uma nova tentativa da MESMA versão continua
+     * idempotente.
+     */
+      _setError(
+        'Não foi possível confirmar a publicação da campanha. Tente novamente.',
+        null,
+      );
+
       return false;
     } finally {
       isPublishing.value = false;
@@ -320,12 +415,19 @@ class AcquisitionWizardController {
 
   Future<bool> generateCreative() async {
     if (isGenerating.value) return false;
-    if (productName.value.trim().isEmpty || objective.value.isEmpty) {
-      errorMessage.value = 'Informe o produto e o objetivo antes de usar a IA.';
+
+    final workspaceId = _workspaceId;
+
+    if (workspaceId == null) {
+      errorMessage.value = 'Selecione um workspace antes de gerar o anúncio.';
       return false;
     }
-    final workspaceId = _workspaceId;
-    if (workspaceId == null) return false;
+
+    if (productName.value.trim().length < 2) {
+      errorMessage.value = 'Informe o produto antes de gerar o anúncio.';
+      return false;
+    }
+
     batch(() {
       isGenerating.value = true;
       errorMessage.value = null;
@@ -333,32 +435,49 @@ class AcquisitionWizardController {
       aiWarnings.value = const <String>[];
       aiRationale.value = null;
     });
+
     _pendingAiRequestId ??= _requestId('ai');
+
     try {
       final result = await _repository.suggestCreative(
         workspaceId: workspaceId,
         input: input,
         clientRequestId: _pendingAiRequestId!,
       );
-      if (_workspaceId != workspaceId) return false;
+
+      if (_workspaceId != workspaceId) {
+        return false;
+      }
+
       _pendingAiRequestId = null;
+
       batch(() {
         headline.value = result.headline;
         primaryText.value = result.primaryText;
         description.value = result.description;
         callToAction.value = result.callToAction;
+
         aiWarnings.value = result.warnings;
         aiRationale.value = result.rationale;
         correlationId.value = result.correlationId;
+
         formRevision.value = ++_revision;
+
         successMessage.value = 'Sugestão criada. Revise antes de continuar.';
       });
+
       return true;
     } on ApiException catch (error) {
+      _pendingAiRequestId = null;
+
       _setError(error.userMessage, error.correlationId);
+
       return false;
     } on Object {
+      _pendingAiRequestId = null;
+
       _setError('Não foi possível gerar o criativo com IA.', null);
+
       return false;
     } finally {
       isGenerating.value = false;

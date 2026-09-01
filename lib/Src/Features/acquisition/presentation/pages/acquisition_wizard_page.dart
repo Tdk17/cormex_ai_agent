@@ -17,25 +17,22 @@ class AcquisitionWizardPage extends SignalStatefulWidget {
   final String? campaignId;
 
   @override
-  State<AcquisitionWizardPage> createState() =>
-      _AcquisitionWizardPageState();
+  State<AcquisitionWizardPage> createState() => _AcquisitionWizardPageState();
 }
 
 class _AcquisitionWizardPageState extends State<AcquisitionWizardPage> {
-  static const List<({String title, IconData icon})> _steps = <({
-    String title,
-    IconData icon,
-  })>[
-    (title: 'Produto', icon: Icons.inventory_2_outlined),
-    (title: 'Objetivo', icon: Icons.flag_outlined),
-    (title: 'Canais', icon: Icons.cell_tower_rounded),
-    (title: 'Público', icon: Icons.groups_2_outlined),
-    (title: 'Orçamento', icon: Icons.payments_outlined),
-    (title: 'Criativo', icon: Icons.auto_awesome_outlined),
-    (title: 'Destino', icon: Icons.route_outlined),
-    (title: 'Automação', icon: Icons.smart_toy_outlined),
-    (title: 'Revisão', icon: Icons.fact_check_outlined),
-  ];
+  static const List<({String title, IconData icon})> _steps =
+      <({String title, IconData icon})>[
+        (title: 'Produto', icon: Icons.inventory_2_outlined),
+        (title: 'Objetivo', icon: Icons.flag_outlined),
+        (title: 'Canais', icon: Icons.cell_tower_rounded),
+        (title: 'Público', icon: Icons.groups_2_outlined),
+        (title: 'Orçamento', icon: Icons.payments_outlined),
+        (title: 'Criativo', icon: Icons.auto_awesome_outlined),
+        (title: 'Destino', icon: Icons.route_outlined),
+        (title: 'Automação', icon: Icons.smart_toy_outlined),
+        (title: 'Revisão', icon: Icons.fact_check_outlined),
+      ];
 
   late final AcquisitionWizardController controller;
 
@@ -57,7 +54,8 @@ class _AcquisitionWizardPageState extends State<AcquisitionWizardPage> {
         padding: const EdgeInsets.all(24),
         children: <Widget>[
           FormErrorBanner(
-            message: controller.errorMessage.value ??
+            message:
+                controller.errorMessage.value ??
                 'Não foi possível carregar a campanha.',
             correlationId: controller.correlationId.value,
           ),
@@ -99,9 +97,7 @@ class _AcquisitionWizardPageState extends State<AcquisitionWizardPage> {
                           ),
                           const VerticalDivider(width: 1),
                           Expanded(
-                            child: _StepScroll(
-                              child: _stepContent(step),
-                            ),
+                            child: _StepScroll(child: _stepContent(step)),
                           ),
                           if (constraints.maxWidth >= 1280) ...<Widget>[
                             const VerticalDivider(width: 1),
@@ -349,7 +345,10 @@ class _MobileStepBar extends StatelessWidget {
             Icon(icon, color: AppColors.primary),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+              child: Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
             ),
             Text(
               '${step + 1}/$count',
@@ -390,7 +389,8 @@ class _ProductStep extends SignalWidget {
   Widget build(BuildContext context) {
     return _StepSection(
       title: 'O que você quer anunciar?',
-      subtitle: 'Use os dados reais do seu produto ou serviço. Você poderá revisar tudo antes de publicar.',
+      subtitle:
+          'Use os dados reais do seu produto ou serviço. Você poderá revisar tudo antes de publicar.',
       children: <Widget>[
         _TextField(
           label: 'Nome da campanha',
@@ -409,7 +409,8 @@ class _ProductStep extends SignalWidget {
           initialValue: controller.productDescription.value,
           minLines: 3,
           maxLines: 5,
-          onChanged: (String value) => controller.productDescription.value = value,
+          onChanged: (String value) =>
+              controller.productDescription.value = value,
         ),
         _TextField(
           label: 'Oferta ou diferencial',
@@ -484,7 +485,9 @@ class _CampaignMediaPicker extends SignalWidget {
           if (uploading) ...<Widget>[
             const SizedBox(height: 16),
             Text(
-              uploadLabel == null ? 'Enviando mídia...' : 'Enviando $uploadLabel...',
+              uploadLabel == null
+                  ? 'Enviando mídia...'
+                  : 'Enviando $uploadLabel...',
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 7),
@@ -516,7 +519,10 @@ class _CampaignMediaPicker extends SignalWidget {
                   Text(
                     'Escolha uma imagem ou um vídeo do seu dispositivo.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -527,7 +533,9 @@ class _CampaignMediaPicker extends SignalWidget {
                 padding: const EdgeInsets.only(bottom: 9),
                 child: _CampaignMediaTile(
                   url: url,
-                  onRemove: uploading ? null : () => controller.removeMedia(url),
+                  onRemove: uploading
+                      ? null
+                      : () => controller.removeMedia(url),
                 ),
               ),
             ),
@@ -537,41 +545,64 @@ class _CampaignMediaPicker extends SignalWidget {
   }
 
   Future<void> _pickMedia(BuildContext context) async {
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: true,
-      withData: true,
-      type: FileType.custom,
-      allowedExtensions: const <String>[
-        'jpg',
-        'jpeg',
-        'png',
-        'webp',
-        'gif',
-        'mp4',
-        'mov',
-        'webm',
-      ],
-    );
-    if (result == null || result.files.isEmpty) return;
-
-    for (final PlatformFile file in result.files) {
-      final bytes = file.bytes;
-      final contentType = _contentTypeFor(file.extension);
-      if (bytes == null || contentType == null) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Não foi possível ler o arquivo ${file.name}.')),
-          );
-        }
-        return;
-      }
-      final success = await controller.uploadMedia(
-        fileName: file.name,
-        bytes: bytes,
-        contentType: contentType,
+    try {
+      final files = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const <String>[
+          'jpg',
+          'jpeg',
+          'png',
+          'webp',
+          'gif',
+          'mp4',
+          'mov',
+          'webm',
+        ],
       );
-      if (!success) return;
+
+      // No file_picker 12, se cancelar retorna uma lista vazia.
+      if (files.isEmpty) return;
+
+      for (final PlatformFile file in files) {
+        final bytes = await file.readAsBytes();
+
+        final extension = _extensionFromFileName(file.name);
+        final contentType = _contentTypeFor(extension);
+
+        if (contentType == null) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Formato não suportado: ${file.name}')),
+            );
+          }
+          return;
+        }
+
+        final success = await controller.uploadMedia(
+          fileName: file.name,
+          bytes: bytes,
+          contentType: contentType,
+        );
+
+        if (!success) return;
+      }
+    } catch (error) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Não foi possível selecionar a mídia: $error')),
+      );
     }
+  }
+
+  static String? _extensionFromFileName(String fileName) {
+    final index = fileName.lastIndexOf('.');
+
+    if (index == -1 || index == fileName.length - 1) {
+      return null;
+    }
+
+    return fileName.substring(index + 1).toLowerCase();
   }
 
   static String? _contentTypeFor(String? extension) {
@@ -618,7 +649,10 @@ class _CampaignMediaTile extends StatelessWidget {
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => const ColoredBox(
                         color: AppColors.background,
-                        child: Icon(Icons.image_outlined, color: AppColors.textSecondary),
+                        child: Icon(
+                          Icons.image_outlined,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     )
                   : const ColoredBox(
@@ -645,7 +679,10 @@ class _CampaignMediaTile extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   image ? 'Imagem adicionada' : 'Vídeo adicionado',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -687,16 +724,43 @@ class _ObjectiveStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const options = <({String value, String title, String description, IconData icon})>[
-      (value: 'leads', title: 'Gerar leads', description: 'Capturar interessados para o CRM.', icon: Icons.person_add_alt_1_outlined),
-      (value: 'messages', title: 'Receber mensagens', description: 'Iniciar conversas pelo canal escolhido.', icon: Icons.forum_outlined),
-      (value: 'conversions', title: 'Gerar conversões', description: 'Otimizar para uma ação mensurável.', icon: Icons.check_circle_outline_rounded),
-      (value: 'traffic', title: 'Direcionar tráfego', description: 'Levar pessoas para uma página.', icon: Icons.open_in_new_rounded),
-      (value: 'awareness', title: 'Divulgar oferta', description: 'Aumentar alcance e reconhecimento.', icon: Icons.campaign_outlined),
-    ];
+    const options =
+        <({String value, String title, String description, IconData icon})>[
+          (
+            value: 'leads',
+            title: 'Gerar leads',
+            description: 'Capturar interessados para o CRM.',
+            icon: Icons.person_add_alt_1_outlined,
+          ),
+          (
+            value: 'messages',
+            title: 'Receber mensagens',
+            description: 'Iniciar conversas pelo canal escolhido.',
+            icon: Icons.forum_outlined,
+          ),
+          (
+            value: 'conversions',
+            title: 'Gerar conversões',
+            description: 'Otimizar para uma ação mensurável.',
+            icon: Icons.check_circle_outline_rounded,
+          ),
+          (
+            value: 'traffic',
+            title: 'Direcionar tráfego',
+            description: 'Levar pessoas para uma página.',
+            icon: Icons.open_in_new_rounded,
+          ),
+          (
+            value: 'awareness',
+            title: 'Divulgar oferta',
+            description: 'Aumentar alcance e reconhecimento.',
+            icon: Icons.campaign_outlined,
+          ),
+        ];
     return _StepSection(
       title: 'Qual resultado você quer gerar?',
-      subtitle: 'A escolha orienta a configuração inicial, mas não remove seu controle sobre público e orçamento.',
+      subtitle:
+          'A escolha orienta a configuração inicial, mas não remove seu controle sobre público e orçamento.',
       children: <Widget>[
         LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
@@ -739,13 +803,15 @@ class _ChannelsStep extends SignalWidget {
     final metaSelected = controller.channels.value.contains('meta');
     return _StepSection(
       title: 'Onde a campanha será publicada?',
-      subtitle: 'Selecione Google Ads, Meta Ads ou os dois. Toque no card para marcar ou desmarcar.',
+      subtitle:
+          'Selecione Google Ads, Meta Ads ou os dois. Toque no card para marcar ou desmarcar.',
       children: <Widget>[
         _SelectCard(
           selected: googleSelected,
           icon: Icons.ads_click_rounded,
           title: 'Google Ads',
-          description: 'Pesquisa, display e formatos suportados pelo contrato da conta.',
+          description:
+              'Pesquisa, display e formatos suportados pelo contrato da conta.',
           trailing: Icon(
             googleSelected ? Icons.check_circle_rounded : Icons.circle_outlined,
             color: googleSelected ? AppColors.primary : AppColors.textSecondary,
@@ -756,7 +822,8 @@ class _ChannelsStep extends SignalWidget {
           selected: metaSelected,
           icon: Icons.campaign_outlined,
           title: 'Meta Ads',
-          description: 'Facebook e Instagram conforme a conta de anúncios selecionada.',
+          description:
+              'Facebook e Instagram conforme a conta de anúncios selecionada.',
           trailing: Icon(
             metaSelected ? Icons.check_circle_rounded : Icons.circle_outlined,
             color: metaSelected ? AppColors.primary : AppColors.textSecondary,
@@ -765,7 +832,8 @@ class _ChannelsStep extends SignalWidget {
         ),
         const _InfoNote(
           icon: Icons.lock_outline_rounded,
-          text: 'O login ocorre na página oficial do provedor. O CormeX nunca solicita sua senha do Google, Facebook ou Instagram.',
+          text:
+              'O login ocorre na página oficial do provedor. O CormeX nunca solicita sua senha do Google, Facebook ou Instagram.',
         ),
       ],
     );
@@ -781,7 +849,8 @@ class _AudienceStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return _StepSection(
       title: 'Quem deve ver esta campanha?',
-      subtitle: 'Comece com uma região e uma faixa coerentes. Públicos muito restritos podem limitar a entrega.',
+      subtitle:
+          'Comece com uma região e uma faixa coerentes. Públicos muito restritos podem limitar a entrega.',
       children: <Widget>[
         _TextField(
           label: 'Localizações',
@@ -819,7 +888,9 @@ class _AudienceStep extends StatelessWidget {
           onChanged: (bool value) => controller.broadAudience.value = value,
           contentPadding: EdgeInsets.zero,
           title: const Text('Permitir público amplo'),
-          subtitle: const Text('O provedor pode expandir a entrega dentro dos limites definidos.'),
+          subtitle: const Text(
+            'O provedor pode expandir a entrega dentro dos limites definidos.',
+          ),
         ),
         _TextField(
           label: 'Interesses e sinais',
@@ -844,7 +915,8 @@ class _BudgetStep extends StatelessWidget {
     final date = DateFormat('dd/MM/yyyy');
     return _StepSection(
       title: 'Quanto e por quanto tempo?',
-      subtitle: 'Este valor é investimento em mídia e será cobrado diretamente pela plataforma de anúncios.',
+      subtitle:
+          'Este valor é investimento em mídia e será cobrado diretamente pela plataforma de anúncios.',
       children: <Widget>[
         SegmentedButton<String>(
           segments: const <ButtonSegment<String>>[
@@ -898,7 +970,8 @@ class _BudgetStep extends StatelessWidget {
         ),
         const _InfoNote(
           icon: Icons.credit_card_outlined,
-          text: 'A assinatura do CormeX e o gasto de anúncios são cobranças separadas. O CormeX não movimenta seu saldo sem autorização.',
+          text:
+              'A assinatura do CormeX e o gasto de anúncios são cobranças separadas. O CormeX não movimenta seu saldo sem autorização.',
         ),
       ],
     );
@@ -929,7 +1002,8 @@ class _CreativeStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return _StepSection(
       title: 'Construa o anúncio',
-      subtitle: 'Peça uma sugestão à IA ou escreva manualmente. A versão gerada nunca é publicada sem sua revisão.',
+      subtitle:
+          'Peça uma sugestão à IA ou escreva manualmente. A versão gerada nunca é publicada sem sua revisão.',
       trailing: OutlinedButton.icon(
         onPressed: controller.isGenerating.value
             ? null
@@ -969,11 +1043,26 @@ class _CreativeStep extends StatelessWidget {
           initialValue: controller.callToAction.value,
           decoration: const InputDecoration(labelText: 'Chamada para ação'),
           items: const <DropdownMenuItem<String>>[
-            DropdownMenuItem<String>(value: 'LEARN_MORE', child: Text('Saiba mais')),
-            DropdownMenuItem<String>(value: 'CONTACT_US', child: Text('Fale conosco')),
-            DropdownMenuItem<String>(value: 'SIGN_UP', child: Text('Cadastre-se')),
-            DropdownMenuItem<String>(value: 'SHOP_NOW', child: Text('Comprar agora')),
-            DropdownMenuItem<String>(value: 'SEND_MESSAGE', child: Text('Enviar mensagem')),
+            DropdownMenuItem<String>(
+              value: 'LEARN_MORE',
+              child: Text('Saiba mais'),
+            ),
+            DropdownMenuItem<String>(
+              value: 'CONTACT_US',
+              child: Text('Fale conosco'),
+            ),
+            DropdownMenuItem<String>(
+              value: 'SIGN_UP',
+              child: Text('Cadastre-se'),
+            ),
+            DropdownMenuItem<String>(
+              value: 'SHOP_NOW',
+              child: Text('Comprar agora'),
+            ),
+            DropdownMenuItem<String>(
+              value: 'SEND_MESSAGE',
+              child: Text('Enviar mensagem'),
+            ),
           ],
           onChanged: (String? value) {
             if (value != null) controller.callToAction.value = value;
@@ -1001,16 +1090,29 @@ class _DestinationStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return _StepSection(
       title: 'Para onde o interessado será enviado?',
-      subtitle: 'Escolha um destino compatível com o objetivo e capture somente os dados necessários.',
+      subtitle:
+          'Escolha um destino compatível com o objetivo e capture somente os dados necessários.',
       children: <Widget>[
         DropdownButtonFormField<String>(
           initialValue: controller.destinationType.value,
           decoration: const InputDecoration(labelText: 'Destino'),
           items: const <DropdownMenuItem<String>>[
-            DropdownMenuItem<String>(value: 'whatsapp', child: Text('Conversa / WhatsApp')),
-            DropdownMenuItem<String>(value: 'landing_page', child: Text('Landing page')),
-            DropdownMenuItem<String>(value: 'form', child: Text('Formulário de lead')),
-            DropdownMenuItem<String>(value: 'product_page', child: Text('Página do produto')),
+            DropdownMenuItem<String>(
+              value: 'whatsapp',
+              child: Text('Conversa / WhatsApp'),
+            ),
+            DropdownMenuItem<String>(
+              value: 'landing_page',
+              child: Text('Landing page'),
+            ),
+            DropdownMenuItem<String>(
+              value: 'form',
+              child: Text('Formulário de lead'),
+            ),
+            DropdownMenuItem<String>(
+              value: 'product_page',
+              child: Text('Página do produto'),
+            ),
           ],
           onChanged: (String? value) {
             if (value != null) controller.destinationType.value = value;
@@ -1022,30 +1124,37 @@ class _DestinationStep extends StatelessWidget {
             initialValue: controller.destinationUrl.value,
             hint: 'https://...',
             keyboardType: TextInputType.url,
-            onChanged: (String value) => controller.destinationUrl.value = value,
+            onChanged: (String value) =>
+                controller.destinationUrl.value = value,
           ),
         if (controller.destinationType.value == 'form') ...<Widget>[
-          const Text('Campos do formulário', style: TextStyle(fontWeight: FontWeight.w700)),
+          const Text(
+            'Campos do formulário',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: <({String value, String label})>[
-              (value: 'name', label: 'Nome'),
-              (value: 'phone', label: 'Telefone'),
-              (value: 'email', label: 'E-mail'),
-              (value: 'region', label: 'Região'),
-              (value: 'interest', label: 'Interesse'),
-              (value: 'qualification', label: 'Qualificação'),
-            ]
-                .map(
-                  (item) => FilterChip(
-                    selected: controller.captureFields.value.contains(item.value),
-                    label: Text(item.label),
-                    onSelected: (bool selected) =>
-                        controller.setCaptureField(item.value, selected),
-                  ),
-                )
-                .toList(growable: false),
+            children:
+                <({String value, String label})>[
+                      (value: 'name', label: 'Nome'),
+                      (value: 'phone', label: 'Telefone'),
+                      (value: 'email', label: 'E-mail'),
+                      (value: 'region', label: 'Região'),
+                      (value: 'interest', label: 'Interesse'),
+                      (value: 'qualification', label: 'Qualificação'),
+                    ]
+                    .map(
+                      (item) => FilterChip(
+                        selected: controller.captureFields.value.contains(
+                          item.value,
+                        ),
+                        label: Text(item.label),
+                        onSelected: (bool selected) =>
+                            controller.setCaptureField(item.value, selected),
+                      ),
+                    )
+                    .toList(growable: false),
           ),
           _TextField(
             label: 'Texto de consentimento',
@@ -1069,14 +1178,17 @@ class _AutomationStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return _StepSection(
       title: 'O que acontece depois que o lead chegar?',
-      subtitle: 'Conecte aquisição à operação comercial sem duplicar Leads, Conversas ou Pipeline.',
+      subtitle:
+          'Conecte aquisição à operação comercial sem duplicar Leads, Conversas ou Pipeline.',
       children: <Widget>[
         SwitchListTile.adaptive(
           contentPadding: EdgeInsets.zero,
           value: controller.onlyRegisterLead.value,
           onChanged: (bool value) => controller.onlyRegisterLead.value = value,
           title: const Text('Apenas registrar o lead'),
-          subtitle: const Text('Não iniciar conversa automática após a captura.'),
+          subtitle: const Text(
+            'Não iniciar conversa automática após a captura.',
+          ),
         ),
         if (!controller.onlyRegisterLead.value) ...<Widget>[
           _TextField(
@@ -1084,7 +1196,8 @@ class _AutomationStep extends StatelessWidget {
             initialValue: controller.initialMessage.value,
             minLines: 3,
             maxLines: 6,
-            onChanged: (String value) => controller.initialMessage.value = value,
+            onChanged: (String value) =>
+                controller.initialMessage.value = value,
           ),
           _TextField(
             label: 'Perguntas de qualificação',
@@ -1098,11 +1211,22 @@ class _AutomationStep extends StatelessWidget {
         ],
         DropdownButtonFormField<String>(
           initialValue: controller.pipelineStageId.value,
-          decoration: const InputDecoration(labelText: 'Etapa inicial do Pipeline'),
+          decoration: const InputDecoration(
+            labelText: 'Etapa inicial do Pipeline',
+          ),
           items: const <DropdownMenuItem<String>>[
-            DropdownMenuItem<String>(value: 'new_lead', child: Text('Novo lead')),
-            DropdownMenuItem<String>(value: 'contacted', child: Text('Contato feito')),
-            DropdownMenuItem<String>(value: 'proposal', child: Text('Proposta enviada')),
+            DropdownMenuItem<String>(
+              value: 'new_lead',
+              child: Text('Novo lead'),
+            ),
+            DropdownMenuItem<String>(
+              value: 'contacted',
+              child: Text('Contato feito'),
+            ),
+            DropdownMenuItem<String>(
+              value: 'proposal',
+              child: Text('Proposta enviada'),
+            ),
           ],
           onChanged: (String? value) {
             if (value != null) controller.pipelineStageId.value = value;
@@ -1132,7 +1256,8 @@ class _ReviewStep extends StatelessWidget {
     final currency = NumberFormat.simpleCurrency(locale: 'pt_BR');
     return _StepSection(
       title: 'Revise antes de publicar',
-      subtitle: 'A publicação só será solicitada depois da sua autorização explícita.',
+      subtitle:
+          'A publicação só será solicitada depois da sua autorização explícita.',
       children: <Widget>[
         _ReviewGroup(
           title: 'Campanha e produto',
@@ -1140,62 +1265,115 @@ class _ReviewStep extends StatelessWidget {
             (label: 'Campanha', value: controller.name.value),
             (label: 'Produto', value: controller.productName.value),
             (label: 'Oferta', value: _fallback(controller.offer.value)),
-            (label: 'Objetivo', value: _objectiveLabel(controller.objective.value)),
+            (
+              label: 'Objetivo',
+              value: _objectiveLabel(controller.objective.value),
+            ),
           ],
         ),
         _ReviewGroup(
           title: 'Distribuição',
           items: <({String label, String value})>[
-            (label: 'Canais', value: controller.channels.value.map(_providerLabel).join(' + ')),
-            (label: 'Região', value: _fallback(controller.locationsText.value.replaceAll('\n', ', '))),
-            (label: 'Público', value: '${controller.ageMin.value} a ${controller.ageMax.value} anos'),
-            (label: 'Interesses', value: _fallback(controller.interestsText.value.replaceAll('\n', ', '))),
+            (
+              label: 'Canais',
+              value: controller.channels.value.map(_providerLabel).join(' + '),
+            ),
+            (
+              label: 'Região',
+              value: _fallback(
+                controller.locationsText.value.replaceAll('\n', ', '),
+              ),
+            ),
+            (
+              label: 'Público',
+              value:
+                  '${controller.ageMin.value} a ${controller.ageMax.value} anos',
+            ),
+            (
+              label: 'Interesses',
+              value: _fallback(
+                controller.interestsText.value.replaceAll('\n', ', '),
+              ),
+            ),
           ],
         ),
         _ReviewGroup(
           title: 'Investimento',
           items: <({String label, String value})>[
-            (label: 'Orçamento', value: '${currency.format(controller.budgetAmount.value)} ${controller.budgetType.value == 'daily' ? 'por dia' : 'total'}'),
-            (label: 'Início', value: controller.startAt.value == null ? 'Não informado' : date.format(controller.startAt.value!)),
-            (label: 'Término', value: controller.endAt.value == null ? 'Execução contínua' : date.format(controller.endAt.value!)),
+            (
+              label: 'Orçamento',
+              value:
+                  '${currency.format(controller.budgetAmount.value)} ${controller.budgetType.value == 'daily' ? 'por dia' : 'total'}',
+            ),
+            (
+              label: 'Início',
+              value: controller.startAt.value == null
+                  ? 'Não informado'
+                  : date.format(controller.startAt.value!),
+            ),
+            (
+              label: 'Término',
+              value: controller.endAt.value == null
+                  ? 'Execução contínua'
+                  : date.format(controller.endAt.value!),
+            ),
             (label: 'Cobrança', value: 'Direta pelo provedor de anúncios'),
           ],
         ),
         _ReviewGroup(
           title: 'Criativo e destino',
           items: <({String label, String value})>[
-            (label: 'Mídias', value: controller.mediaUrls.isEmpty ? 'Nenhuma' : '${controller.mediaUrls.length} arquivo(s)'),
+            (
+              label: 'Mídias',
+              value: controller.mediaUrls.isEmpty
+                  ? 'Nenhuma'
+                  : '${controller.mediaUrls.length} arquivo(s)',
+            ),
             (label: 'Título', value: _fallback(controller.headline.value)),
             (label: 'Texto', value: _fallback(controller.primaryText.value)),
-            (label: 'Destino', value: _destinationLabel(controller.destinationType.value)),
-            (label: 'Automação', value: controller.onlyRegisterLead.value ? 'Apenas registrar lead' : 'Iniciar atendimento com IA'),
+            (
+              label: 'Destino',
+              value: _destinationLabel(controller.destinationType.value),
+            ),
+            (
+              label: 'Automação',
+              value: controller.onlyRegisterLead.value
+                  ? 'Apenas registrar lead'
+                  : 'Iniciar atendimento com IA',
+            ),
           ],
         ),
         const _InfoNote(
           icon: Icons.verified_user_outlined,
-          text: 'Ao autorizar, o backend validará conta, permissões, forma de pagamento, criativos, orçamento e versão do rascunho antes de publicar.',
+          text:
+              'Ao autorizar, o backend validará conta, permissões, forma de pagamento, criativos, orçamento e versão do rascunho antes de publicar.',
         ),
       ],
     );
   }
 
-  static String _fallback(String value) => value.trim().isEmpty ? 'Não informado' : value.trim();
-  static String _providerLabel(String value) => value == 'google' ? 'Google Ads' : value == 'meta' ? 'Meta Ads' : value;
+  static String _fallback(String value) =>
+      value.trim().isEmpty ? 'Não informado' : value.trim();
+  static String _providerLabel(String value) => value == 'google'
+      ? 'Google Ads'
+      : value == 'meta'
+      ? 'Meta Ads'
+      : value;
   static String _objectiveLabel(String value) => switch (value) {
-        'leads' => 'Gerar leads',
-        'messages' => 'Receber mensagens',
-        'conversions' => 'Gerar conversões',
-        'traffic' => 'Direcionar tráfego',
-        'awareness' => 'Divulgar oferta',
-        _ => value,
-      };
+    'leads' => 'Gerar leads',
+    'messages' => 'Receber mensagens',
+    'conversions' => 'Gerar conversões',
+    'traffic' => 'Direcionar tráfego',
+    'awareness' => 'Divulgar oferta',
+    _ => value,
+  };
   static String _destinationLabel(String value) => switch (value) {
-        'whatsapp' => 'Conversa / WhatsApp',
-        'landing_page' => 'Landing page',
-        'form' => 'Formulário de lead',
-        'product_page' => 'Página do produto',
-        _ => value,
-      };
+    'whatsapp' => 'Conversa / WhatsApp',
+    'landing_page' => 'Landing page',
+    'form' => 'Formulário de lead',
+    'product_page' => 'Página do produto',
+    _ => value,
+  };
 }
 
 class _StepSection extends StatelessWidget {
@@ -1240,7 +1418,9 @@ class _StepSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 24),
-        ...children.expand((Widget item) => <Widget>[item, const SizedBox(height: 15)]),
+        ...children.expand(
+          (Widget item) => <Widget>[item, const SizedBox(height: 15)],
+        ),
       ],
     );
   }
@@ -1339,11 +1519,17 @@ class _SelectCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
                     const SizedBox(height: 3),
                     Text(
                       description,
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -1384,7 +1570,13 @@ class _DateButton extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
                 Text(value),
               ],
             ),
@@ -1404,7 +1596,11 @@ class _DateButton extends StatelessWidget {
 }
 
 class _InfoNote extends StatelessWidget {
-  const _InfoNote({required this.icon, required this.text, this.warning = false});
+  const _InfoNote({
+    required this.icon,
+    required this.text,
+    this.warning = false,
+  });
 
   final IconData icon;
   final String text;
@@ -1491,18 +1687,31 @@ class _LiveSummary extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.all(20),
         children: <Widget>[
-          const Text('Resumo ao vivo', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+          const Text(
+            'Resumo ao vivo',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+          ),
           const SizedBox(height: 18),
           _SummaryLine(label: 'Campanha', value: controller.name.value),
           _SummaryLine(label: 'Produto', value: controller.productName.value),
-          _SummaryLine(label: 'Canais', value: controller.channels.value.join(' + ')),
-          _SummaryLine(label: 'Orçamento', value: currency.format(controller.budgetAmount.value)),
+          _SummaryLine(
+            label: 'Canais',
+            value: controller.channels.value.join(' + '),
+          ),
+          _SummaryLine(
+            label: 'Orçamento',
+            value: currency.format(controller.budgetAmount.value),
+          ),
           _SummaryLine(label: 'Título', value: controller.headline.value),
-          _SummaryLine(label: 'Destino', value: controller.destinationType.value),
+          _SummaryLine(
+            label: 'Destino',
+            value: controller.destinationType.value,
+          ),
           const SizedBox(height: 18),
           const _InfoNote(
             icon: Icons.auto_awesome_outlined,
-            text: 'A IA pode sugerir configurações, mas publicar e alterar investimento sempre exigem sua autorização.',
+            text:
+                'A IA pode sugerir configurações, mas publicar e alterar investimento sempre exigem sua autorização.',
           ),
         ],
       ),
@@ -1523,7 +1732,13 @@ class _SummaryLine extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 11,
+            ),
+          ),
           const SizedBox(height: 2),
           Text(
             value.trim().isEmpty ? 'Não informado' : value.trim(),
@@ -1587,8 +1802,9 @@ class _WizardFooter extends StatelessWidget {
                   label: const Text('Continuar'),
                 )
               : FilledButton.icon(
-                  onPressed:
-                      isSaving || isPublishing ? null : () => onPublish(),
+                  onPressed: isSaving || isPublishing
+                      ? null
+                      : () => onPublish(),
                   icon: isPublishing
                       ? const SizedBox.square(
                           dimension: 17,
@@ -1651,7 +1867,10 @@ class _WizardSuccess extends StatelessWidget {
       ),
       child: Row(
         children: <Widget>[
-          const Icon(Icons.check_circle_outline_rounded, color: AppColors.accent),
+          const Icon(
+            Icons.check_circle_outline_rounded,
+            color: AppColors.accent,
+          ),
           const SizedBox(width: 9),
           Expanded(child: Text(message)),
         ],
