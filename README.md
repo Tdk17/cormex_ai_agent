@@ -36,6 +36,17 @@ Marcos 1 a 6 do front-end descrito no handoff técnico. O projeto preserva o pad
 - Contrato completo em `docs/api/acquisition-api.md`.
 - Resumo de todas as mudanças em `docs/release-0.6.0.md`.
 
+## Documentação do backend
+
+Para implementar todas as APIs no Back4App, comece pelo
+[`docs/backend-api-implementation-guide.md`](docs/backend-api-implementation-guide.md).
+Ele contém o catálogo completo, prioridade, segurança multi-tenant,
+idempotência, classes mínimas, critérios de aceite e links para os contratos
+detalhados de cada tela, além dos webhooks e workers da automação.
+
+O envelope comum e o índice resumido permanecem em
+[`docs/api-contract.md`](docs/api-contract.md).
+
 ## Preparar as plataformas
 
 O ambiente usado para gerar este marco não contém o SDK do Flutter. Na primeira execução, dentro desta pasta, gere somente os runners de plataforma:

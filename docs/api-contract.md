@@ -44,6 +44,7 @@ As funções lógicas são chamadas por `POST /functions/<nome>` no Parse Server
 | Conversas | `v1-conversations-list`, `v1-conversations-get`, `v1-conversations-send-message`, `v1-conversations-assign`, `v1-conversations-set-mode`, `v1-conversations-start` |
 | Agente | `v1-agent-get`, `v1-agent-update`, `v1-agent-test-reply` |
 | Central de Aquisição | `v1-acquisition-overview`, `v1-acquisition-campaign-get`, `v1-acquisition-campaign-upsert`, `v1-acquisition-campaign-publish`, `v1-acquisition-campaign-action`, `v1-acquisition-ai-suggest` |
+| Google Ads | `v1-google-ads-connection-status`, `v1-google-ads-oauth-start` |
 | Conhecimento | `knowledge.list`, `knowledge.create`, `knowledge.delete` |
 | Follow-ups e tarefas | `followups.list`, `followups.upsert`, `tasks.list` |
 | Integrações | `integrations.list`, `integrations.connect` |
@@ -51,6 +52,8 @@ As funções lógicas são chamadas por `POST /functions/<nome>` no Parse Server
 
 ## Contratos detalhados por módulo
 
+- [Guia mestre para implementar todo o backend](backend-api-implementation-guide.md)
+- [Upload de imagens e documentos pelo Parse Files](api/uploads-api.md)
 - [Login, sessão e recuperação de senha](api/login-api.md)
 - [Cadastro da conta e criação única da empresa](api/register-company-api.md)
 - [Dashboard — métricas, funil e conversas recentes](api/dashboard-api.md)
@@ -64,9 +67,15 @@ As funções lógicas são chamadas por `POST /functions/<nome>` no Parse Server
 - [Configuração do Agente de IA](api/agent-settings-api.md)
 - [Console de Teste do Agente](api/agent-test-console-api.md)
 - [Central de Aquisição — campanhas, wizard, publicação e IA](api/acquisition-api.md)
+- [Google Ads — OAuth, contas, seleção e desconexão](api/google-ads-oauth-api.md)
 - [Base de Conhecimento](api/knowledge-api.md)
 - [Follow-ups](api/followups-api.md)
+- [Tarefas](api/tasks-api.md)
 - [Equipe e papéis](api/team-api.md)
+- [Integrações de canais](api/integrations-api.md)
+- [Plano e uso](api/usage-api.md)
+- [Configurações da empresa](api/settings-api.md)
+- [Webhooks, workers e runtime automático](api/automation-runtime-api.md)
 - [Automação comercial do anúncio à venda](api/sales-automation-flow.md)
 
 ## Códigos mínimos

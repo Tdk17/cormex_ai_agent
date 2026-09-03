@@ -132,38 +132,41 @@ Request:
 ```json
 {
   "workspaceId": "ws_01J...",
-  "config": {
-    "name": "Clara",
-    "objective": "Qualificar leads e conduzir os contatos prontos para proposta.",
-    "persona": "Consultora comercial experiente, clara e respeitosa.",
-    "tone": "consultive",
-    "mode": "assist",
-    "productOffer": "CormeX Enterprise para equipes comerciais.",
-    "initialMessage": "Olá! Posso entender o que sua equipe precisa?",
-    "isActive": true,
-    "rules": ["Nunca inventar preço, prazo ou desconto."],
-    "qualificationQuestions": ["Quantas pessoas fazem parte da equipe?"],
-    "schedule": {
-      "enabled": true,
-      "timezone": "America/Sao_Paulo",
-      "daysOfWeek": [1, 2, 3, 4, 5],
-      "startTime": "08:00",
-      "endTime": "18:00"
-    },
-    "policies": {
-      "maxResponseCharacters": 700,
-      "maxAttemptsBeforeHandoff": 3,
-      "askForName": true,
-      "askForPhone": true,
-      "allowPricePresentation": true,
-      "allowFollowUp": true,
-      "followUpDelayMinutes": 1440,
-      "handoffOnRequest": true
-    },
-    "expectedVersion": 4
-  }
+  "name": "Clara",
+  "objective": "Qualificar leads e conduzir os contatos prontos para proposta.",
+  "persona": "Consultora comercial experiente, clara e respeitosa.",
+  "tone": "consultive",
+  "mode": "assist",
+  "productOffer": "CormeX Enterprise para equipes comerciais.",
+  "initialMessage": "Olá! Posso entender o que sua equipe precisa?",
+  "isActive": true,
+  "rules": ["Nunca inventar preço, prazo ou desconto."],
+  "qualificationQuestions": ["Quantas pessoas fazem parte da equipe?"],
+  "schedule": {
+    "enabled": true,
+    "timezone": "America/Sao_Paulo",
+    "daysOfWeek": [1, 2, 3, 4, 5],
+    "startTime": "08:00",
+    "endTime": "18:00"
+  },
+  "policies": {
+    "maxResponseCharacters": 700,
+    "maxAttemptsBeforeHandoff": 3,
+    "askForName": true,
+    "askForPhone": true,
+    "allowPricePresentation": true,
+    "allowFollowUp": true,
+    "followUpDelayMinutes": 1440,
+    "handoffOnRequest": true
+  },
+  "expectedVersion": 4
 }
 ```
+
+Os campos da configuração ficam no nível raiz do request, ao lado de
+`workspaceId`. Não envolver o conteúdo em `config`, porque o
+`RemoteAgentRepository` atual serializa `AgentConfigurationInput.toJson()`
+diretamente nesse nível.
 
 Response:
 
@@ -227,4 +230,3 @@ Se `expectedVersion` estiver desatualizada, responder `CONFLICT` sem salvar. A r
 - `lib/Src/Features/agent/presentation/controllers/agent_settings_controller.dart`
 - `lib/Src/Features/agent/data/remote_agent_repository.dart`
 - `lib/Src/Shared/models/agent_models.dart`
-

@@ -149,7 +149,109 @@ Classe protegida `GoogleAdsOAuthState`:
 - `expiresAt`
 - `usedAt`
 
-## 5. Publicação de campanha
+## 5. Funções complementares de conta
+
+As três funções abaixo completam a seleção e a revogação da conta. Elas ainda não estão registradas no `Endpoints` Flutter; adicione as constantes somente quando a interface passar a chamá-las.
+
+### `v1-google-ads-accounts`
+
+Lista contas acessíveis com a autorização já concluída.
+
+Request:
+
+```json
+{
+  "workspaceId": "ws_123"
+}
+```
+
+Response:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "accounts": [
+      {
+        "customerId": "1234567890",
+        "descriptiveName": "Conta principal",
+        "currency": "BRL",
+        "timezone": "America/Sao_Paulo",
+        "manager": false,
+        "selected": true,
+        "accessible": true
+      }
+    ]
+  },
+  "meta": { "correlationId": "req_01J..." }
+}
+```
+
+O backend deve consultar contas acessíveis e, quando houver manager account, percorrer `customer_client` de forma controlada. Não confiar apenas em IDs persistidos anteriormente; revalidar acesso.
+
+### `v1-google-ads-select-account`
+
+Request:
+
+```json
+{
+  "workspaceId": "ws_123",
+  "customerId": "1234567890",
+  "loginCustomerId": "0987654321",
+  "clientRequestId": "google_ads_select_1725192000000"
+}
+```
+
+`loginCustomerId` é opcional e só deve ser usado quando a hierarquia exigir. Ambos os IDs devem ser normalizados para dígitos.
+
+Response:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "connected": true,
+    "status": "connected",
+    "account": {
+      "name": "Conta principal",
+      "customerId": "1234567890",
+      "currency": "BRL"
+    }
+  },
+  "meta": { "correlationId": "req_01J..." }
+}
+```
+
+Antes de salvar, confirmar que a conta está acessível pelo refresh token atual e que a credencial tem permissão suficiente para a operação pretendida.
+
+### `v1-google-ads-disconnect`
+
+Request:
+
+```json
+{
+  "workspaceId": "ws_123",
+  "clientRequestId": "google_ads_disconnect_1725192000000"
+}
+```
+
+Response:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "connected": false,
+    "status": "disconnected",
+    "account": null
+  },
+  "meta": { "correlationId": "req_01J..." }
+}
+```
+
+Revogar o token no Google quando possível, inutilizar a credencial local, cancelar sincronizações futuras e preservar histórico de campanhas/métricas.
+
+## 6. Publicação de campanha
 
 `v1-acquisition-campaign-publish` deve, para campanhas com canal `google`:
 
@@ -162,7 +264,7 @@ Classe protegida `GoogleAdsOAuthState`:
 7. salvar os IDs externos em `providerCampaignIds.google`;
 8. nunca retornar credenciais ao Flutter.
 
-## 6. Segurança
+## 7. Segurança
 
 - não guardar Client Secret, developer token ou refresh token no Flutter;
 - não usar `--dart-define` para segredos OAuth do Google Ads;
@@ -173,7 +275,26 @@ Classe protegida `GoogleAdsOAuthState`:
 - revogação/erro de autorização deve alterar a integração para `authorization_error`;
 - logs devem mascarar tokens e códigos OAuth.
 
-## 7. Google Cloud Console
+## 8. Erros esperados
+
+| Código | Uso |
+| --- | --- |
+| `GOOGLE_ADS_NOT_CONFIGURED` | variáveis privadas ausentes |
+| `GOOGLE_OAUTH_STATE_INVALID` | state desconhecido ou adulterado |
+| `GOOGLE_OAUTH_STATE_EXPIRED` | state expirado |
+| `GOOGLE_OAUTH_STATE_USED` | state já consumido |
+| `GOOGLE_OAUTH_CODE_MISSING` | callback sem authorization code |
+| `GOOGLE_OAUTH_CODE_EXCHANGE_FAILED` | falha segura na troca do code |
+| `GOOGLE_REFRESH_TOKEN_MISSING` | Google não devolveu refresh token utilizável |
+| `GOOGLE_ADS_ACCOUNT_NOT_FOUND` | conta não encontrada |
+| `GOOGLE_ADS_ACCOUNT_NOT_ACCESSIBLE` | credencial sem acesso à conta |
+| `GOOGLE_ADS_AUTHORIZATION_ERROR` | autorização expirada/revogada |
+| `GOOGLE_ADS_PERMISSION_ERROR` | acesso insuficiente |
+| `GOOGLE_ADS_DEVELOPER_TOKEN_ERROR` | developer token inválido/não aprovado |
+| `GOOGLE_ADS_API_ERROR` | erro normalizado da API externa |
+| `GOOGLE_ADS_PUBLICATION_ERROR` | mutação da campanha não concluída |
+
+## 9. Google Cloud Console
 
 Antes de o botão **Entrar com Google** funcionar:
 
@@ -185,3 +306,9 @@ Antes de o botão **Entrar com Google** funcionar:
 6. obter/aprovar um Google Ads developer token na API Center da conta manager.
 
 O token do Google Ads e as credenciais OAuth são responsabilidades diferentes: o OAuth autoriza o usuário/conta; o developer token autoriza o aplicativo a utilizar a Google Ads API.
+
+## 10. Referências oficiais
+
+- [Google Ads API — OAuth 2.0](https://developers.google.com/google-ads/api/docs/oauth/overview)
+- [Google Ads API — hierarquia de contas](https://developers.google.com/google-ads/api/docs/account-management/get-account-hierarchy)
+- [Google Ads Lead Form Webhook](https://developers.google.com/google-ads/webhook/docs/overview)
