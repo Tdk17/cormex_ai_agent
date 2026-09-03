@@ -471,10 +471,6 @@ class _CreateKnowledgeDialogState extends State<_CreateKnowledgeDialog> {
     );
     if (files.isEmpty || !mounted) return;
     final file = files.first;
-    if (file.size > KnowledgeController.maxFileBytes) {
-      setState(() => _error = 'O arquivo deve ter até 15 MB.');
-      return;
-    }
     setState(() {
       _file = file;
       _error = null;
@@ -533,7 +529,7 @@ class _CreateKnowledgeDialogState extends State<_CreateKnowledgeDialog> {
       KnowledgeFileInput(
         name: _nameController.text,
         fileName: file.name,
-        mimeType: _mimeType(file.extension),
+        mimeType: _mimeType(_extension(file.name)),
         bytes: bytes,
       ),
     );
@@ -546,6 +542,11 @@ class _CreateKnowledgeDialogState extends State<_CreateKnowledgeDialog> {
         'md' => 'text/markdown',
         _ => 'text/plain',
       };
+
+  static String? _extension(String fileName) {
+    final parts = fileName.toLowerCase().split('.');
+    return parts.length < 2 ? null : parts.last;
+  }
 }
 
 class _StatusChip extends StatelessWidget {
