@@ -12,7 +12,9 @@ import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/register
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/splash_page.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/presentation/pages/conversations_page.dart';
 import 'package:agente_vendas_saas/Src/Features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:agente_vendas_saas/Src/Features/followups/presentation/pages/followups_page.dart';
 import 'package:agente_vendas_saas/Src/Features/integrations/presentation/pages/integrations_page.dart';
+import 'package:agente_vendas_saas/Src/Features/knowledge/presentation/pages/knowledge_page.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/lead_detail_page.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/lead_form_page.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/lead_import_page.dart';
@@ -23,6 +25,7 @@ import 'package:agente_vendas_saas/Src/Features/pipeline/presentation/pages/oppo
 import 'package:agente_vendas_saas/Src/Features/pipeline/presentation/pages/pipeline_page.dart';
 import 'package:agente_vendas_saas/Src/Features/shared/presentation/pages/app_shell.dart';
 import 'package:agente_vendas_saas/Src/Features/shared/presentation/pages/feature_placeholder_page.dart';
+import 'package:agente_vendas_saas/Src/Features/team/presentation/pages/team_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:signals/signals.dart';
@@ -149,23 +152,17 @@ class AppRouter {
                 ),
               ],
             ),
-            _placeholder(
-              '/knowledge',
-              'Base de conhecimento',
-              'Gerencie textos, FAQs e arquivos usados para contextualizar o agente.',
-              Icons.menu_book_outlined,
+            GoRoute(
+              path: '/knowledge',
+              builder: (_, __) => const KnowledgePage(),
             ),
-            _placeholder(
-              '/followups',
-              'Follow-ups e tarefas',
-              'Crie cadências, condições e tarefas comerciais programadas.',
-              Icons.schedule_send_outlined,
+            GoRoute(
+              path: '/followups',
+              builder: (_, __) => const FollowUpsPage(),
             ),
-            _placeholder(
-              '/team',
-              'Equipe',
-              'Convide usuários e gerencie os papéis owner, admin e seller.',
-              Icons.group_outlined,
+            GoRoute(
+              path: '/team',
+              builder: (_, __) => const TeamPage(),
             ),
             GoRoute(
               path: '/integrations',

@@ -5,6 +5,12 @@ class FollowUpRuleModel {
     required this.delayMinutes,
     required this.condition,
     required this.active,
+    this.channel = 'whatsapp',
+    this.message = '',
+    this.maxAttempts = 1,
+    this.stopOnReply = true,
+    this.stopOnLost = true,
+    this.version = 0,
   });
 
   final String id;
@@ -12,6 +18,12 @@ class FollowUpRuleModel {
   final int delayMinutes;
   final String condition;
   final bool active;
+  final String channel;
+  final String message;
+  final int maxAttempts;
+  final bool stopOnReply;
+  final bool stopOnLost;
+  final int version;
 
   factory FollowUpRuleModel.fromJson(Map<String, dynamic> json) {
     return FollowUpRuleModel(
@@ -20,6 +32,12 @@ class FollowUpRuleModel {
       delayMinutes: (json['delayMinutes'] as num?)?.toInt() ?? 0,
       condition: json['condition']?.toString() ?? 'no_reply',
       active: json['active'] == true,
+      channel: json['channel']?.toString() ?? 'whatsapp',
+      message: json['message']?.toString() ?? '',
+      maxAttempts: (json['maxAttempts'] as num?)?.toInt() ?? 1,
+      stopOnReply: json['stopOnReply'] != false,
+      stopOnLost: json['stopOnLost'] != false,
+      version: (json['version'] as num?)?.toInt() ?? 0,
     );
   }
 }

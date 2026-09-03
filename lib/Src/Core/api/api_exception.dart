@@ -54,7 +54,15 @@ class ApiException implements Exception {
         'GOOGLE_ADS_API_ERROR' => message,
         'GOOGLE_ADS_PUBLICATION_ERROR' => message,
         'INVALID_FUNCTION' => message,
-        'AI_PROVIDER_ERROR' => 'O agente de IA está temporariamente indisponível.',
+        'AI_PROVIDER_ERROR' => message.trim().isEmpty
+            ? 'O agente de IA está temporariamente indisponível.'
+            : message,
+        'AI_NOT_CONFIGURED' => message.trim().isEmpty
+            ? 'Configure o provedor de IA no backend antes de gerar o anúncio.'
+            : message,
+        'AI_INVALID_RESPONSE' => message.trim().isEmpty
+            ? 'A IA respondeu em um formato inválido. Tente gerar novamente.'
+            : message,
         'EXTERNAL_PROVIDER_ERROR' => 'Um serviço externo não respondeu como esperado.',
         _ => 'Não foi possível concluir a operação. Tente novamente.',
       };

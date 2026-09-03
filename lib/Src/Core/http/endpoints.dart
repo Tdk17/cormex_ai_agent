@@ -30,6 +30,7 @@ class Endpoints {
       'v1-conversations-send-message';
   static const String conversationsAssign = 'v1-conversations-assign';
   static const String conversationsSetMode = 'v1-conversations-set-mode';
+  static const String conversationsStart = 'v1-conversations-start';
   static const String agentGet = 'v1-agent-get';
   static const String agentUpdate = 'v1-agent-update';
   static const String agentTestReply = 'v1-agent-test-reply';

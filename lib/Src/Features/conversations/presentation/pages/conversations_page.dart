@@ -1,6 +1,8 @@
 import 'package:agente_vendas_saas/Src/App/theme/app_colors.dart';
 import 'package:agente_vendas_saas/Src/Core/di/service_locator.dart';
 import 'package:agente_vendas_saas/Src/Core/utils/screen_state.dart';
+import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_constants.dart';
+import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_start_input.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/presentation/controllers/conversation_thread_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/presentation/controllers/conversations_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/presentation/widgets/conversation_list_panel.dart';
@@ -68,6 +70,19 @@ class _ConversationsPageState extends State<ConversationsPage> {
     );
   }
 
+  Future<void> _showStartConversation() async {
+    conversationsController.clearActionError();
+    final input = await showDialog<ConversationStartInput>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) => const _StartConversationDialog(),
+    );
+    if (input == null || !mounted) return;
+    final conversation = await conversationsController.startConversation(input);
+    if (!mounted || conversation == null) return;
+    context.go('/conversations/${conversation.id}');
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedId = widget.conversationId;
@@ -83,6 +98,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
             return ConversationListPanel(
               controller: conversationsController,
               selectedConversationId: selectedId,
+              onStart: _showStartConversation,
               onOpen: (String id) => context.go('/conversations/$id'),
             );
           }
@@ -111,6 +127,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
                   controller: conversationsController,
                   selectedConversationId: selectedId,
                   embedded: true,
+                  onStart: _showStartConversation,
                   onOpen: (String id) => context.go('/conversations/$id'),
                 ),
               ),
@@ -137,6 +154,197 @@ class _ConversationsPageState extends State<ConversationsPage> {
           ),
         );
       },
+    );
+  }
+}
+
+class _StartConversationDialog extends StatefulWidget {
+  const _StartConversationDialog();
+
+  @override
+  State<_StartConversationDialog> createState() =>
+      _StartConversationDialogState();
+}
+
+class _StartConversationDialogState extends State<_StartConversationDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _leadIdController = TextEditingController();
+  final _messageController = TextEditingController();
+  String _channel = ConversationChannels.whatsapp;
+  String _mode = ConversationModes.auto;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _leadIdController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Iniciar conversa'),
+      content: SizedBox(
+        width: 520,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                const Text(
+                  'Escolha quem fará o primeiro atendimento. No modo IA automática, o agente usa a configuração e a Base de Conhecimento da empresa.',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 18),
+                SegmentedButton<String>(
+                  segments: const <ButtonSegment<String>>[
+                    ButtonSegment<String>(
+                      value: ConversationModes.auto,
+                      icon: Icon(Icons.auto_awesome_rounded),
+                      label: Text('IA automática'),
+                    ),
+                    ButtonSegment<String>(
+                      value: ConversationModes.human,
+                      icon: Icon(Icons.support_agent_rounded),
+                      label: Text('Eu converso'),
+                    ),
+                  ],
+                  selected: <String>{_mode},
+                  showSelectedIcon: false,
+                  onSelectionChanged: (Set<String> value) {
+                    setState(() => _mode = value.first);
+                  },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  initialValue: _channel,
+                  decoration: const InputDecoration(labelText: 'Canal'),
+                  items: const <DropdownMenuItem<String>>[
+                    DropdownMenuItem<String>(
+                      value: ConversationChannels.whatsapp,
+                      child: Text('WhatsApp'),
+                    ),
+                    DropdownMenuItem<String>(
+                      value: ConversationChannels.instagram,
+                      child: Text('Instagram'),
+                    ),
+                    DropdownMenuItem<String>(
+                      value: ConversationChannels.email,
+                      child: Text('E-mail'),
+                    ),
+                    DropdownMenuItem<String>(
+                      value: ConversationChannels.webchat,
+                      child: Text('Webchat'),
+                    ),
+                  ],
+                  onChanged: (String? value) {
+                    if (value != null) setState(() => _channel = value);
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome do contato',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Telefone com DDD',
+                    hintText: '+55 47 99999-9999',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'E-mail (opcional)',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _leadIdController,
+                  decoration: const InputDecoration(
+                    labelText: 'ID de um lead existente (opcional)',
+                  ),
+                  validator: (_) {
+                    final hasDestination =
+                        _leadIdController.text.trim().isNotEmpty ||
+                        _phoneController.text.trim().isNotEmpty ||
+                        _emailController.text.trim().isNotEmpty;
+                    return hasDestination
+                        ? null
+                        : 'Informe telefone, e-mail ou ID do lead.';
+                  },
+                ),
+                if (_mode == ConversationModes.human) ...<Widget>[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _messageController,
+                    minLines: 3,
+                    maxLines: 6,
+                    maxLength: 4000,
+                    decoration: const InputDecoration(
+                      labelText: 'Primeira mensagem',
+                    ),
+                    validator: (String? value) =>
+                        (value?.trim().length ?? 0) < 2
+                        ? 'Escreva a primeira mensagem.'
+                        : null,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton.icon(
+          onPressed: _submit,
+          icon: Icon(
+            _mode == ConversationModes.auto
+                ? Icons.auto_awesome_rounded
+                : Icons.send_rounded,
+          ),
+          label: Text(
+            _mode == ConversationModes.auto
+                ? 'Iniciar com IA'
+                : 'Enviar mensagem',
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _submit() {
+    if (_formKey.currentState?.validate() != true) return;
+    Navigator.of(context).pop(
+      ConversationStartInput(
+        channel: _channel,
+        mode: _mode,
+        leadId: _leadIdController.text,
+        contactName: _nameController.text,
+        phone: _phoneController.text,
+        email: _emailController.text,
+        initialMessage:
+            _mode == ConversationModes.human ? _messageController.text : null,
+      ),
     );
   }
 }

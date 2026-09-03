@@ -24,6 +24,9 @@ import 'package:agente_vendas_saas/Src/Features/conversations/presentation/contr
 import 'package:agente_vendas_saas/Src/Features/dashboard/data/remote_dashboard_repository.dart';
 import 'package:agente_vendas_saas/Src/Features/dashboard/domain/dashboard_repository.dart';
 import 'package:agente_vendas_saas/Src/Features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:agente_vendas_saas/Src/Features/followups/data/remote_followups_repository.dart';
+import 'package:agente_vendas_saas/Src/Features/followups/domain/followups_repository.dart';
+import 'package:agente_vendas_saas/Src/Features/followups/presentation/controllers/followups_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/data/csv_lead_parser.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/data/remote_leads_repository.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/domain/leads_repository.dart';
@@ -31,12 +34,18 @@ import 'package:agente_vendas_saas/Src/Features/leads/presentation/controllers/l
 import 'package:agente_vendas_saas/Src/Features/leads/presentation/controllers/lead_form_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/presentation/controllers/lead_import_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/presentation/controllers/leads_controller.dart';
+import 'package:agente_vendas_saas/Src/Features/knowledge/data/remote_knowledge_repository.dart';
+import 'package:agente_vendas_saas/Src/Features/knowledge/domain/knowledge_repository.dart';
+import 'package:agente_vendas_saas/Src/Features/knowledge/presentation/controllers/knowledge_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/onboarding/presentation/controllers/onboarding_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/pipeline/data/remote_pipeline_repository.dart';
 import 'package:agente_vendas_saas/Src/Features/pipeline/domain/pipeline_repository.dart';
 import 'package:agente_vendas_saas/Src/Features/pipeline/presentation/controllers/opportunity_detail_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/pipeline/presentation/controllers/opportunity_form_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/pipeline/presentation/controllers/pipeline_controller.dart';
+import 'package:agente_vendas_saas/Src/Features/team/data/remote_team_repository.dart';
+import 'package:agente_vendas_saas/Src/Features/team/domain/team_repository.dart';
+import 'package:agente_vendas_saas/Src/Features/team/presentation/controllers/team_controller.dart';
 import 'package:get_it/get_it.dart';
 
 final GetIt sl = GetIt.instance;
@@ -69,6 +78,13 @@ void setupDependencies() {
   sl.registerLazySingleton<PipelineRepository>(
     () => RemotePipelineRepository(sl()),
   );
+  sl.registerLazySingleton<KnowledgeRepository>(
+    () => RemoteKnowledgeRepository(sl()),
+  );
+  sl.registerLazySingleton<FollowUpsRepository>(
+    () => RemoteFollowUpsRepository(sl()),
+  );
+  sl.registerLazySingleton<TeamRepository>(() => RemoteTeamRepository(sl()));
   sl.registerLazySingleton<CsvLeadParser>(() => CsvLeadParser());
 
   sl.registerLazySingleton<AuthController>(() => AuthController(sl()));
@@ -115,6 +131,13 @@ void setupDependencies() {
   sl.registerLazySingleton<PipelineController>(
     () => PipelineController(sl(), sl()),
   );
+  sl.registerLazySingleton<KnowledgeController>(
+    () => KnowledgeController(sl(), sl()),
+  );
+  sl.registerLazySingleton<FollowUpsController>(
+    () => FollowUpsController(sl(), sl()),
+  );
+  sl.registerLazySingleton<TeamController>(() => TeamController(sl(), sl()));
   sl.registerFactory<OpportunityDetailController>(
     () => OpportunityDetailController(sl(), sl(), sl()),
   );

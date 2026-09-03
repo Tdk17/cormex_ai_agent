@@ -45,6 +45,7 @@
 - [x] Contexto do lead com qualificação, tags, produto, carrinho, histórico e notas.
 - [x] Repositório conectado às cinco Cloud Functions de conversas, sem mocks.
 - [x] Contratos de API separados para caixa de entrada e atendimento.
+- [x] Início manual ou automático por `v1-conversations-start`, com destino e idempotência.
 
 ## Marco 5 — Agente de IA
 
@@ -77,11 +78,12 @@
 - [x] Conversas: inbox, thread, composer, rascunho e modos auto/assist/human.
 - [x] Agente de IA: configuração e console de teste.
 - [x] Central de Aquisição: visão, wizard, detalhe, rascunho e publicação.
-- [ ] Base de Conhecimento.
+- [x] Base de Conhecimento: texto, FAQ, arquivo, processamento e exclusão.
 - [ ] Integração de canal.
-- [ ] Follow-ups e tarefas.
+- [x] Follow-ups: listar, criar, editar, ativar/desativar e regras de interrupção.
 - [x] Dashboard conectado ao contrato de métricas remotas.
-- [ ] Plano, uso, equipe e permissões.
+- [x] Equipe e permissões: listar, convidar e alterar papel.
+- [ ] Plano e uso.
 - [ ] Hardening, testes ponta a ponta e staging.
 
-As rotas das fases futuras permanecem visíveis como placeholders para validar navegação e responsividade, mas não são consideradas funcionalidades concluídas. Conversas, Agente de IA e Central de Aquisição já foram substituídos por implementações remotas completas.
+Plano/Uso e Configurações permanecem visíveis como placeholders. Conversas, Agente de IA, Base de Conhecimento, Follow-ups, Equipe e Central de Aquisição possuem telas remotas conectadas aos contratos documentados.

@@ -1,5 +1,6 @@
 import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_filters.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_page.dart';
+import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_start_input.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_thread.dart';
 import 'package:agente_vendas_saas/Src/Shared/models/conversation_models.dart';
 
@@ -36,5 +37,11 @@ abstract interface class ConversationsRepository {
     required String workspaceId,
     required String conversationId,
     required String mode,
+  });
+
+  Future<ConversationModel> start({
+    required String workspaceId,
+    required ConversationStartInput input,
+    required String clientRequestId,
   });
 }

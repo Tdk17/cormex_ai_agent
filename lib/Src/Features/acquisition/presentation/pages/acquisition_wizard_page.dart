@@ -723,7 +723,7 @@ class _CampaignMediaTile extends StatelessWidget {
   }
 }
 
-class _ObjectiveStep extends StatelessWidget {
+class _ObjectiveStep extends SignalWidget {
   const _ObjectiveStep({required this.controller});
 
   final AcquisitionWizardController controller;
@@ -846,7 +846,7 @@ class _ChannelsStep extends SignalWidget {
   }
 }
 
-class _AudienceStep extends StatelessWidget {
+class _AudienceStep extends SignalWidget {
   const _AudienceStep({required this.controller});
 
   final AcquisitionWizardController controller;
@@ -911,7 +911,7 @@ class _AudienceStep extends StatelessWidget {
   }
 }
 
-class _BudgetStep extends StatelessWidget {
+class _BudgetStep extends SignalWidget {
   const _BudgetStep({required this.controller});
 
   final AcquisitionWizardController controller;
@@ -999,7 +999,7 @@ class _BudgetStep extends StatelessWidget {
   }
 }
 
-class _CreativeStep extends StatelessWidget {
+class _CreativeStep extends SignalWidget {
   const _CreativeStep({required this.controller});
 
   final AcquisitionWizardController controller;
@@ -1087,7 +1087,7 @@ class _CreativeStep extends StatelessWidget {
   }
 }
 
-class _DestinationStep extends StatelessWidget {
+class _DestinationStep extends SignalWidget {
   const _DestinationStep({required this.controller});
 
   final AcquisitionWizardController controller;
@@ -1175,7 +1175,7 @@ class _DestinationStep extends StatelessWidget {
   }
 }
 
-class _AutomationStep extends StatelessWidget {
+class _AutomationStep extends SignalWidget {
   const _AutomationStep({required this.controller});
 
   final AcquisitionWizardController controller;
@@ -1189,11 +1189,12 @@ class _AutomationStep extends StatelessWidget {
       children: <Widget>[
         SwitchListTile.adaptive(
           contentPadding: EdgeInsets.zero,
-          value: controller.onlyRegisterLead.value,
-          onChanged: (bool value) => controller.onlyRegisterLead.value = value,
-          title: const Text('Apenas registrar o lead'),
+          value: !controller.onlyRegisterLead.value,
+          onChanged: (bool value) =>
+              controller.onlyRegisterLead.value = !value,
+          title: const Text('Iniciar atendimento automático com IA'),
           subtitle: const Text(
-            'Não iniciar conversa automática após a captura.',
+            'Cria o Lead e a Conversa, envia a abordagem e inicia a qualificação.',
           ),
         ),
         if (!controller.onlyRegisterLead.value) ...<Widget>[
@@ -1213,6 +1214,11 @@ class _AutomationStep extends StatelessWidget {
             maxLines: 7,
             onChanged: (String value) =>
                 controller.qualificationQuestionsText.value = value,
+          ),
+          const _InfoNote(
+            icon: Icons.route_outlined,
+            text:
+                'A IA continua o atendimento usando suas regras e a Base de Conhecimento, executa follow-ups, atualiza o Pipeline e encerra ao converter ou transfere quando o cliente pedir uma pessoa.',
           ),
         ],
         DropdownButtonFormField<String>(
@@ -1251,7 +1257,7 @@ class _AutomationStep extends StatelessWidget {
   }
 }
 
-class _ReviewStep extends StatelessWidget {
+class _ReviewStep extends SignalWidget {
   const _ReviewStep({required this.controller});
 
   final AcquisitionWizardController controller;
@@ -1345,7 +1351,7 @@ class _ReviewStep extends StatelessWidget {
               label: 'Automação',
               value: controller.onlyRegisterLead.value
                   ? 'Apenas registrar lead'
-                  : 'Iniciar atendimento com IA',
+                  : 'IA automática até conversão ou handoff',
             ),
           ],
         ),

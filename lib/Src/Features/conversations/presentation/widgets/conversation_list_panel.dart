@@ -14,12 +14,14 @@ class ConversationListPanel extends SignalStatefulWidget {
     required this.controller,
     required this.selectedConversationId,
     required this.onOpen,
+    required this.onStart,
     this.embedded = false,
   });
 
   final ConversationsController controller;
   final String? selectedConversationId;
   final ValueChanged<String> onOpen;
+  final VoidCallback onStart;
   final bool embedded;
 
   @override
@@ -93,6 +95,22 @@ class _ConversationListPanelState extends State<ConversationListPanel> {
                         : () => controller.load(force: true),
                     icon: const Icon(Icons.refresh_rounded),
                   ),
+                  const SizedBox(width: 4),
+                  FilledButton.icon(
+                    onPressed: controller.isStarting.value
+                        ? null
+                        : widget.onStart,
+                    icon: controller.isStarting.value
+                        ? const SizedBox.square(
+                            dimension: 15,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.add_comment_outlined, size: 18),
+                    label: const Text('Nova'),
+                  ),
                 ],
               ),
             ),
@@ -141,6 +159,15 @@ class _ConversationListPanelState extends State<ConversationListPanel> {
             ),
             const SizedBox(height: 10),
             const Divider(height: 1),
+            if (controller.errorMessage.value != null &&
+                state != ScreenState.error)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+                child: FormErrorBanner(
+                  message: controller.errorMessage.value!,
+                  correlationId: controller.correlationId.value,
+                ),
+              ),
             if (state == ScreenState.loading && conversations.isNotEmpty)
               const LinearProgressIndicator(minHeight: 2),
             Expanded(
@@ -184,7 +211,7 @@ class _ConversationListPanelState extends State<ConversationListPanel> {
       );
     }
     if (state == ScreenState.empty || conversations.isEmpty) {
-      return const _EmptyConversations();
+      return _EmptyConversations(onStart: widget.onStart);
     }
 
     return RefreshIndicator(
@@ -512,7 +539,9 @@ class _TinyBadge extends StatelessWidget {
 }
 
 class _EmptyConversations extends StatelessWidget {
-  const _EmptyConversations();
+  const _EmptyConversations({required this.onStart});
+
+  final VoidCallback onStart;
 
   @override
   Widget build(BuildContext context) {
@@ -535,9 +564,15 @@ class _EmptyConversations extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             const Text(
-              'Ajuste os filtros ou aguarde a chegada de uma nova mensagem.',
+              'Ajuste os filtros ou inicie um atendimento agora.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: onStart,
+              icon: const Icon(Icons.add_comment_outlined),
+              label: const Text('Iniciar conversa'),
             ),
           ],
         ),

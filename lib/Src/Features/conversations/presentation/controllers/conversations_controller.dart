@@ -4,6 +4,7 @@ import 'package:agente_vendas_saas/Src/Core/api/api_exception.dart';
 import 'package:agente_vendas_saas/Src/Core/utils/screen_state.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/controllers/auth_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_filters.dart';
+import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_start_input.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversations_repository.dart';
 import 'package:agente_vendas_saas/Src/Shared/models/conversation_models.dart';
 import 'package:signals/signals.dart';
@@ -39,8 +40,11 @@ class ConversationsController {
   final Signal<ConversationFilters> filters = signal(const ConversationFilters());
   final Signal<String?> nextCursor = signal<String?>(null);
   final Signal<bool> isLoadingMore = signal(false);
+  final Signal<bool> isStarting = signal(false);
   final Signal<String?> errorMessage = signal<String?>(null);
   final Signal<String?> correlationId = signal<String?>(null);
+  String? _pendingStartKey;
+  String? _pendingStartRequestId;
 
   bool get hasMore => nextCursor.value != null && nextCursor.value!.isNotEmpty;
 
@@ -153,6 +157,67 @@ class ConversationsController {
     final conversation = findById(conversationId);
     if (conversation == null || conversation.unreadCount == 0) return;
     upsert(conversation.copyWith(unreadCount: 0));
+  }
+
+  Future<ConversationModel?> startConversation(
+    ConversationStartInput input,
+  ) async {
+    final workspaceId = _workspaceId;
+    if (workspaceId == null || isStarting.value) return null;
+    final hasDestination = input.leadId?.trim().isNotEmpty == true ||
+        input.phone?.trim().isNotEmpty == true ||
+        input.email?.trim().isNotEmpty == true;
+    if (!hasDestination) {
+      errorMessage.value =
+          'Informe o telefone, o e-mail ou o identificador de um lead.';
+      return null;
+    }
+    if (input.mode == 'human' &&
+        (input.initialMessage?.trim().length ?? 0) < 2) {
+      errorMessage.value = 'Escreva a primeira mensagem do atendimento.';
+      return null;
+    }
+
+    final key = input.idempotencyKey;
+    if (_pendingStartKey != key || _pendingStartRequestId == null) {
+      _pendingStartKey = key;
+      _pendingStartRequestId =
+          'flutter_start_${DateTime.now().microsecondsSinceEpoch}';
+    }
+    batch(() {
+      isStarting.value = true;
+      errorMessage.value = null;
+      correlationId.value = null;
+    });
+    try {
+      final conversation = await _repository.start(
+        workspaceId: workspaceId,
+        input: input,
+        clientRequestId: _pendingStartRequestId!,
+      );
+      _pendingStartKey = null;
+      _pendingStartRequestId = null;
+      upsert(conversation);
+      return conversation;
+    } on ApiException catch (error) {
+      batch(() {
+        errorMessage.value = error.userMessage;
+        correlationId.value = error.correlationId;
+      });
+      return null;
+    } on Object {
+      errorMessage.value = 'Não foi possível iniciar a conversa.';
+      return null;
+    } finally {
+      isStarting.value = false;
+    }
+  }
+
+  void clearActionError() {
+    if (state.value != ScreenState.error) {
+      errorMessage.value = null;
+      correlationId.value = null;
+    }
   }
 
   void upsert(ConversationModel conversation) {

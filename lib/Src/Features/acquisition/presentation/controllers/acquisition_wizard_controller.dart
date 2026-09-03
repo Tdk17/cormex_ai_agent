@@ -481,6 +481,13 @@ class AcquisitionWizardController {
       return false;
     }
 
+    if (productDescription.value.trim().length < 10 &&
+        offer.value.trim().length < 3) {
+      errorMessage.value =
+          'Descreva o produto ou informe a oferta para a IA criar um anúncio útil.';
+      return false;
+    }
+
     batch(() {
       isGenerating.value = true;
       errorMessage.value = null;
@@ -500,6 +507,16 @@ class AcquisitionWizardController {
 
       if (_workspaceId != workspaceId) {
         return false;
+      }
+
+      if (result.headline.trim().isEmpty ||
+          result.primaryText.trim().isEmpty) {
+        throw ApiException(
+          code: 'AI_INVALID_RESPONSE',
+          message:
+              'A API de IA não retornou título e texto principal. Verifique o contrato de v1-acquisition-ai-suggest.',
+          correlationId: result.correlationId,
+        );
       }
 
       _pendingAiRequestId = null;

@@ -41,7 +41,7 @@ As funções lógicas são chamadas por `POST /functions/<nome>` no Parse Server
 | Dashboard | `v1-dashboard-metrics` |
 | Leads | `v1-leads-list`, `v1-leads-get`, `v1-leads-create`, `v1-leads-update`, `v1-leads-import` |
 | Pipeline | `v1-pipeline-list`, `v1-pipeline-get`, `v1-pipeline-create`, `v1-pipeline-update`, `v1-pipeline-move` |
-| Conversas | `v1-conversations-list`, `v1-conversations-get`, `v1-conversations-send-message`, `v1-conversations-assign`, `v1-conversations-set-mode` |
+| Conversas | `v1-conversations-list`, `v1-conversations-get`, `v1-conversations-send-message`, `v1-conversations-assign`, `v1-conversations-set-mode`, `v1-conversations-start` |
 | Agente | `v1-agent-get`, `v1-agent-update`, `v1-agent-test-reply` |
 | Central de Aquisição | `v1-acquisition-overview`, `v1-acquisition-campaign-get`, `v1-acquisition-campaign-upsert`, `v1-acquisition-campaign-publish`, `v1-acquisition-campaign-action`, `v1-acquisition-ai-suggest` |
 | Conhecimento | `knowledge.list`, `knowledge.create`, `knowledge.delete` |
@@ -60,10 +60,15 @@ As funções lógicas são chamadas por `POST /functions/<nome>` no Parse Server
 - [Detalhes da Oportunidade](api/opportunity-detail-api.md)
 - [Caixa de Entrada de Conversas](api/conversations-inbox-api.md)
 - [Atendimento da Conversa](api/conversation-thread-api.md)
+- [Iniciar conversa manual ou com IA](api/conversation-start-api.md)
 - [Configuração do Agente de IA](api/agent-settings-api.md)
 - [Console de Teste do Agente](api/agent-test-console-api.md)
 - [Central de Aquisição — campanhas, wizard, publicação e IA](api/acquisition-api.md)
+- [Base de Conhecimento](api/knowledge-api.md)
+- [Follow-ups](api/followups-api.md)
+- [Equipe e papéis](api/team-api.md)
+- [Automação comercial do anúncio à venda](api/sales-automation-flow.md)
 
 ## Códigos mínimos
 
-`UNAUTHENTICATED`, `FORBIDDEN`, `WORKSPACE_NOT_FOUND`, `VALIDATION_ERROR`, `NOT_FOUND`, `CONFLICT`, `PLAN_LIMIT_REACHED`, `RATE_LIMITED`, `INTEGRATION_NOT_CONNECTED`, `AI_PROVIDER_ERROR`, `EXTERNAL_PROVIDER_ERROR`, `INTERNAL_ERROR`.
+`UNAUTHENTICATED`, `FORBIDDEN`, `WORKSPACE_NOT_FOUND`, `VALIDATION_ERROR`, `NOT_FOUND`, `CONFLICT`, `PLAN_LIMIT_REACHED`, `RATE_LIMITED`, `INTEGRATION_NOT_CONNECTED`, `AI_NOT_CONFIGURED`, `AI_PROVIDER_ERROR`, `AI_INVALID_RESPONSE`, `EXTERNAL_PROVIDER_ERROR`, `INTERNAL_ERROR`.

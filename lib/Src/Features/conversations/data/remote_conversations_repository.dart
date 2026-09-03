@@ -4,6 +4,7 @@ import 'package:agente_vendas_saas/Src/Core/http/endpoints.dart';
 import 'package:agente_vendas_saas/Src/Core/http/http_manager.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_filters.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_page.dart';
+import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_start_input.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_thread.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversations_repository.dart';
 import 'package:agente_vendas_saas/Src/Shared/models/conversation_models.dart';
@@ -132,6 +133,23 @@ class RemoteConversationsRepository implements ConversationsRepository {
         'workspaceId': workspaceId,
         'conversationId': conversationId,
         'mode': mode,
+      },
+    );
+    return _conversation(result);
+  }
+
+  @override
+  Future<ConversationModel> start({
+    required String workspaceId,
+    required ConversationStartInput input,
+    required String clientRequestId,
+  }) async {
+    final result = await _httpManager.cloudFunction(
+      name: Endpoints.conversationsStart,
+      parameters: <String, dynamic>{
+        'workspaceId': workspaceId,
+        ...input.toJson(),
+        'clientRequestId': clientRequestId,
       },
     );
     return _conversation(result);

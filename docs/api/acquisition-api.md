@@ -290,6 +290,12 @@ Gera uma sugestão editável para a seção de criativo. Não publica e não alt
 
 O servidor aplica guardrails de alegações, políticas dos provedores, tamanho máximo e conteúdo proibido. Não retorna cadeia de pensamento, prompt interno nem credenciais do provedor de IA.
 
+O front exige `headline` e `primaryText` não vazios. Falhas de configuração devem usar `AI_NOT_CONFIGURED`; falhas do provedor usam `AI_PROVIDER_ERROR`; respostas fora do contrato usam `AI_INVALID_RESPONSE`. Todos retornam mensagem acionável e `correlationId`.
+
+## Automação do lead captado
+
+Quando `campaign.automation.onlyRegisterLead=false`, cada lead confirmado pelo Google/Meta deve iniciar a jornada descrita em `docs/api/sales-automation-flow.md`: Lead idempotente, Conversation em `auto`, primeira abordagem, qualificação, Follow-ups e atualização de Pipeline. A função de publicação apenas persiste essa configuração; callbacks e workers executam a automação.
+
 ## Status da campanha
 
 | Status | Significado |
