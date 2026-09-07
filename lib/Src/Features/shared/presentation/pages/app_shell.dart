@@ -12,19 +12,56 @@ class AppShell extends SignalWidget {
 
   final Widget child;
 
-  static const _items = <_NavItem>[
-    _NavItem('/acquisition', 'Central de Aquisição', Icons.rocket_launch_outlined),
-    _NavItem('/dashboard', 'Visão geral', Icons.dashboard_outlined),
-    _NavItem('/leads', 'Leads', Icons.groups_2_outlined),
-    _NavItem('/pipeline', 'Pipeline', Icons.view_kanban_outlined),
-    _NavItem('/conversations', 'Conversas', Icons.forum_outlined),
-    _NavItem('/agent', 'Agente de IA', Icons.auto_awesome_outlined),
-    _NavItem('/knowledge', 'Conhecimento', Icons.menu_book_outlined),
-    _NavItem('/followups', 'Follow-ups', Icons.schedule_send_outlined),
-    _NavItem('/team', 'Equipe', Icons.group_outlined),
-    _NavItem('/integrations', 'Integrações', Icons.hub_outlined),
-    _NavItem('/billing', 'Plano e uso', Icons.credit_card_outlined),
-    _NavItem('/settings', 'Configurações', Icons.settings_outlined),
+  static const _groups = <_NavGroup>[
+    _NavGroup(
+      'PRINCIPAL',
+      <_NavItem>[
+        _NavItem('/dashboard', 'Visão geral', Icons.dashboard_outlined),
+      ],
+    ),
+    _NavGroup(
+      'CRM',
+      <_NavItem>[
+        _NavItem('/crm/leads', 'Leads', Icons.groups_2_outlined),
+        _NavItem('/crm/customers', 'Clientes', Icons.person_outline_rounded),
+        _NavItem('/crm/accounts', 'Empresas / Contas', Icons.apartment_outlined),
+        _NavItem('/crm/pipeline', 'Pipeline', Icons.view_kanban_outlined),
+        _NavItem('/crm/activities', 'Atividades', Icons.task_alt_outlined),
+        _NavItem('/crm/conversations', 'Conversas', Icons.forum_outlined),
+      ],
+    ),
+    _NavGroup(
+      'AUTOMAÇÃO',
+      <_NavItem>[
+        _NavItem('/automation/agent', 'Agente de IA', Icons.auto_awesome_outlined),
+        _NavItem(
+          '/automation/followups',
+          'Follow-ups',
+          Icons.schedule_send_outlined,
+        ),
+      ],
+    ),
+    _NavGroup(
+      'AQUISIÇÃO',
+      <_NavItem>[
+        _NavItem('/acquisition', 'Campanhas', Icons.rocket_launch_outlined),
+        _NavItem('/integrations', 'Integrações', Icons.hub_outlined),
+      ],
+    ),
+    _NavGroup(
+      'CONTEÚDO',
+      <_NavItem>[
+        _NavItem('/knowledge', 'Conhecimento', Icons.menu_book_outlined),
+      ],
+    ),
+    _NavGroup(
+      'ADMINISTRAÇÃO',
+      <_NavItem>[
+        _NavItem('/team', 'Equipe', Icons.group_outlined),
+        _NavItem('/billing', 'Plano e uso', Icons.credit_card_outlined),
+        _NavItem('/settings', 'Configurações', Icons.settings_outlined),
+      ],
+    ),
   ];
 
   @override
@@ -48,7 +85,7 @@ class AppShell extends SignalWidget {
                   child: Row(
                     children: <Widget>[
                       Container(
-                        width: 270,
+                        width: 292,
                         decoration: BoxDecoration(
                           color: AppColors.shellSidebar,
                           borderRadius: BorderRadius.circular(24),
@@ -81,45 +118,16 @@ class AppShell extends SignalWidget {
                               ),
                             ),
                             const SizedBox(height: 14),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 18),
-                              child: Row(
-                                children: <Widget>[
-                                  Container(
-                                    width: 7,
-                                    height: 7,
-                                    decoration: const BoxDecoration(
-                                      color: AppColors.shellCyan,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'CENTRAL COMERCIAL',
-                                    style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.46),
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 1.1,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 18),
+                              child: _ProductIdentity(),
                             ),
                             const SizedBox(height: 9),
                             Expanded(
-                              child: ListView(
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                                children: _items
-                                    .map(
-                                      (_NavItem item) => _SidebarItem(
-                                        item: item,
-                                        selected: currentPath == item.path ||
-                                            currentPath.startsWith('${item.path}/'),
-                                        onTap: () => context.go(item.path),
-                                      ),
-                                    )
-                                    .toList(growable: false),
+                              child: _NavigationList(
+                                groups: _groups,
+                                currentPath: currentPath,
+                                onNavigate: context.go,
                               ),
                             ),
                             _UserFooter(
@@ -152,7 +160,7 @@ class AppShell extends SignalWidget {
               scrolledUnderElevation: 0,
               titleSpacing: 4,
               title: Text(
-                workspace?.name ?? 'CormeX AI Agent',
+                workspace?.name ?? 'CormeX CRM AI',
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               actions: <Widget>[
@@ -191,23 +199,20 @@ class AppShell extends SignalWidget {
                           child: AppBrand(light: true),
                         ),
                       ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 18),
+                        child: _ProductIdentity(),
+                      ),
+                      const SizedBox(height: 8),
                       Divider(color: Colors.white.withValues(alpha: 0.10)),
                       Expanded(
-                        child: ListView(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          children: _items
-                              .map(
-                                (_NavItem item) => _SidebarItem(
-                                  item: item,
-                                  selected: currentPath == item.path ||
-                                      currentPath.startsWith('${item.path}/'),
-                                  onTap: () {
-                                    Navigator.of(context).pop();
-                                    context.go(item.path);
-                                  },
-                                ),
-                              )
-                              .toList(growable: false),
+                        child: _NavigationList(
+                          groups: _groups,
+                          currentPath: currentPath,
+                          onNavigate: (String path) {
+                            Navigator.of(context).pop();
+                            context.go(path);
+                          },
                         ),
                       ),
                       _UserFooter(
@@ -239,6 +244,78 @@ class AppShell extends SignalWidget {
     if (parts.isEmpty || parts.first.isEmpty) return 'U';
     if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
     return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+  }
+}
+
+class _ProductIdentity extends StatelessWidget {
+  const _ProductIdentity();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Container(
+          width: 7,
+          height: 7,
+          decoration: const BoxDecoration(
+            color: AppColors.shellCyan,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          'CRM COMERCIAL + IA',
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.46),
+            fontSize: 9,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.1,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _NavigationList extends StatelessWidget {
+  const _NavigationList({
+    required this.groups,
+    required this.currentPath,
+    required this.onNavigate,
+  });
+
+  final List<_NavGroup> groups;
+  final String currentPath;
+  final ValueChanged<String> onNavigate;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(12, 2, 12, 14),
+      children: <Widget>[
+        for (final group in groups) ...<Widget>[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 12, 8, 7),
+            child: Text(
+              group.label,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.35),
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.05,
+              ),
+            ),
+          ),
+          for (final item in group.items)
+            _SidebarItem(
+              item: item,
+              selected: currentPath == item.path ||
+                  currentPath.startsWith('${item.path}/'),
+              onTap: () => onNavigate(item.path),
+            ),
+        ],
+      ],
+    );
   }
 }
 
@@ -319,6 +396,13 @@ class _ContentSurface extends StatelessWidget {
   }
 }
 
+class _NavGroup {
+  const _NavGroup(this.label, this.items);
+
+  final String label;
+  final List<_NavItem> items;
+}
+
 class _NavItem {
   const _NavItem(this.path, this.label, this.icon);
 
@@ -328,7 +412,11 @@ class _NavItem {
 }
 
 class _SidebarItem extends StatelessWidget {
-  const _SidebarItem({required this.item, required this.selected, required this.onTap});
+  const _SidebarItem({
+    required this.item,
+    required this.selected,
+    required this.onTap,
+  });
 
   final _NavItem item;
   final bool selected;
@@ -357,9 +445,16 @@ class _SidebarItem extends StatelessWidget {
           size: 21,
           color: selected ? AppColors.shellCyan : null,
         ),
-        title: Text(item.label, style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(
+          item.label,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
         trailing: selected
-            ? const Icon(Icons.chevron_right_rounded, size: 17, color: AppColors.shellCyan)
+            ? const Icon(
+                Icons.chevron_right_rounded,
+                size: 17,
+                color: AppColors.shellCyan,
+              )
             : null,
         onTap: onTap,
       ),
@@ -477,7 +572,10 @@ class _UserFooter extends StatelessWidget {
                 ? AppColors.shellCyanStrong.withValues(alpha: 0.15)
                 : AppColors.primary,
             foregroundColor: lightContent ? AppColors.shellCyan : Colors.white,
-            child: Text(AppShell._initials(name), style: const TextStyle(fontSize: 12)),
+            child: Text(
+              AppShell._initials(name),
+              style: const TextStyle(fontSize: 12),
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(

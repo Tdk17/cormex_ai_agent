@@ -13,6 +13,9 @@ class ConversationModel {
     this.assignedUserId,
     this.assignedUserName,
     this.lastMessageAt,
+    this.customerId,
+    this.accountId,
+    this.opportunityId,
   });
 
   final String id;
@@ -28,6 +31,9 @@ class ConversationModel {
   final DateTime? lastMessageAt;
   final DateTime updatedAt;
   final int unreadCount;
+  final String? customerId;
+  final String? accountId;
+  final String? opportunityId;
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) {
     final lead = json['lead'] is Map
@@ -62,6 +68,9 @@ class ConversationModel {
       lastMessageAt: _date(lastMessage['sentAt'] ?? json['lastMessageAt']),
       updatedAt: _date(json['updatedAt']) ?? now,
       unreadCount: (json['unreadCount'] as num?)?.toInt() ?? 0,
+      customerId: json['customerId']?.toString(),
+      accountId: json['accountId']?.toString(),
+      opportunityId: json['opportunityId']?.toString(),
     );
   }
 
@@ -75,6 +84,9 @@ class ConversationModel {
     DateTime? lastMessageAt,
     DateTime? updatedAt,
     int? unreadCount,
+    String? customerId,
+    String? accountId,
+    String? opportunityId,
   }) {
     return ConversationModel(
       id: id,
@@ -92,6 +104,9 @@ class ConversationModel {
       lastMessageAt: lastMessageAt ?? this.lastMessageAt,
       updatedAt: updatedAt ?? this.updatedAt,
       unreadCount: unreadCount ?? this.unreadCount,
+      customerId: customerId ?? this.customerId,
+      accountId: accountId ?? this.accountId,
+      opportunityId: opportunityId ?? this.opportunityId,
     );
   }
 
