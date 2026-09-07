@@ -30,6 +30,9 @@ import 'package:agente_vendas_saas/Src/Features/dashboard/presentation/controlle
 import 'package:agente_vendas_saas/Src/Features/followups/data/remote_followups_repository.dart';
 import 'package:agente_vendas_saas/Src/Features/followups/domain/followups_repository.dart';
 import 'package:agente_vendas_saas/Src/Features/followups/presentation/controllers/followups_controller.dart';
+import 'package:agente_vendas_saas/Src/Features/integrations/data/remote_integrations_repository.dart';
+import 'package:agente_vendas_saas/Src/Features/integrations/domain/integrations_repository.dart';
+import 'package:agente_vendas_saas/Src/Features/integrations/presentation/controllers/integrations_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/knowledge/data/remote_knowledge_repository.dart';
 import 'package:agente_vendas_saas/Src/Features/knowledge/domain/knowledge_repository.dart';
 import 'package:agente_vendas_saas/Src/Features/knowledge/presentation/controllers/knowledge_controller.dart';
@@ -87,6 +90,9 @@ void setupDependencies() {
   sl.registerLazySingleton<FollowUpsRepository>(
     () => RemoteFollowUpsRepository(sl()),
   );
+  sl.registerLazySingleton<IntegrationsRepository>(
+    () => RemoteIntegrationsRepository(sl()),
+  );
   sl.registerLazySingleton<TeamRepository>(() => RemoteTeamRepository(sl()));
   sl.registerLazySingleton<BillingRepository>(() => RemoteBillingRepository(sl()));
   sl.registerLazySingleton<CsvLeadParser>(() => CsvLeadParser());
@@ -140,6 +146,9 @@ void setupDependencies() {
   );
   sl.registerLazySingleton<FollowUpsController>(
     () => FollowUpsController(sl(), sl()),
+  );
+  sl.registerLazySingleton<IntegrationsController>(
+    () => IntegrationsController(sl(), sl()),
   );
   sl.registerLazySingleton<TeamController>(() => TeamController(sl(), sl()));
   sl.registerLazySingleton<BillingController>(
