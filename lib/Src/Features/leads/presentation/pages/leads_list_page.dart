@@ -27,8 +27,12 @@ class _LeadsListPageState extends State<LeadsListPage> {
   void initState() {
     super.initState();
     controller = sl<LeadsController>();
-    searchController = TextEditingController(text: controller.filters.value.search);
-    if (controller.state.value == ScreenState.initial) controller.load();
+    searchController = TextEditingController(
+      text: controller.filters.value.search,
+    );
+    if (controller.state.value == ScreenState.initial) {
+      controller.load();
+    }
   }
 
   @override
@@ -46,73 +50,42 @@ class _LeadsListPageState extends State<LeadsListPage> {
     return RefreshIndicator(
       onRefresh: () => controller.load(force: true),
       child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(22, 24, 22, 40),
         children: <Widget>[
           _Header(
-            onCreate: () => context.go('/leads/new'),
-            onImport: () => context.go('/leads/import'),
+            onCreate: () => context.go('/crm/leads/new'),
+            onImport: () => context.go('/crm/leads/import'),
+            onRefresh: () => controller.load(force: true),
           ),
-          const SizedBox(height: 22),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: LayoutBuilder(
-                builder: (BuildContext context, BoxConstraints constraints) {
-                  final search = TextField(
-                    controller: searchController,
-                    onChanged: controller.search,
-                    decoration: const InputDecoration(
-                      hintText: 'Buscar por nome, empresa, telefone, e-mail ou tag',
-                      prefixIcon: Icon(Icons.search_rounded),
-                    ),
-                  );
-                  final filterButton = OutlinedButton.icon(
-                    onPressed: () => _openFilters(filters),
-                    icon: const Icon(Icons.tune_rounded),
-                    label: Text(
-                      filters.activeCount == 0
-                          ? 'Filtros'
-                          : 'Filtros (${filters.activeCount})',
-                    ),
-                  );
-                  if (constraints.maxWidth < 680) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        search,
-                        const SizedBox(height: 10),
-                        filterButton,
-                      ],
-                    );
-                  }
-                  return Row(
-                    children: <Widget>[
-                      Expanded(child: search),
-                      const SizedBox(width: 12),
-                      filterButton,
-                    ],
-                  );
-                },
-              ),
-            ),
+          const SizedBox(height: 18),
+          _FiltersBar(
+            controller: searchController,
+            filters: filters,
+            onSearch: controller.search,
+            onOpenFilters: () => _openFilters(filters),
           ),
           if (filters.activeCount > 0) ...<Widget>[
             const SizedBox(height: 10),
-            _ActiveFilters(filters: filters, onClear: controller.clearFilters),
+            _ActiveFilters(
+              filters: filters,
+              onClear: controller.clearFilters,
+            ),
           ],
           const SizedBox(height: 16),
           if (state == ScreenState.loading && leads.isEmpty)
             const _LoadingLeads()
           else if (state == ScreenState.error && leads.isEmpty)
             _ErrorState(
-              message: controller.errorMessage.value ?? 'Erro ao carregar leads.',
+              message: controller.errorMessage.value ??
+                  'Não foi possível carregar os leads.',
               correlationId: controller.correlationId.value,
               onRetry: () => controller.load(force: true),
             )
           else if (leads.isEmpty)
             _EmptyLeads(
               filtered: !filters.isEmpty,
-              onCreate: () => context.go('/leads/new'),
+              onCreate: () => context.go('/crm/leads/new'),
               onClear: controller.clearFilters,
             )
           else ...<Widget>[
@@ -131,12 +104,17 @@ class _LeadsListPageState extends State<LeadsListPage> {
               children: <Widget>[
                 Text(
                   '${leads.length} lead${leads.length == 1 ? '' : 's'} carregado${leads.length == 1 ? '' : 's'}',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
                 ),
                 const Spacer(),
                 if (controller.hasMore)
                   OutlinedButton.icon(
-                    onPressed: controller.isLoadingMore.value ? null : controller.loadMore,
+                    onPressed: controller.isLoadingMore.value
+                        ? null
+                        : controller.loadMore,
                     icon: controller.isLoadingMore.value
                         ? const SizedBox.square(
                             dimension: 16,
@@ -158,15 +136,22 @@ class _LeadsListPageState extends State<LeadsListPage> {
       context: context,
       builder: (BuildContext context) => _FiltersDialog(initial: current),
     );
-    if (result != null) await controller.applyFilters(result);
+    if (result != null) {
+      await controller.applyFilters(result);
+    }
   }
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.onCreate, required this.onImport});
+  const _Header({
+    required this.onCreate,
+    required this.onImport,
+    required this.onRefresh,
+  });
 
   final VoidCallback onCreate;
   final VoidCallback onImport;
+  final VoidCallback onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -182,15 +167,20 @@ class _Header extends StatelessWidget {
             Text('Leads', style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 5),
             const Text(
-              'Gerencie, qualifique e acompanhe sua base comercial.',
+              'Gerencie os contatos do CRM e use o ID para abrir ou testar uma conversa.',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ],
         ),
         Wrap(
-          spacing: 10,
+          spacing: 8,
           runSpacing: 8,
           children: <Widget>[
+            IconButton.outlined(
+              tooltip: 'Atualizar leads',
+              onPressed: onRefresh,
+              icon: const Icon(Icons.refresh_rounded),
+            ),
             OutlinedButton.icon(
               onPressed: onImport,
               icon: const Icon(Icons.upload_file_outlined),
@@ -204,6 +194,67 @@ class _Header extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _FiltersBar extends StatelessWidget {
+  const _FiltersBar({
+    required this.controller,
+    required this.filters,
+    required this.onSearch,
+    required this.onOpenFilters,
+  });
+
+  final TextEditingController controller;
+  final LeadFilters filters;
+  final ValueChanged<String> onSearch;
+  final VoidCallback onOpenFilters;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final search = TextField(
+              controller: controller,
+              onChanged: onSearch,
+              decoration: const InputDecoration(
+                hintText: 'Buscar por nome, empresa, telefone, e-mail ou tag',
+                prefixIcon: Icon(Icons.search_rounded),
+              ),
+            );
+            final filterButton = OutlinedButton.icon(
+              onPressed: onOpenFilters,
+              icon: const Icon(Icons.tune_rounded),
+              label: Text(
+                filters.activeCount == 0
+                    ? 'Filtros'
+                    : 'Filtros (${filters.activeCount})',
+              ),
+            );
+            if (constraints.maxWidth < 680) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  search,
+                  const SizedBox(height: 10),
+                  filterButton,
+                ],
+              );
+            }
+            return Row(
+              children: <Widget>[
+                Expanded(child: search),
+                const SizedBox(width: 12),
+                filterButton,
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -245,19 +296,21 @@ class _LeadsContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        if (constraints.maxWidth < 780) {
+        if (constraints.maxWidth < 820) {
           return Column(
             children: leads
                 .map((LeadModel lead) => _LeadCard(lead: lead))
                 .toList(growable: false),
           );
         }
+
         return Card(
           clipBehavior: Clip.antiAlias,
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
               columns: const <DataColumn>[
+                DataColumn(label: Text('ID')),
                 DataColumn(label: Text('Lead')),
                 DataColumn(label: Text('Empresa')),
                 DataColumn(label: Text('Origem')),
@@ -268,11 +321,28 @@ class _LeadsContent extends StatelessWidget {
               ],
               rows: leads.map((LeadModel lead) {
                 return DataRow(
-                  onSelectChanged: (_) => context.go('/leads/${lead.id}'),
+                  onSelectChanged: (_) =>
+                      context.go('/crm/leads/${lead.id}'),
                   cells: <DataCell>[
                     DataCell(
                       SizedBox(
-                        width: 210,
+                        width: 145,
+                        child: SelectableText(
+                          lead.id.isEmpty ? 'ID ausente' : lead.id,
+                          maxLines: 1,
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 11,
+                            color: lead.id.isEmpty
+                                ? AppColors.danger
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    DataCell(
+                      SizedBox(
+                        width: 220,
                         child: Row(
                           children: <Widget>[
                             _LeadAvatar(name: lead.name),
@@ -283,10 +353,14 @@ class _LeadsContent extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
                                   Text(
-                                    lead.name,
+                                    lead.name.trim().isEmpty
+                                        ? 'Lead sem nome'
+                                        : lead.name,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontWeight: FontWeight.w700),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                   Text(
                                     lead.email ?? lead.phone ?? 'Sem contato',
@@ -304,15 +378,26 @@ class _LeadsContent extends StatelessWidget {
                         ),
                       ),
                     ),
-                    DataCell(SizedBox(width: 120, child: Text(lead.company ?? '—'))),
+                    DataCell(
+                      SizedBox(
+                        width: 130,
+                        child: Text(lead.company ?? '—'),
+                      ),
+                    ),
                     DataCell(Text(LeadLabels.source(lead.source))),
                     DataCell(LeadStatusBadge(status: lead.status)),
                     DataCell(_Score(value: lead.score)),
-                    DataCell(Text(DateFormat('dd/MM/yy').format(lead.updatedAt))),
+                    DataCell(
+                      Text(DateFormat('dd/MM/yy').format(lead.updatedAt)),
+                    ),
                     DataCell(
                       IconButton(
                         tooltip: 'Editar lead',
-                        onPressed: () => context.go('/leads/${lead.id}/edit'),
+                        onPressed: lead.id.isEmpty
+                            ? null
+                            : () => context.go(
+                                  '/crm/leads/${lead.id}/edit',
+                                ),
                         icon: const Icon(Icons.edit_outlined, size: 19),
                       ),
                     ),
@@ -338,7 +423,9 @@ class _LeadCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => context.go('/leads/${lead.id}'),
+        onTap: lead.id.isEmpty
+            ? null
+            : () => context.go('/crm/leads/${lead.id}'),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -352,11 +439,17 @@ class _LeadCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(lead.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                        Text(
+                          lead.name.trim().isEmpty ? 'Lead sem nome' : lead.name,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
                         const SizedBox(height: 2),
                         Text(
                           lead.company ?? 'Sem empresa',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -364,14 +457,67 @@ class _LeadCard extends StatelessWidget {
                   LeadStatusBadge(status: lead.status),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    const Icon(
+                      Icons.fingerprint_rounded,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 7),
+                    const Text(
+                      'ID: ',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Expanded(
+                      child: SelectableText(
+                        lead.id.isEmpty ? 'ID ausente' : lead.id,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontFamily: 'monospace',
+                          fontSize: 11,
+                          color: lead.id.isEmpty
+                              ? AppColors.danger
+                              : AppColors.ink,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
               Wrap(
                 spacing: 14,
                 runSpacing: 8,
                 children: <Widget>[
-                  _Meta(icon: Icons.mail_outline, text: lead.email ?? 'Sem e-mail'),
-                  _Meta(icon: Icons.phone_outlined, text: lead.phone ?? 'Sem telefone'),
-                  _Meta(icon: Icons.ads_click_outlined, text: LeadLabels.source(lead.source)),
+                  _Meta(
+                    icon: Icons.mail_outline,
+                    text: lead.email ?? 'Sem e-mail',
+                  ),
+                  _Meta(
+                    icon: Icons.phone_outlined,
+                    text: lead.phone ?? 'Sem telefone',
+                  ),
+                  _Meta(
+                    icon: Icons.ads_click_outlined,
+                    text: LeadLabels.source(lead.source),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -381,7 +527,10 @@ class _LeadCard extends StatelessWidget {
                   const Spacer(),
                   Text(
                     'Atualizado em ${DateFormat('dd/MM/yy').format(lead.updatedAt)}',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),
@@ -428,7 +577,10 @@ class _Score extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Icon(Icons.bolt_rounded, size: 17, color: color),
-        Text('$value', style: TextStyle(color: color, fontWeight: FontWeight.w700)),
+        Text(
+          '$value',
+          style: TextStyle(color: color, fontWeight: FontWeight.w700),
+        ),
       ],
     );
   }
@@ -447,7 +599,13 @@ class _Meta extends StatelessWidget {
       children: <Widget>[
         Icon(icon, size: 15, color: AppColors.textSecondary),
         const SizedBox(width: 5),
-        Text(text, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+        Text(
+          text,
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 12,
+          ),
+        ),
       ],
     );
   }
@@ -494,7 +652,10 @@ class _FiltersDialogState extends State<_FiltersDialog> {
               initialValue: status,
               decoration: const InputDecoration(labelText: 'Status'),
               items: <DropdownMenuItem<String?>>[
-                const DropdownMenuItem<String?>(value: null, child: Text('Todos')),
+                const DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text('Todos'),
+                ),
                 ...LeadLabels.statuses.entries.map(
                   (entry) => DropdownMenuItem<String?>(
                     value: entry.key,
@@ -509,7 +670,10 @@ class _FiltersDialogState extends State<_FiltersDialog> {
               initialValue: source,
               decoration: const InputDecoration(labelText: 'Origem'),
               items: <DropdownMenuItem<String?>>[
-                const DropdownMenuItem<String?>(value: null, child: Text('Todas')),
+                const DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text('Todas'),
+                ),
                 ...LeadLabels.sources.entries.map(
                   (entry) => DropdownMenuItem<String?>(
                     value: entry.key,
@@ -612,10 +776,16 @@ class _EmptyLeads extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 52),
         child: Column(
           children: <Widget>[
-            const Icon(Icons.person_search_outlined, size: 48, color: AppColors.primary),
+            const Icon(
+              Icons.person_search_outlined,
+              size: 48,
+              color: AppColors.primary,
+            ),
             const SizedBox(height: 14),
             Text(
-              filtered ? 'Nenhum lead encontrado' : 'Sua base de leads começa aqui',
+              filtered
+                  ? 'Nenhum lead encontrado'
+                  : 'Sua base de leads começa aqui',
               style: Theme.of(context).textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
