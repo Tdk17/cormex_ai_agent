@@ -1,6 +1,7 @@
 import 'package:agente_vendas_saas/Src/App/theme/app_colors.dart';
 import 'package:agente_vendas_saas/Src/Core/di/service_locator.dart';
 import 'package:agente_vendas_saas/Src/Core/utils/screen_state.dart';
+import 'package:agente_vendas_saas/Src/Features/agent/presentation/controllers/agent_settings_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_constants.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_start_input.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/presentation/controllers/conversation_thread_controller.dart';
@@ -72,15 +73,24 @@ class _ConversationsPageState extends State<ConversationsPage> {
 
   Future<void> _showStartConversation() async {
     conversationsController.clearActionError();
+
+    final agentSettings = sl<AgentSettingsController>();
+    await agentSettings.load(force: true);
+    if (!mounted) return;
+
     final input = await showDialog<ConversationStartInput>(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) => const _StartConversationDialog(),
+      builder: (BuildContext context) => _StartConversationDialog(
+        initialAgentMessage: agentSettings.initialMessage.value.trim(),
+        agentIsActive: agentSettings.isActive.value,
+      ),
     );
     if (input == null || !mounted) return;
+
     final conversation = await conversationsController.startConversation(input);
     if (!mounted || conversation == null) return;
-    context.go('/conversations/${conversation.id}');
+    context.go('/crm/conversations/${conversation.id}');
   }
 
   @override
@@ -99,14 +109,14 @@ class _ConversationsPageState extends State<ConversationsPage> {
               controller: conversationsController,
               selectedConversationId: selectedId,
               onStart: _showStartConversation,
-              onOpen: (String id) => context.go('/conversations/$id'),
+              onOpen: (String id) => context.go('/crm/conversations/$id'),
             );
           }
           return ConversationThreadPanel(
             key: ValueKey<String>(selectedId),
             controller: selectedThread,
             compact: true,
-            onBack: () => context.go('/conversations'),
+            onBack: () => context.go('/crm/conversations'),
             onShowLead: () => _showLeadContext(context),
           );
         }
@@ -128,7 +138,7 @@ class _ConversationsPageState extends State<ConversationsPage> {
                   selectedConversationId: selectedId,
                   embedded: true,
                   onStart: _showStartConversation,
-                  onOpen: (String id) => context.go('/conversations/$id'),
+                  onOpen: (String id) => context.go('/crm/conversations/$id'),
                 ),
               ),
               const VerticalDivider(width: 1),
@@ -159,7 +169,13 @@ class _ConversationsPageState extends State<ConversationsPage> {
 }
 
 class _StartConversationDialog extends StatefulWidget {
-  const _StartConversationDialog();
+  const _StartConversationDialog({
+    required this.initialAgentMessage,
+    required this.agentIsActive,
+  });
+
+  final String initialAgentMessage;
+  final bool agentIsActive;
 
   @override
   State<_StartConversationDialog> createState() =>
@@ -172,9 +188,15 @@ class _StartConversationDialogState extends State<_StartConversationDialog> {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _leadIdController = TextEditingController();
-  final _messageController = TextEditingController();
+  late final TextEditingController _messageController;
   String _channel = ConversationChannels.whatsapp;
   String _mode = ConversationModes.auto;
+
+  @override
+  void initState() {
+    super.initState();
+    _messageController = TextEditingController(text: widget.initialAgentMessage);
+  }
 
   @override
   void dispose() {
@@ -200,7 +222,7 @@ class _StartConversationDialogState extends State<_StartConversationDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 const Text(
-                  'Escolha quem fará o primeiro atendimento. No modo IA automática, o agente usa a configuração e a Base de Conhecimento da empresa.',
+                  'Escolha quem fará o primeiro atendimento. No modo IA automática, a mensagem inicial salva no agente é enviada explicitamente para iniciar o contato.',
                   style: TextStyle(color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 18),
@@ -223,6 +245,24 @@ class _StartConversationDialogState extends State<_StartConversationDialog> {
                     setState(() => _mode = value.first);
                   },
                 ),
+                if (_mode == ConversationModes.auto && !widget.agentIsActive) ...<Widget>[
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.warning.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: const Text(
+                      'O agente salvo está marcado como inativo. A conversa pode ser criada, mas o backend pode impedir respostas automáticas até você ativá-lo em Agente de IA.',
+                      style: TextStyle(fontSize: 11, height: 1.35),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   initialValue: _channel,
@@ -289,22 +329,32 @@ class _StartConversationDialogState extends State<_StartConversationDialog> {
                         : 'Informe telefone, e-mail ou ID do lead.';
                   },
                 ),
-                if (_mode == ConversationModes.human) ...<Widget>[
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _messageController,
-                    minLines: 3,
-                    maxLines: 6,
-                    maxLength: 4000,
-                    decoration: const InputDecoration(
-                      labelText: 'Primeira mensagem',
-                    ),
-                    validator: (String? value) =>
-                        (value?.trim().length ?? 0) < 2
-                        ? 'Escreva a primeira mensagem.'
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _messageController,
+                  minLines: 3,
+                  maxLines: 6,
+                  maxLength: 4000,
+                  decoration: InputDecoration(
+                    labelText: _mode == ConversationModes.auto
+                        ? 'Mensagem inicial da IA *'
+                        : 'Primeira mensagem *',
+                    helperText: _mode == ConversationModes.auto
+                        ? 'Carregada da configuração salva do agente. Você pode ajustar somente para este contato.'
                         : null,
+                    alignLabelWithHint: true,
                   ),
-                ],
+                  validator: (String? value) {
+                    final length = value?.trim().length ?? 0;
+                    if (_mode == ConversationModes.auto && length < 5) {
+                      return 'Configure uma mensagem inicial da IA com pelo menos 5 caracteres.';
+                    }
+                    if (_mode == ConversationModes.human && length < 2) {
+                      return 'Escreva a primeira mensagem.';
+                    }
+                    return null;
+                  },
+                ),
               ],
             ),
           ),
@@ -342,8 +392,7 @@ class _StartConversationDialogState extends State<_StartConversationDialog> {
         contactName: _nameController.text,
         phone: _phoneController.text,
         email: _emailController.text,
-        initialMessage:
-            _mode == ConversationModes.human ? _messageController.text : null,
+        initialMessage: _messageController.text,
       ),
     );
   }
@@ -380,8 +429,8 @@ class _NoConversationSelected extends StatelessWidget {
             ),
             const SizedBox(height: 7),
             ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 360),
-              child: Text(
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: const Text(
                 'Escolha um contato à esquerda para acompanhar o histórico e continuar o atendimento.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.textSecondary),
