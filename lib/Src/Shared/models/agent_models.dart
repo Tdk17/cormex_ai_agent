@@ -36,19 +36,41 @@ class SalesAgentModel {
   final DateTime? updatedAt;
 
   factory SalesAgentModel.fromJson(Map<String, dynamic> json) {
+    final legacyInstructions = json['instructions']?.toString() ?? '';
+
     return SalesAgentModel(
       id: (json['id'] ?? json['objectId'] ?? '').toString(),
       workspaceId: json['workspaceId']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
-      objective: json['objective']?.toString() ?? '',
-      persona: json['persona']?.toString() ?? '',
+      objective: _firstNonEmpty(<dynamic>[
+        json['objective'],
+        _legacySection(legacyInstructions, 'OBJECTIVE'),
+      ]),
+      persona: _firstNonEmpty(<dynamic>[
+        json['persona'],
+        _legacySection(legacyInstructions, 'PERSONA'),
+      ]),
       tone: json['tone']?.toString() ?? 'consultive',
       mode: json['mode']?.toString() ?? 'assist',
-      productOffer: json['productOffer']?.toString() ?? '',
-      initialMessage: json['initialMessage']?.toString() ?? '',
-      isActive: json['isActive'] == true,
-      rules: _stringList(json['rules']),
-      qualificationQuestions: _stringList(json['qualificationQuestions']),
+      productOffer: _firstNonEmpty(<dynamic>[
+        json['productOffer'],
+        _legacySection(legacyInstructions, 'PRODUCT_OFFER'),
+      ]),
+      initialMessage: _firstNonEmpty(<dynamic>[
+        json['initialMessage'],
+        json['greeting'],
+      ]),
+      isActive: _bool(
+        json.containsKey('isActive') ? json['isActive'] : json['active'],
+      ),
+      rules: _firstStringList(
+        json['rules'],
+        _legacyListSection(legacyInstructions, 'RULES'),
+      ),
+      qualificationQuestions: _firstStringList(
+        json['qualificationQuestions'],
+        _legacyListSection(legacyInstructions, 'QUALIFICATION_QUESTIONS'),
+      ),
       schedule: AgentScheduleModel.fromJson(_map(json['schedule'])),
       policies: AgentPoliciesModel.fromJson(_map(json['policies'])),
       version: (json['version'] as num?)?.toInt() ?? 0,
@@ -67,6 +89,53 @@ class SalesAgentModel {
     return value
         .map((dynamic item) => item.toString().trim())
         .where((String item) => item.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  static List<String> _firstStringList(dynamic primary, List<String> fallback) {
+    final parsed = _stringList(primary);
+    return parsed.isNotEmpty ? parsed : fallback;
+  }
+
+  static String _firstNonEmpty(List<dynamic> values) {
+    for (final value in values) {
+      final text = value?.toString().trim() ?? '';
+      if (text.isNotEmpty && text.toLowerCase() != 'null') return text;
+    }
+    return '';
+  }
+
+  static bool _bool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    final text = value?.toString().trim().toLowerCase();
+    return text == 'true' || text == '1';
+  }
+
+  static String _legacySection(String raw, String section) {
+    if (raw.trim().isEmpty) return '';
+    final marker = '[$section]';
+    final start = raw.indexOf(marker);
+    if (start < 0) return '';
+
+    final contentStart = start + marker.length;
+    final tail = raw.substring(contentStart).trimLeft();
+    final nextSection = RegExp(r'\n\[[A-Z_]+\]').firstMatch(tail);
+    final value = nextSection == null
+        ? tail
+        : tail.substring(0, nextSection.start);
+    return value.trim();
+  }
+
+  static List<String> _legacyListSection(String raw, String section) {
+    final content = _legacySection(raw, section);
+    if (content.isEmpty) return const <String>[];
+    return content
+        .split('\n')
+        .map((String line) => line.trim())
+        .where((String line) => line.isNotEmpty)
+        .map((String line) => line.startsWith('- ') ? line.substring(2).trim() : line)
+        .where((String line) => line.isNotEmpty)
         .toList(growable: false);
   }
 
