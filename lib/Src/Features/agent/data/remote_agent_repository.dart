@@ -43,7 +43,7 @@ class RemoteAgentRepository implements AgentRepository {
     return switch (result) {
       ApiSuccess<Map<String, dynamic>>(:final data, :final meta) =>
         AgentSaveResult(
-          agent: SalesAgentModel.fromJson(_requiredMap(data, 'agent')),
+          agent: _agentFromSave(data, workspaceId, input),
           correlationId: meta.correlationId,
         ),
       ApiFailure<Map<String, dynamic>>(:final error) => throw error,
@@ -86,6 +86,46 @@ class RemoteAgentRepository implements AgentRepository {
       correlationId: meta.correlationId,
       usage: _optionalMap(data['usage']),
     );
+  }
+
+  static SalesAgentModel _agentFromSave(
+    Map<String, dynamic> data,
+    String workspaceId,
+    AgentConfigurationInput input,
+  ) {
+    final server = _requiredMap(data, 'agent');
+
+    final normalized = <String, dynamic>{
+      'workspaceId': workspaceId,
+      'name': input.name,
+      'objective': input.objective,
+      'persona': input.persona,
+      'tone': input.tone,
+      'mode': input.mode,
+      'productOffer': input.productOffer,
+      'initialMessage': input.initialMessage,
+      'isActive': input.isActive,
+      'rules': input.rules,
+      'qualificationQuestions': input.qualificationQuestions,
+      'schedule': input.schedule.toJson(),
+      'policies': input.policies.toJson(),
+      ...server,
+    };
+
+    // O backend legado responde active/greeting. Normalizamos para o contrato
+    // atual antes de hidratar a interface, sem apagar o que acabou de ser salvo.
+    if (!server.containsKey('initialMessage')) {
+      final greeting = server['greeting']?.toString().trim();
+      normalized['initialMessage'] =
+          greeting?.isNotEmpty == true ? greeting : input.initialMessage;
+    }
+    if (!server.containsKey('isActive')) {
+      normalized['isActive'] = server.containsKey('active')
+          ? server['active']
+          : input.isActive;
+    }
+
+    return SalesAgentModel.fromJson(normalized);
   }
 
   static Map<String, dynamic>? _optionalMap(dynamic raw) {
