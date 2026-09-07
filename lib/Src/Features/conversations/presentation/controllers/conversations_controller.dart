@@ -164,6 +164,7 @@ class ConversationsController {
   ) async {
     final workspaceId = _workspaceId;
     if (workspaceId == null || isStarting.value) return null;
+
     final hasDestination = input.leadId?.trim().isNotEmpty == true ||
         input.phone?.trim().isNotEmpty == true ||
         input.email?.trim().isNotEmpty == true;
@@ -172,8 +173,14 @@ class ConversationsController {
           'Informe o telefone, o e-mail ou o identificador de um lead.';
       return null;
     }
-    if (input.mode == 'human' &&
-        (input.initialMessage?.trim().length ?? 0) < 2) {
+
+    final initialMessageLength = input.initialMessage?.trim().length ?? 0;
+    if (input.mode == 'auto' && initialMessageLength < 5) {
+      errorMessage.value =
+          'A IA precisa de uma mensagem inicial válida para começar o contato.';
+      return null;
+    }
+    if (input.mode == 'human' && initialMessageLength < 2) {
       errorMessage.value = 'Escreva a primeira mensagem do atendimento.';
       return null;
     }
