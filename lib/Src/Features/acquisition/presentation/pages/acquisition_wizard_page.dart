@@ -1190,8 +1190,7 @@ class _AutomationStep extends SignalWidget {
         SwitchListTile.adaptive(
           contentPadding: EdgeInsets.zero,
           value: !controller.onlyRegisterLead.value,
-          onChanged: (bool value) =>
-              controller.onlyRegisterLead.value = !value,
+          onChanged: (bool value) => controller.onlyRegisterLead.value = !value,
           title: const Text('Iniciar atendimento automático com IA'),
           subtitle: const Text(
             'Cria o Lead e a Conversa, envia a abordagem e inicia a qualificação.',
@@ -1444,12 +1443,11 @@ class _TextField extends StatelessWidget {
     required this.initialValue,
     required this.onChanged,
     this.hint,
-    this.helper,
     this.minLines = 1,
     this.maxLines = 1,
     this.maxLength,
     this.keyboardType,
-  });
+  }) : helper = null;
 
   final String label;
   final String initialValue;

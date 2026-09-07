@@ -14,6 +14,14 @@ class LeadModel {
     this.tags = const <String>[],
     this.ownerId,
     this.lastContactAt,
+    this.customerId,
+    this.accountId,
+    this.opportunityId,
+    this.lastActivityAt,
+    this.nextActionAt,
+    this.campaignId,
+    this.utmSource,
+    this.utmCampaign,
   });
 
   final String id;
@@ -28,6 +36,14 @@ class LeadModel {
   final String? ownerId;
   final int score;
   final DateTime? lastContactAt;
+  final String? customerId;
+  final String? accountId;
+  final String? opportunityId;
+  final DateTime? lastActivityAt;
+  final DateTime? nextActionAt;
+  final String? campaignId;
+  final String? utmSource;
+  final String? utmCampaign;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -46,9 +62,17 @@ class LeadModel {
           .toList(growable: false),
       ownerId: json['ownerId']?.toString(),
       score: (json['score'] as num?)?.toInt() ?? 0,
-      lastContactAt: DateTime.tryParse(json['lastContactAt']?.toString() ?? ''),
-      createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ?? DateTime.now(),
+      lastContactAt: _date(json['lastContactAt']),
+      customerId: json['customerId']?.toString(),
+      accountId: json['accountId']?.toString(),
+      opportunityId: json['opportunityId']?.toString(),
+      lastActivityAt: _date(json['lastActivityAt']),
+      nextActionAt: _date(json['nextActionAt']),
+      campaignId: json['campaignId']?.toString(),
+      utmSource: json['utmSource']?.toString(),
+      utmCampaign: json['utmCampaign']?.toString(),
+      createdAt: _date(json['createdAt']) ?? DateTime.now(),
+      updatedAt: _date(json['updatedAt']) ?? DateTime.now(),
     );
   }
 
@@ -65,10 +89,26 @@ class LeadModel {
       'tags': tags,
       if (ownerId != null) 'ownerId': ownerId,
       'score': score,
-      if (lastContactAt != null) 'lastContactAt': lastContactAt!.toIso8601String(),
+      if (lastContactAt != null)
+        'lastContactAt': lastContactAt!.toIso8601String(),
+      if (customerId != null) 'customerId': customerId,
+      if (accountId != null) 'accountId': accountId,
+      if (opportunityId != null) 'opportunityId': opportunityId,
+      if (lastActivityAt != null)
+        'lastActivityAt': lastActivityAt!.toIso8601String(),
+      if (nextActionAt != null) 'nextActionAt': nextActionAt!.toIso8601String(),
+      if (campaignId != null) 'campaignId': campaignId,
+      if (utmSource != null) 'utmSource': utmSource,
+      if (utmCampaign != null) 'utmCampaign': utmCampaign,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
   }
 
+  static DateTime? _date(dynamic value) {
+    if (value is Map && value['iso'] != null) {
+      return DateTime.tryParse(value['iso'].toString());
+    }
+    return DateTime.tryParse(value?.toString() ?? '');
+  }
 }

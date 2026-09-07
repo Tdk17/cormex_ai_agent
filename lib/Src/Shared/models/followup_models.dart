@@ -48,7 +48,11 @@ class TaskModel {
     required this.title,
     required this.status,
     required this.dueAt,
+    this.workspaceId,
     this.leadId,
+    this.customerId,
+    this.accountId,
+    this.opportunityId,
     this.ownerId,
   });
 
@@ -56,7 +60,11 @@ class TaskModel {
   final String title;
   final String status;
   final DateTime dueAt;
+  final String? workspaceId;
   final String? leadId;
+  final String? customerId;
+  final String? accountId;
+  final String? opportunityId;
   final String? ownerId;
 
   factory TaskModel.fromJson(Map<String, dynamic> json) {
@@ -64,9 +72,20 @@ class TaskModel {
       id: (json['id'] ?? json['objectId'] ?? '').toString(),
       title: json['title']?.toString() ?? '',
       status: json['status']?.toString() ?? 'pending',
-      dueAt: DateTime.tryParse(json['dueAt']?.toString() ?? '') ?? DateTime.now(),
+      dueAt: _date(json['dueAt']) ?? DateTime.now(),
+      workspaceId: json['workspaceId']?.toString(),
       leadId: json['leadId']?.toString(),
+      customerId: json['customerId']?.toString(),
+      accountId: json['accountId']?.toString(),
+      opportunityId: json['opportunityId']?.toString(),
       ownerId: json['ownerId']?.toString(),
     );
+  }
+
+  static DateTime? _date(dynamic value) {
+    if (value is Map && value['iso'] != null) {
+      return DateTime.tryParse(value['iso'].toString());
+    }
+    return DateTime.tryParse(value?.toString() ?? '');
   }
 }
