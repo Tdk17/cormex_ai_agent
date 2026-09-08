@@ -1,0 +1,46 @@
+name: Google Copilot CI
+
+on:
+  pull_request:
+    paths:
+      - 'lib/Src/Features/google_copilot/**'
+      - 'lib/Src/Core/http/endpoints.dart'
+      - 'lib/Src/Core/di/service_locator.dart'
+      - 'lib/Src/Core/router/app_router.dart'
+      - 'xvclean-google-copilot/**'
+      - '.github/workflows/google-copilot-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Analyze Google Copilot Flutter module
+        run: |
+          flutter analyze \
+            lib/Src/Features/google_copilot \
+            lib/Src/Core/http/endpoints.dart \
+            lib/Src/Core/di/service_locator.dart \
+            lib/Src/Core/router/app_router.dart
+
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: xvclean-google-copilot
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
