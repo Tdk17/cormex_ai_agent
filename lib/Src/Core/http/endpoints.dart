@@ -61,4 +61,15 @@ class Endpoints {
   static const String googleAdsConnectionStatus =
       'v1-google-ads-connection-status';
   static const String googleAdsOAuthStart = 'v1-google-ads-oauth-start';
+
+  static const String googleCopilotConnection =
+      'v1-google-copilot-connection';
+  static const String googleCopilotOAuthStart =
+      'v1-google-copilot-oauth-start';
+  static const String googleCopilotPropertiesUpdate =
+      'v1-google-copilot-properties-update';
+  static const String googleCopilotDashboard =
+      'v1-google-copilot-dashboard';
+  static const String googleCopilotPolicyUpdate =
+      'v1-google-copilot-policy-update';
 }
