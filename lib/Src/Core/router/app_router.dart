@@ -17,6 +17,7 @@ import 'package:agente_vendas_saas/Src/Features/crm/activities/presentation/page
 import 'package:agente_vendas_saas/Src/Features/crm/customers/presentation/pages/customers_page.dart';
 import 'package:agente_vendas_saas/Src/Features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:agente_vendas_saas/Src/Features/followups/presentation/pages/followups_page.dart';
+import 'package:agente_vendas_saas/Src/Features/google_copilot/presentation/pages/google_copilot_page.dart';
 import 'package:agente_vendas_saas/Src/Features/integrations/presentation/pages/integrations_page.dart';
 import 'package:agente_vendas_saas/Src/Features/knowledge/presentation/pages/knowledge_page.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/lead_detail_page.dart';
@@ -105,6 +106,10 @@ class AppRouter {
             GoRoute(
               path: '/integrations',
               builder: (_, __) => const IntegrationsPage(),
+            ),
+            GoRoute(
+              path: '/google-copilot',
+              builder: (_, __) => const GoogleCopilotPage(),
             ),
             GoRoute(
               path: '/knowledge',
