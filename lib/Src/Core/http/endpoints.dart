@@ -49,8 +49,7 @@ class Endpoints {
   static const String teamUpdateRole = 'v1-team-update-role';
 
   static const String acquisitionOverview = 'v1-acquisition-overview';
-  static const String acquisitionCampaignGet =
-      'v1-acquisition-campaign-get';
+  static const String acquisitionCampaignGet = 'v1-acquisition-campaign-get';
   static const String acquisitionCampaignUpsert =
       'v1-acquisition-campaign-upsert';
   static const String acquisitionCampaignPublish =
