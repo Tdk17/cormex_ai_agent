@@ -1,7 +1,7 @@
 name: agente_vendas_saas
-description: Front-end Flutter do Agente de Vendas SaaS multi-tenant.
+description: Front-end Flutter do CormeX CRM multi-tenant.
 publish_to: none
-version: 0.7.0+9
+version: 0.7.1+10
 
 environment:
   sdk: '>=3.10.0 <4.0.0'

@@ -97,13 +97,10 @@ class IntegrationsController {
           current.status == IntegrationStatuses.authorizationError;
       final isWhatsApp = provider == IntegrationProviders.whatsapp;
 
-      // WhatsApp uses an isolated QR/Web session per workspace. The backend
-      // owns the session and returns only a short-lived URL where the QR is
-      // displayed. No WhatsApp/Meta password or browser session is stored in
-      // the Flutter client.
-      final action = isWhatsApp
-          ? (isDisconnected ? 'start_qr' : 'refresh_qr')
-          : (isDisconnected ? 'start' : 'refresh');
+      // All official providers, including WhatsApp Business, start or renew
+      // authorization through OAuth. Provider credentials remain exclusively
+      // in the backend and the client receives only the authorization URL.
+      final action = isDisconnected ? 'start' : 'refresh';
 
       final result = await _repository.connect(
         workspaceId: workspaceId,
@@ -124,7 +121,8 @@ class IntegrationsController {
           return null;
         }
         errorMessage.value = isWhatsApp
-            ? 'O backend não retornou a URL temporária do QR Code do WhatsApp.'
+            ? 'O backend não retornou a URL de autorização da Meta para o '
+                'WhatsApp.'
             : 'O backend não retornou a URL de autorização do provedor.';
         return null;
       }
@@ -132,12 +130,13 @@ class IntegrationsController {
       final uri = Uri.tryParse(authorizationUrl);
       if (uri == null || !uri.hasScheme) {
         errorMessage.value = isWhatsApp
-            ? 'A URL do QR Code retornada pelo backend é inválida.'
+            ? 'A URL de autorização da Meta retornada pelo backend é inválida.'
             : 'A URL de autorização retornada é inválida.';
         return null;
       }
       successMessage.value = isWhatsApp
-          ? 'Escaneie o QR Code com o WhatsApp do cliente para concluir a conexão.'
+          ? 'Conclua a autorização do WhatsApp na página oficial da '
+              'Meta.'
           : 'Conclua a autorização na página do provedor.';
       return uri;
     } on ApiException catch (error) {

@@ -434,7 +434,8 @@ class _WhatsAppCard extends StatelessWidget {
       iconColor: const Color(0xFF16A34A),
       title: 'WhatsApp Business',
       subtitle:
-          'Conecte pelo fluxo oficial do provedor. Depois a IA poderá iniciar e responder conversas em modo automático.',
+          'Autorize sua conta pela página oficial da Meta. Depois a IA poderá '
+          'iniciar e responder conversas em modo automático.',
       status: _StatusBadge(
         connected: connected,
         loading: loading,
@@ -537,7 +538,7 @@ class _WhatsAppCard extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: busy ? null : onConnect,
                 icon: const Icon(Icons.sync_lock_rounded),
-                label: const Text('Renovar autorização'),
+                label: const Text('Renovar autorização Meta'),
               ),
             OutlinedButton.icon(
               onPressed: loading || busy ? null : onRefresh,
@@ -554,7 +555,9 @@ class _WhatsAppCard extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         const Text(
-          'O CormeX não solicita sua senha do WhatsApp/Meta. Tokens e segredos devem permanecer somente no backend; o front recebe apenas o status sanitizado da conexão.',
+          'O CormeX não solicita sua senha do WhatsApp/Meta. A autorização '
+          'acontece na Meta; tokens e segredos permanecem somente no backend '
+          'e o front recebe apenas o status sanitizado da conexão.',
           style: TextStyle(
             color: AppColors.textSecondary,
             fontSize: 11,

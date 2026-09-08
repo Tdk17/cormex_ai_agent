@@ -1,11 +1,11 @@
 {
-    "name": "cormex_ai_agent",
-    "short_name": "cormex_ai_agent",
+    "name": "CormeX CRM",
+    "short_name": "CormeX CRM",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "CRM de gestão comercial, aquisição, atendimento e automação com IA.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -407,7 +407,7 @@ class _ProductStep extends SignalWidget {
         _TextField(
           label: 'Produto ou serviço',
           initialValue: controller.productName.value,
-          hint: 'Ex.: CormeX AI Agent',
+          hint: 'Ex.: CormeX CRM',
           onChanged: (String value) => controller.productName.value = value,
         ),
         _TextField(

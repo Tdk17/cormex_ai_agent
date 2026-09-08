@@ -61,7 +61,7 @@ Alimenta a tela principal, incluindo métricas, contas autorizadas e campanhas p
       {
         "id": "campaign_01J...",
         "name": "CormeX SC Setembro",
-        "productName": "CormeX AI Agent",
+        "productName": "CormeX CRM",
         "objective": "leads",
         "channels": ["meta"],
         "status": "active",
@@ -111,7 +111,7 @@ Carrega o detalhe e o formulário completo de uma campanha autorizada.
   },
   "input": {
     "name": "CormeX SC Setembro",
-    "productName": "CormeX AI Agent",
+    "productName": "CormeX CRM",
     "productDescription": "Central de aquisição e vendas.",
     "offer": "Demonstração gratuita",
     "productUrl": "https://example.com/cormex",
@@ -170,7 +170,7 @@ Cria ou atualiza rascunho. Ausência de `campaignId` significa criação. A mesm
   "clientRequestId": "save:campaign_01J...:1725192000000",
   "campaign": {
     "name": "CormeX SC Setembro",
-    "productName": "CormeX AI Agent",
+    "productName": "CormeX CRM",
     "objective": "leads",
     "channels": ["meta"],
     "audience": {},
@@ -255,7 +255,7 @@ Gera uma sugestão editável para a seção de criativo. Não publica e não alt
   "section": "creative",
   "clientRequestId": "ai:workspace_01J...:1725192000000",
   "campaign": {
-    "productName": "CormeX AI Agent",
+    "productName": "CormeX CRM",
     "productDescription": "Central de aquisição e vendas.",
     "offer": "Demonstração gratuita",
     "objective": "leads",
@@ -276,7 +276,7 @@ Gera uma sugestão editável para a seção de criativo. Não publica e não alt
     "suggestion": {
       "headline": "Transforme sua operação comercial",
       "primaryText": "Capte, qualifique e acompanhe oportunidades em uma jornada única.",
-      "description": "Conheça o CormeX AI Agent.",
+      "description": "Conheça o CormeX CRM.",
       "callToAction": "LEARN_MORE",
       "rationale": "Texto direto para público empresarial.",
       "warnings": []

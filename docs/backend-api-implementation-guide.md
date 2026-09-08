@@ -1,4 +1,4 @@
-# Guia mestre de implementação das APIs — CormeX AI Agent
+# Guia mestre de implementação das APIs — CormeX CRM
 
 Versão do contrato: **2026-09-03**  
 Backend alvo: **Parse Server / Back4App Cloud Code**  

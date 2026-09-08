@@ -73,25 +73,17 @@ O DTO é sanitizado. Nunca retornar access token, refresh token, client secret, 
 
 Função de comando genérica. O campo `action` define a operação.
 
-### Ações genéricas OAuth
+### Ações OAuth/Embedded Signup
 
-Para provedores oficiais que usam OAuth/Embedded Signup:
+O WhatsApp usa a integração oficial da Meta e segue as mesmas ações dos demais provedores OAuth:
 
 - `start`;
 - `refresh`;
 - `disconnect`.
 
-### Ações WhatsApp por QR Code
+O Flutter não recebe token, app secret ou credenciais da conta. Ele recebe apenas a URL de autorização oficial criada pelo backend.
 
-Para o modo de sessão QR do WhatsApp:
-
-- `start_qr`: cria uma sessão isolada para o workspace e gera um QR de pareamento;
-- `refresh_qr`: invalida o QR anterior e gera outro QR curto/temporário;
-- `disconnect`: encerra a sessão e para imediatamente novos envios.
-
-O Flutter **não recebe o conteúdo da sessão do WhatsApp**. O backend deve retornar somente uma URL temporária HTTPS do próprio CormeX para uma página que mostra o QR Code. Essa URL deve expirar rapidamente e não pode permitir acesso a outro workspace.
-
-### Iniciar WhatsApp QR
+### Iniciar autorização do WhatsApp
 
 Request:
 
@@ -99,38 +91,27 @@ Request:
 {
   "workspaceId": "ws_01J...",
   "provider": "whatsapp",
-  "action": "start_qr",
+  "action": "start",
   "returnUrl": "https://tdk17.github.io/cormex_ai_agent/integrations",
   "clientRequestId": "integration_whatsapp_1788872400000"
 }
 ```
 
-Response esperado enquanto aguarda leitura do QR:
+Response esperado enquanto aguarda autorização na Meta:
 
 ```json
 {
   "ok": true,
   "data": {
     "status": "authorization_required",
-    "authorizationUrl": "https://api.cormex.example/connect/whatsapp/qr/qr_01J...?ticket=one_time_token",
-    "expiresAt": "2026-09-08T13:02:00.000Z",
-    "integration": {
-      "id": "integration_01J...",
-      "provider": "whatsapp",
-      "type": "messaging",
-      "status": "connecting",
-      "displayName": null,
-      "maskedAccount": null,
-      "capabilities": [],
-      "requiresAction": true,
-      "version": 1
-    }
+    "authorizationUrl": "https://www.facebook.com/vXX.X/dialog/oauth?...",
+    "expiresAt": "2026-09-08T13:10:00.000Z"
   },
   "meta": { "correlationId": "req_01J..." }
 }
 ```
 
-Depois que o cliente escanear o QR no próprio WhatsApp, `integrations.list` deve passar a retornar `status: connected` para aquele workspace.
+Depois que o usuário concluir a autorização na Meta e o callback for processado, `integrations.list` deve retornar `status: connected` para aquele workspace.
 
 ### Response para OAuth/Embedded Signup
 
@@ -178,78 +159,71 @@ Response:
 
 Desconectar deve:
 
-1. encerrar/revogar a sessão no adaptador utilizado;
-2. remover ou invalidar material de autenticação da sessão;
+1. revogar a autorização no provedor quando disponível;
+2. remover ou invalidar tokens e credenciais locais;
 3. parar novos envios e jobs automáticos imediatamente;
 4. preservar mensagens, leads, auditoria e métricas históricas;
-5. invalidar estados, tickets de QR e webhooks pendentes daquela integração.
+5. invalidar estados OAuth e operações pendentes daquela integração.
 
-## 3. WhatsApp — arquitetura multi-tenant por QR
+## 3. WhatsApp — arquitetura oficial Meta multi-tenant
 
 ### Regra principal
 
-Cada cliente do CormeX conecta **o próprio número**. A sessão pertence a um único `workspaceId`.
+Cada cliente do CormeX conecta **o próprio número**. A integração e sua credencial pertencem a um único `workspaceId`.
 
 Exemplo:
 
 ```text
-Workspace A -> sessão WA A -> número do Cliente A
-Workspace B -> sessão WA B -> número do Cliente B
-Workspace C -> sessão WA C -> número do Cliente C
+Workspace A -> credencial Meta A -> número do Cliente A
+Workspace B -> credencial Meta B -> número do Cliente B
+Workspace C -> credencial Meta C -> número do Cliente C
 ```
 
-Uma sessão nunca pode ser compartilhada entre workspaces.
+Uma credencial nunca pode ser compartilhada entre workspaces.
 
 ### Fluxo
 
 1. usuário autenticado abre Integrações;
-2. front chama `integrations.connect` com `provider=whatsapp` e `action=start_qr`;
-3. backend cria/recupera uma sessão exclusiva daquele workspace;
-4. backend gera QR e devolve `authorizationUrl` temporária;
-5. front abre essa URL;
-6. cliente escaneia com **WhatsApp > Aparelhos conectados > Conectar um aparelho**;
-7. adaptador confirma a sessão;
-8. backend grava somente metadados públicos em `Integration` e mantém credenciais da sessão em armazenamento protegido;
+2. front chama `integrations.connect` com `provider=whatsapp` e `action=start`;
+3. backend cria um `OAuthState` curto, aleatório e vinculado ao usuário e workspace;
+4. backend devolve a `authorizationUrl` oficial da Meta;
+5. front abre essa URL no navegador;
+6. usuário autoriza a conta e o número do WhatsApp Business;
+7. callback troca o código por token, valida WABA e `phoneNumberId` e assina os webhooks;
+8. backend criptografa a credencial em `IntegrationCredential` e grava somente metadados públicos em `Integration`;
 9. `integrations.list` passa para `connected`;
-10. motor de conversas passa a usar aquela sessão para receber/enviar mensagens daquele workspace.
+10. o motor de conversas passa a usar a credencial daquele workspace para receber e enviar mensagens.
 
 ### Requisitos obrigatórios do backend
 
 - isolamento rígido por `workspaceId` e `integrationId`;
-- uma chave lógica de sessão por workspace, por exemplo `wa:<workspaceId>`;
-- não enviar cookies/credenciais da sessão ao Flutter;
-- criptografar material de sessão em repouso;
-- ticket da página de QR curto, aleatório, de uso limitado e expirável;
-- regenerar QR quando expirar sem criar sessão duplicada;
+- uma chave lógica de integração por workspace e provider;
+- nunca enviar access token, app secret ou credenciais ao Flutter;
+- criptografar tokens em repouso com chave exclusiva do servidor;
+- `OAuthState` aleatório, de uso único e expirável;
+- validar `wabaId` e `phoneNumberId` contra a autorização recebida;
 - detectar `connected`, `disconnected`, `expired` e `authorization_error`;
-- reconectar com a sessão persistida quando o worker reiniciar;
-- impedir que dois workers controlem simultaneamente a mesma sessão;
+- renovar ou revogar credenciais sem criar integração duplicada;
+- impedir operações concorrentes sobre a mesma integração;
 - rate limit por workspace;
 - auditoria de conectar, reconectar e desconectar;
-- fila de mensagens por workspace para evitar mistura entre clientes;
+- fila de mensagens por workspace para impedir mistura entre clientes;
 - opt-out deve interromper IA, follow-ups e novos envios de marketing;
 - cada mensagem externa deve manter `providerMessageId` para deduplicação e status.
 
-### Adaptador
+### Configuração obrigatória do backend
 
-O backend deve implementar uma interface de canal para que o restante do CormeX não dependa diretamente da biblioteca escolhida:
+O Cloud Code anexado exige as variáveis:
 
-```text
-WhatsAppChannelAdapter
-  startSession(workspaceId)
-  getConnectionState(workspaceId)
-  refreshQr(workspaceId)
-  sendMessage(workspaceId, to, payload)
-  disconnect(workspaceId)
-  onInboundMessage(event)
-  onDeliveryUpdate(event)
-```
+- `WHATSAPP_APP_ID`;
+- `WHATSAPP_APP_SECRET`;
+- `WHATSAPP_CONFIG_ID`;
+- `WHATSAPP_GRAPH_VERSION`;
+- `WHATSAPP_OAUTH_CALLBACK_URL`;
+- `WHATSAPP_RETURN_URL_ALLOWLIST`;
+- `INTEGRATION_CREDENTIAL_ENCRYPTION_KEY`.
 
-Assim, se futuramente o produto migrar para a API oficial da Meta, o CRM, a IA, as conversas e o pipeline continuam usando o mesmo contrato interno.
-
-### Observação de produto
-
-O modo QR/Web é uma integração não oficial e pode sofrer mudanças, desconexões ou restrições do WhatsApp. Por isso, ele deve ser tratado no CormeX como um **adaptador substituível**, e não como dependência estrutural do CRM. A opção oficial da Meta pode ser adicionada posteriormente sem alterar o fluxo comercial da IA.
+O callback deve chamar o processamento de `whatsapp.oauth.callback`, validar o `state`, trocar o código por token, consultar WABA/números e concluir a integração.
 
 Os webhooks e o pipeline de mensagens estão em [Runtime automático](automation-runtime-api.md).
 
@@ -279,25 +253,25 @@ Para o Google Ads, o contrato especializado é a fonte de verdade:
 Separar obrigatoriamente:
 
 - `Integration`: estado e metadados públicos sanitizados;
-- `IntegrationCredential` ou `ChannelSession`: material de autenticação criptografado e sem CLP/ACL de leitura do cliente;
-- `OAuthState`: para fluxos OAuth;
-- `QrConnectionTicket`: hash do ticket, workspace, integração, expiração e uso;
+- `IntegrationCredential`: tokens criptografados e sem CLP/ACL de leitura do cliente;
+- `OAuthState`: hash do state, workspace, usuário, expiração e uso;
 - `ProviderWebhookEvent`: hash/ID para deduplicação e auditoria.
 
 ## 7. Erros
 
-`UNAUTHENTICATED`, `FORBIDDEN`, `WORKSPACE_NOT_FOUND`, `VALIDATION_ERROR`, `NOT_FOUND`, `CONFLICT`, `RATE_LIMITED`, `INTEGRATION_NOT_CONNECTED`, `AUTHORIZATION_ERROR`, `QR_EXPIRED`, `SESSION_DISCONNECTED`, `SESSION_CONFLICT`, `EXTERNAL_PROVIDER_ERROR`, `INTERNAL_ERROR`.
+`UNAUTHENTICATED`, `FORBIDDEN`, `WORKSPACE_NOT_FOUND`, `VALIDATION_ERROR`, `NOT_FOUND`, `CONFLICT`, `RATE_LIMITED`, `INTEGRATION_NOT_CONNECTED`, `AUTHORIZATION_ERROR`, `EXTERNAL_PROVIDER_ERROR`, `INTERNAL_ERROR`.
 
 ## 8. Critérios de aceite
 
-- [ ] cada workspace possui sua própria sessão WhatsApp;
-- [ ] um workspace nunca consegue consultar QR/sessão de outro;
-- [ ] `start_qr`, `refresh_qr` e `disconnect` são idempotentes;
-- [ ] QR/ticket expiram rapidamente;
-- [ ] sessão continua válida após reinício do worker quando o WhatsApp permitir;
-- [ ] nenhum cookie, token ou segredo de sessão aparece no bundle, response ou log;
+- [ ] cada workspace possui sua própria integração e credencial WhatsApp;
+- [ ] um workspace nunca consegue consultar credenciais de outro;
+- [ ] `start`, `refresh` e `disconnect` são idempotentes;
+- [ ] `OAuthState` expira rapidamente e é de uso único;
+- [ ] o retorno OAuth valida WABA e `phoneNumberId` autorizados;
+- [ ] a credencial é recuperada com segurança após reinício do worker;
+- [ ] nenhum token, app secret ou segredo aparece no bundle, response ou log;
 - [ ] revogação para jobs automáticos imediatamente;
 - [ ] eventos recebidos são deduplicados;
 - [ ] mensagens e filas sempre carregam `workspaceId`/`integrationId` internamente;
 - [ ] auditoria registra ator, ação, integração e `correlationId`;
-- [ ] existe caminho de migração para um adaptador oficial sem alterar CRM/IA/pipeline.
+- [ ] CRM, IA e pipeline dependem do contrato de integração, sem acessar diretamente os tokens da Meta.
