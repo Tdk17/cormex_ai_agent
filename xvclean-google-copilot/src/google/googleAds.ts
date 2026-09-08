@@ -36,6 +36,20 @@ async function googleAdsRequest<T>(input: {
   return json;
 }
 
+async function search<T>(input: {
+  accessToken: string;
+  customerId: string;
+  query: string;
+}): Promise<T[]> {
+  const result = await googleAdsRequest<Array<{ results?: T[] }>>({
+    accessToken: input.accessToken,
+    customerId: input.customerId,
+    path: 'googleAds:searchStream',
+    body: { query: input.query },
+  });
+  return result.flatMap((batch) => batch.results ?? []);
+}
+
 export async function fetchCampaignKpis(input: {
   accessToken: string;
   customerId: string;
@@ -46,7 +60,9 @@ export async function fetchCampaignKpis(input: {
     SELECT
       campaign.id,
       campaign.name,
+      campaign.resource_name,
       campaign.status,
+      campaign.campaign_budget,
       campaign.advertising_channel_type,
       metrics.impressions,
       metrics.clicks,
@@ -59,14 +75,41 @@ export async function fetchCampaignKpis(input: {
     WHERE segments.date BETWEEN '${input.startDate}' AND '${input.endDate}'
       AND campaign.status != 'REMOVED'
     ORDER BY metrics.cost_micros DESC`;
+  return search({ accessToken: input.accessToken, customerId: input.customerId, query });
+}
 
-  const result = await googleAdsRequest<Array<{ results?: unknown[] }>>({
+export async function fetchCampaignState(input: {
+  accessToken: string;
+  customerId: string;
+  campaignResourceName: string;
+}): Promise<unknown | null> {
+  const escaped = input.campaignResourceName.replace(/'/g, "\\'");
+  const rows = await search<unknown>({
     accessToken: input.accessToken,
     customerId: input.customerId,
-    path: 'googleAds:searchStream',
-    body: { query },
+    query: `SELECT campaign.resource_name, campaign.name, campaign.status, campaign.campaign_budget
+            FROM campaign
+            WHERE campaign.resource_name = '${escaped}'
+            LIMIT 1`,
   });
-  return result.flatMap((batch) => batch.results ?? []);
+  return rows[0] ?? null;
+}
+
+export async function fetchCampaignBudgetState(input: {
+  accessToken: string;
+  customerId: string;
+  campaignBudgetResourceName: string;
+}): Promise<{ campaignBudget?: { resourceName?: string; amountMicros?: string } } | null> {
+  const escaped = input.campaignBudgetResourceName.replace(/'/g, "\\'");
+  const rows = await search<{ campaignBudget?: { resourceName?: string; amountMicros?: string } }>({
+    accessToken: input.accessToken,
+    customerId: input.customerId,
+    query: `SELECT campaign_budget.resource_name, campaign_budget.amount_micros
+            FROM campaign_budget
+            WHERE campaign_budget.resource_name = '${escaped}'
+            LIMIT 1`,
+  });
+  return rows[0] ?? null;
 }
 
 export async function setCampaignStatus(input: {
