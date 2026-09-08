@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Conectar WhatsApp · CormeX</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #071522;
+      --panel: #ffffff;
+      --text: #10243a;
+      --muted: #66788a;
+      --accent: #0a7c69;
+      --border: #dce5eb;
+      --danger: #b42318;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: radial-gradient(circle at top, #103146 0, var(--bg) 55%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+    }
+    .card {
+      width: min(520px, 100%);
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.3);
+      text-align: center;
+    }
+    .brand { font-weight: 900; font-size: 14px; color: var(--accent); letter-spacing: .04em; }
+    h1 { margin: 10px 0 8px; font-size: 28px; }
+    p { margin: 0; color: var(--muted); line-height: 1.55; }
+    .qr-wrap {
+      margin: 24px auto 18px;
+      width: min(320px, 86vw);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: #fff;
+      padding: 18px;
+    }
+    #qr { width: 100%; height: 100%; object-fit: contain; }
+    .steps {
+      margin: 18px 0 0;
+      padding: 16px;
+      border-radius: 14px;
+      background: #f5f8fa;
+      color: #3f5366;
+      text-align: left;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .row { display: flex; gap: 10px; margin-top: 20px; }
+    button {
+      flex: 1;
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 16px;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .primary { background: var(--accent); color: #fff; }
+    .secondary { background: #edf2f5; color: var(--text); }
+    #status { margin-top: 14px; min-height: 22px; font-size: 13px; color: var(--muted); }
+    .error { color: var(--danger) !important; }
+    @media (max-width: 520px) {
+      body { padding: 12px; }
+      .card { border-radius: 18px; padding: 20px; }
+      h1 { font-size: 23px; }
+      .row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand">CORMEX CRM</div>
+    <h1>Conectar WhatsApp</h1>
+    <p>Escaneie o QR Code com o WhatsApp que será usado neste workspace.</p>
+
+    <div class="qr-wrap">
+      <img id="qr" alt="QR Code de conexão do WhatsApp" />
+    </div>
+
+    <div class="steps">
+      <strong>No celular:</strong><br />
+      WhatsApp → Aparelhos conectados → Conectar um aparelho → escaneie o código acima.
+    </div>
+
+    <div id="status">Este QR Code é temporário.</div>
+
+    <div class="row">
+      <button class="secondary" id="reload">Gerar outro QR</button>
+      <button class="primary" id="back">Já escaneei · Voltar</button>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      const qr = document.getElementById('qr');
+      const status = document.getElementById('status');
+      const back = document.getElementById('back');
+      const reload = document.getElementById('reload');
+
+      function decodeBase64Url(value) {
+        const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+        const padded = normalized + '='.repeat((4 - normalized.length % 4) % 4);
+        const binary = atob(padded);
+        const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+        return new TextDecoder().decode(bytes);
+      }
+
+      try {
+        const params = new URLSearchParams(location.hash.slice(1));
+        const raw = params.get('payload');
+        if (!raw) throw new Error('Payload ausente');
+
+        const data = JSON.parse(decodeBase64Url(raw));
+        if (!data.qrCode || !String(data.qrCode).startsWith('data:image/')) {
+          throw new Error('QR inválido');
+        }
+
+        qr.src = data.qrCode;
+
+        const expiresAt = data.expiresAt ? new Date(data.expiresAt) : null;
+        const timer = setInterval(() => {
+          if (!expiresAt || Number.isNaN(expiresAt.getTime())) return;
+          const seconds = Math.max(0, Math.ceil((expiresAt.getTime() - Date.now()) / 1000));
+          status.textContent = seconds > 0
+            ? `QR válido por aproximadamente ${seconds}s.`
+            : 'Este QR pode ter expirado. Gere outro código.';
+          if (seconds <= 0) clearInterval(timer);
+        }, 1000);
+
+        back.addEventListener('click', () => {
+          location.href = data.returnUrl || './';
+        });
+
+        reload.addEventListener('click', () => {
+          location.href = data.returnUrl || './';
+        });
+      } catch (error) {
+        qr.remove();
+        status.classList.add('error');
+        status.textContent = 'Não foi possível abrir o QR Code. Volte ao CormeX e gere outro código.';
+        back.textContent = 'Voltar ao CormeX';
+        back.addEventListener('click', () => { location.href = './'; });
+        reload.style.display = 'none';
+      }
+    })();
+  </script>
+</body>
+</html>
