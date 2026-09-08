@@ -41,8 +41,8 @@ class Endpoints {
   static const String followupsList = 'followups.list';
   static const String followupsUpsert = 'followups.upsert';
   static const String tasksList = 'tasks.list';
-  static const String integrationsList = 'integrations.list';
-  static const String integrationsConnect = 'integrations.connect';
+  static const String integrationsList = 'v1-integrations-list';
+  static const String integrationsConnect = 'v1-integrations-connect';
   static const String usageCurrent = 'usage.current';
   static const String teamList = 'v1-team-list';
   static const String teamInvite = 'v1-team-invite';
