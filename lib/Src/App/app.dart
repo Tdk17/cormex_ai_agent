@@ -9,7 +9,7 @@ class SalesAgentApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Agente de Vendas',
+      title: 'CormeX CRM',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,

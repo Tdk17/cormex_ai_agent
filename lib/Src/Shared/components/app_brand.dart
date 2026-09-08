@@ -40,7 +40,7 @@ class AppBrand extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(
-                'CormeX AI Agent',
+                'CormeX CRM',
                 style: TextStyle(
                   color: foreground,
                   fontWeight: FontWeight.w900,

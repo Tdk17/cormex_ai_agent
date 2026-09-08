@@ -1,4 +1,4 @@
-# Agente de Vendas SaaS — Flutter
+# CormeX CRM — Flutter
 
 Marcos 1 a 6 do front-end descrito no handoff técnico. O projeto preserva o padrão já adotado nos demais sistemas: `signals` para estado, `get_it` para injeção, `go_router` para navegação, `HttpManager` com Dio para o contrato REST/Parse e armazenamento seguro para a sessão.
 
@@ -14,7 +14,7 @@ Marcos 1 a 6 do front-end descrito no handoff técnico. O projeto preserva o pad
 - Auth guard e redirecionamento por sessão/workspace.
 - Login, cadastro, recuperação de senha e onboarding idempotente da empresa.
 - Shell responsivo com todas as rotas obrigatórias do MVP registradas.
-- Central de Aquisição como nova tela principal; Dashboard mantido como visão analítica.
+- Dashboard como entrada principal do CRM; Central de Aquisição mantida como módulo especializado.
 - Módulo de Leads responsivo com busca, filtros, paginação por cursor, cadastro, edição e detalhes.
 - Importação CSV com normalização, validação por linha, pré-visualização e resumo.
 - Repositórios conectados diretamente às APIs e contrato detalhado em `docs/leads-api.md`.

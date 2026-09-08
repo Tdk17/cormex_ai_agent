@@ -334,7 +334,7 @@ class _BrandLogo extends StatelessWidget {
               ),
               const SizedBox(width: 14),
               Text(
-                'CormeX\nAI Agent',
+                'CormeX\nCRM',
                 style: TextStyle(
                   color: large ? Colors.white : const Color(0xFF101828),
                   fontSize: large ? 30 : 23,

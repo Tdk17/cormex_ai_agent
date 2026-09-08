@@ -160,7 +160,7 @@ class AppShell extends SignalWidget {
               scrolledUnderElevation: 0,
               titleSpacing: 4,
               title: Text(
-                workspace?.name ?? 'CormeX CRM AI',
+                workspace?.name ?? 'CormeX CRM',
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               actions: <Widget>[

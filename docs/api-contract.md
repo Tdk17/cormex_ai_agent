@@ -1,4 +1,4 @@
-# Contrato API — Agente de Vendas SaaS
+# Contrato API — CormeX CRM
 
 Este arquivo versiona a fronteira entre Flutter e Cloud Code. Nomes de função, campos de DTO e códigos de erro não devem ser alterados unilateralmente.
 
