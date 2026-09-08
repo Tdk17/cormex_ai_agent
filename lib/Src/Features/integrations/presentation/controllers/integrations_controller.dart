@@ -97,10 +97,12 @@ class IntegrationsController {
           current.status == IntegrationStatuses.authorizationError;
       final isWhatsApp = provider == IntegrationProviders.whatsapp;
 
-      // All official providers, including WhatsApp Business, start or renew
-      // authorization through OAuth. Provider credentials remain exclusively
-      // in the backend and the client receives only the authorization URL.
-      final action = isDisconnected ? 'start' : 'refresh';
+      // WhatsApp currently uses an isolated QR/Web session per workspace.
+      // Meta OAuth remains a future/optional backend flow and must not be
+      // required by the current Connect WhatsApp button.
+      final action = isWhatsApp
+          ? (isDisconnected ? 'start_qr' : 'refresh_qr')
+          : (isDisconnected ? 'start' : 'refresh');
 
       final result = await _repository.connect(
         workspaceId: workspaceId,
@@ -121,8 +123,7 @@ class IntegrationsController {
           return null;
         }
         errorMessage.value = isWhatsApp
-            ? 'O backend não retornou a URL de autorização da Meta para o '
-                'WhatsApp.'
+            ? 'O backend não retornou a URL temporária do QR Code do WhatsApp.'
             : 'O backend não retornou a URL de autorização do provedor.';
         return null;
       }
@@ -130,13 +131,12 @@ class IntegrationsController {
       final uri = Uri.tryParse(authorizationUrl);
       if (uri == null || !uri.hasScheme) {
         errorMessage.value = isWhatsApp
-            ? 'A URL de autorização da Meta retornada pelo backend é inválida.'
+            ? 'A URL do QR Code retornada pelo backend é inválida.'
             : 'A URL de autorização retornada é inválida.';
         return null;
       }
       successMessage.value = isWhatsApp
-          ? 'Conclua a autorização do WhatsApp na página oficial da '
-              'Meta.'
+          ? 'Escaneie o QR Code com o WhatsApp do cliente para concluir a conexão.'
           : 'Conclua a autorização na página do provedor.';
       return uri;
     } on ApiException catch (error) {
