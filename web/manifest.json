@@ -1,35 +1,58 @@
 {
-    "name": "CormeX CRM",
-    "short_name": "CormeX CRM",
-    "start_url": ".",
-    "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "CRM de gestão comercial, aquisição, atendimento e automação com IA.",
-    "orientation": "portrait-primary",
-    "prefer_related_applications": false,
-    "icons": [
+  "id": "./",
+  "name": "CormeX CRM",
+  "short_name": "CormeX",
+  "description": "CRM inteligente para gestão comercial, leads, conversas, pipeline, follow-ups e automação de vendas com IA.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#030712",
+  "theme_color": "#071A2E",
+  "orientation": "any",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": ["business", "productivity"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icons/Icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/Icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/Icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/Icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Acessar CRM",
+      "short_name": "CRM",
+      "description": "Abrir o CormeX CRM",
+      "url": "./login",
+      "icons": [
         {
-            "src": "icons/Icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/Icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/Icon-maskable-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "icons/Icon-maskable-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
+          "src": "icons/Icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
         }
-    ]
+      ]
+    }
+  ]
 }
