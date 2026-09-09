@@ -23,6 +23,8 @@
   <meta name="theme-color" content="#071A2E">
   <meta name="color-scheme" content="light">
   <meta name="google-site-verification" content="ByesghzQafSVSf8hqZlv0ICwmj_yARMo1c3dKDqmZGE" />
+  <link rel="canonical" href="https://cormexcrm.com.br/">
+  <link rel="privacy-policy" href="https://cormexcrm.com.br/privacy.html">
 
   <!-- PWA / Android -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -40,9 +42,67 @@
 
   <title>CormeX CRM</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    Links legais mantidos no HTML base, além do conteúdo Flutter, para que
+    verificadores externos (como o Google OAuth Branding) consigam localizar
+    Política de Privacidade e Termos diretamente na página inicial.
+  -->
+  <style>
+    #cormex-legal-links {
+      position: fixed;
+      left: 50%;
+      bottom: 12px;
+      transform: translateX(-50%);
+      z-index: 2147483647;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 13px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 999px;
+      background: rgba(3,7,18,.88);
+      box-shadow: 0 8px 30px rgba(0,0,0,.28);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      font: 600 11px/1.2 Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      white-space: nowrap;
+    }
+
+    #cormex-legal-links a {
+      color: #cbd5e1;
+      text-decoration: none;
+    }
+
+    #cormex-legal-links a:hover,
+    #cormex-legal-links a:focus-visible {
+      color: #67e8f9;
+      text-decoration: underline;
+    }
+
+    #cormex-legal-links .separator {
+      color: rgba(255,255,255,.28);
+    }
+
+    @media (max-width: 520px) {
+      #cormex-legal-links {
+        bottom: 8px;
+        max-width: calc(100vw - 20px);
+        padding: 7px 11px;
+        font-size: 10px;
+      }
+    }
+  </style>
 </head>
 <body>
   <noscript>O CormeX CRM precisa de JavaScript habilitado para funcionar.</noscript>
+
+  <nav id="cormex-legal-links" aria-label="Links legais do CormeX CRM">
+    <a href="https://cormexcrm.com.br/privacy.html">Política de Privacidade</a>
+    <span class="separator" aria-hidden="true">•</span>
+    <a href="https://cormexcrm.com.br/terms.html">Termos de Serviço</a>
+  </nav>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
