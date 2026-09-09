@@ -5,6 +5,7 @@ import 'package:agente_vendas_saas/Src/Features/acquisition/presentation/pages/a
 import 'package:agente_vendas_saas/Src/Features/acquisition/presentation/pages/acquisition_wizard_page.dart';
 import 'package:agente_vendas_saas/Src/Features/agent/presentation/pages/agent_settings_page.dart';
 import 'package:agente_vendas_saas/Src/Features/agent/presentation/pages/agent_test_page.dart';
+import 'package:agente_vendas_saas/Src/Features/agent/presentation/pages/operational_agent_page.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/controllers/auth_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/login_page.dart';
@@ -261,6 +262,10 @@ class AppRouter {
       builder: (_, __) => const AgentSettingsPage(),
       routes: <RouteBase>[
         GoRoute(path: 'test', builder: (_, __) => const AgentTestPage()),
+        GoRoute(
+          path: 'operations',
+          builder: (_, __) => const OperationalAgentPage(),
+        ),
       ],
     );
   }
@@ -330,6 +335,10 @@ class AppRouter {
       redirect: (_, __) => '/automation/agent',
       routes: <RouteBase>[
         GoRoute(path: 'test', redirect: (_, __) => '/automation/agent/test'),
+        GoRoute(
+          path: 'operations',
+          redirect: (_, __) => '/automation/agent/operations',
+        ),
       ],
     );
   }
