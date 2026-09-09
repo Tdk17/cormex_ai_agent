@@ -97,12 +97,10 @@ class IntegrationsController {
           current.status == IntegrationStatuses.authorizationError;
       final isWhatsApp = provider == IntegrationProviders.whatsapp;
 
-      // WhatsApp currently uses an isolated QR/Web session per workspace.
-      // Meta OAuth remains a future/optional backend flow and must not be
-      // required by the current Connect WhatsApp button.
-      final action = isWhatsApp
-          ? (isDisconnected ? 'start_qr' : 'refresh_qr')
-          : (isDisconnected ? 'start' : 'refresh');
+      // O backend atual segue o contrato OAuth/Embedded Signup oficial:
+      // start, refresh e disconnect. Não envie start_qr/refresh_qr aqui,
+      // pois essas ações não fazem parte do contrato publicado da API.
+      final action = isDisconnected ? 'start' : 'refresh';
 
       final result = await _repository.connect(
         workspaceId: workspaceId,
@@ -123,7 +121,7 @@ class IntegrationsController {
           return null;
         }
         errorMessage.value = isWhatsApp
-            ? 'O backend não retornou a URL temporária do QR Code do WhatsApp.'
+            ? 'O backend não retornou a URL de autorização do WhatsApp.'
             : 'O backend não retornou a URL de autorização do provedor.';
         return null;
       }
@@ -131,16 +129,24 @@ class IntegrationsController {
       final uri = Uri.tryParse(authorizationUrl);
       if (uri == null || !uri.hasScheme) {
         errorMessage.value = isWhatsApp
-            ? 'A URL do QR Code retornada pelo backend é inválida.'
+            ? 'A URL de autorização do WhatsApp retornada pelo backend é inválida.'
             : 'A URL de autorização retornada é inválida.';
         return null;
       }
       successMessage.value = isWhatsApp
-          ? 'Escaneie o QR Code com o WhatsApp do cliente para concluir a conexão.'
+          ? 'Conclua a autorização do WhatsApp na página oficial aberta.'
           : 'Conclua a autorização na página do provedor.';
       return uri;
     } on ApiException catch (error) {
-      _setError(error.userMessage, error.correlationId);
+      final code = error.code.toUpperCase();
+      if (code == 'FORBIDDEN' || code == 'UNAUTHORIZED' || code == 'PERMISSION_DENIED') {
+        _setError(
+          'Sua sessão está autenticada, mas o backend recusou a permissão para integrar este workspace. O proprietário (owner) e administradores devem ter permissão para conectar integrações.',
+          error.correlationId,
+        );
+      } else {
+        _setError(error.userMessage, error.correlationId);
+      }
       return null;
     } on Object {
       _setError('Não foi possível iniciar a conexão com o canal.', null);
