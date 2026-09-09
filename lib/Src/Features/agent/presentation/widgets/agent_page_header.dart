@@ -92,25 +92,32 @@ class AgentPageHeader extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.border),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+            child: Wrap(
+              spacing: 2,
+              runSpacing: 2,
               children: <Widget>[
                 _HeaderTab(
-                  label: 'Configuração',
+                  label: 'Agente comercial',
                   icon: Icons.tune_rounded,
                   selected: activeSection == 'settings',
-                  onTap: () => context.go('/agent'),
+                  onTap: () => context.go('/automation/agent'),
                 ),
                 _HeaderTab(
                   label: 'Testar agente',
                   icon: Icons.science_outlined,
                   selected: activeSection == 'test',
-                  onTap: () => context.go('/agent/test'),
+                  onTap: () => context.go('/automation/agent/test'),
+                ),
+                _HeaderTab(
+                  label: 'Operação 24h',
+                  icon: Icons.radar_outlined,
+                  selected: activeSection == 'operations',
+                  onTap: () => context.go('/automation/agent/operations'),
                 ),
               ],
             ),
           );
-          if (constraints.maxWidth < 620) {
+          if (constraints.maxWidth < 760) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
@@ -158,6 +165,7 @@ class _HeaderTab extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Icon(
                 icon,
