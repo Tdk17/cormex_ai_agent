@@ -19,6 +19,7 @@ import 'package:agente_vendas_saas/Src/Features/dashboard/presentation/pages/das
 import 'package:agente_vendas_saas/Src/Features/followups/presentation/pages/followups_page.dart';
 import 'package:agente_vendas_saas/Src/Features/integrations/presentation/pages/integrations_page.dart';
 import 'package:agente_vendas_saas/Src/Features/knowledge/presentation/pages/knowledge_page.dart';
+import 'package:agente_vendas_saas/Src/Features/landing/presentation/pages/landing_page.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/lead_detail_page.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/lead_form_page.dart';
 import 'package:agente_vendas_saas/Src/Features/leads/presentation/pages/lead_import_page.dart';
@@ -38,10 +39,11 @@ class AppRouter {
   AppRouter(this._authController) {
     _refresh = _RouterRefresh(_authController);
     router = GoRouter(
-      initialLocation: '/splash',
+      initialLocation: '/',
       refreshListenable: _refresh,
       redirect: _redirect,
       routes: <RouteBase>[
+        GoRoute(path: '/', builder: (_, __) => const LandingPage()),
         GoRoute(path: '/splash', builder: (_, __) => const SplashPage()),
         GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
         GoRoute(path: '/register', builder: (_, __) => const RegisterPage()),
@@ -146,8 +148,8 @@ class AppRouter {
               ),
               const SizedBox(height: 14),
               FilledButton(
-                onPressed: () => context.go('/dashboard'),
-                child: const Text('Voltar ao CRM'),
+                onPressed: () => context.go('/'),
+                child: const Text('Voltar ao início'),
               ),
             ],
           ),
@@ -164,16 +166,27 @@ class AppRouter {
     final status = _authController.status.value;
     final session = _authController.session.value;
     final path = state.uri.path;
+    final atLanding = path == '/';
     final atSplash = path == '/splash';
     final atAuth =
         path == '/login' || path == '/register' || path == '/forgot-password';
     final atOnboarding = path == '/onboarding';
+    final publicRoute = atLanding || atAuth;
+
+    if (atLanding) return null;
 
     if (status == AuthStatus.initial || status == AuthStatus.loading) {
-      return atSplash ? null : '/splash';
+      return publicRoute || atSplash ? null : '/splash';
     }
-    if (session == null) return atAuth ? null : '/login';
-    if (!session.hasWorkspace) return atOnboarding ? null : '/onboarding';
+
+    if (session == null) {
+      return publicRoute ? null : '/login';
+    }
+
+    if (!session.hasWorkspace) {
+      return atOnboarding ? null : '/onboarding';
+    }
+
     if (atSplash || atAuth || atOnboarding) return '/dashboard';
     return null;
   }
