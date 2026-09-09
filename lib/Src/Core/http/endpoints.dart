@@ -54,6 +54,11 @@ class Endpoints {
   static const String integrationsList = 'v1-integrations-list';
   static const String integrationsConnect = 'v1-integrations-connect';
   static const String usageCurrent = 'usage.current';
+
+  static const String billingPlansList = 'v1-billing-plans-list';
+  static const String billingCheckoutCreate = 'v1-billing-checkout-create';
+  static const String billingCheckoutStatus = 'v1-billing-checkout-status';
+
   static const String teamList = 'v1-team-list';
   static const String teamInvite = 'v1-team-invite';
   static const String teamUpdateRole = 'v1-team-update-role';
