@@ -35,6 +35,11 @@ class AppShell extends SignalWidget {
       <_NavItem>[
         _NavItem('/automation/agent', 'Agente de IA', Icons.auto_awesome_outlined),
         _NavItem(
+          '/automation/agent/operations',
+          'IA Operacional 24h',
+          Icons.psychology_alt_outlined,
+        ),
+        _NavItem(
           '/automation/followups',
           'Follow-ups',
           Icons.schedule_send_outlined,
@@ -290,6 +295,17 @@ class _NavigationList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final selectedPath = groups
+        .expand((group) => group.items)
+        .map((item) => item.path)
+        .where(
+          (path) => currentPath == path || currentPath.startsWith('$path/'),
+        )
+        .fold<String>(
+          '',
+          (best, path) => path.length > best.length ? path : best,
+        );
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(12, 2, 12, 14),
       children: <Widget>[
@@ -309,8 +325,7 @@ class _NavigationList extends StatelessWidget {
           for (final item in group.items)
             _SidebarItem(
               item: item,
-              selected: currentPath == item.path ||
-                  currentPath.startsWith('${item.path}/'),
+              selected: item.path == selectedPath,
               onTap: () => onNavigate(item.path),
             ),
         ],
