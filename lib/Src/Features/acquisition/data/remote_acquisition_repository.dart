@@ -177,6 +177,7 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
       contentType: contentType,
       onSendProgress: onSendProgress,
     );
+
     return switch (result) {
       ApiSuccess<Map<String, dynamic>>(:final data) => () {
           final url = data['url']?.toString().trim() ?? '';
@@ -225,7 +226,7 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
       name: Endpoints.googleAdsOAuthStart,
       parameters: <String, dynamic>{
         'workspaceId': workspaceId,
-        'returnUrl': returnUrl,
+        'returnUrl': _integrationReturnUrl(returnUrl),
       },
     );
     return switch (result) {
@@ -256,6 +257,18 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
       parameters: parameters,
     );
     return _campaign(result);
+  }
+
+  static String _integrationReturnUrl(String raw) {
+    final parsed = Uri.tryParse(raw.trim());
+    if (parsed == null || !parsed.hasScheme || parsed.host.isEmpty) {
+      return 'https://cormexcrm.com.br/integrations';
+    }
+    return parsed.replace(
+      path: '/integrations',
+      query: null,
+      fragment: null,
+    ).toString();
   }
 
   static AcquisitionMutationResult _campaign(
