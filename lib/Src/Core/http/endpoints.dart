@@ -18,6 +18,16 @@ class Endpoints {
   static const String leadsUpdate = 'v1-leads-update';
   static const String leadsImport = 'v1-leads-import';
 
+  static const String customersList = 'v1-customers-list';
+  static const String customersCreate = 'v1-customers-create';
+  static const String customersGet = 'v1-customers-get';
+  static const String customersUpdate = 'v1-customers-update';
+
+  static const String accountsList = 'v1-accounts-list';
+  static const String accountsCreate = 'v1-accounts-create';
+  static const String accountsGet = 'v1-accounts-get';
+  static const String accountsUpdate = 'v1-accounts-update';
+
   static const String pipelineList = 'v1-pipeline-list';
   static const String pipelineGet = 'v1-pipeline-get';
   static const String pipelineCreate = 'v1-pipeline-create';
