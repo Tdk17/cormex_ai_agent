@@ -44,13 +44,10 @@ class Endpoints {
   static const String agentUpdate = 'v1-agent-update';
   static const String agentTestReply = 'v1-agent-test-reply';
 
-  // Knowledge uses the canonical v1 contract implemented by mvp-services.js.
   static const String knowledgeList = 'v1-knowledge-list';
   static const String knowledgeCreate = 'v1-knowledge-create';
   static const String knowledgeDelete = 'v1-knowledge-delete';
 
-  // Follow-up automation rules intentionally use followups.*. The v1-followups-*
-  // functions represent scheduled CRM activities and are a different domain model.
   static const String followupsList = 'followups.list';
   static const String followupsUpsert = 'followups.upsert';
   static const String tasksList = 'v1-tasks-list';
@@ -61,6 +58,11 @@ class Endpoints {
   static const String teamList = 'v1-team-list';
   static const String teamInvite = 'v1-team-invite';
   static const String teamUpdateRole = 'v1-team-update-role';
+
+  static const String billingCurrent = 'v1-billing-current';
+  static const String billingPlans = 'v1-billing-plans';
+  static const String billingCheckout = 'v1-billing-checkout';
+  static const String billingCancel = 'v1-billing-cancel';
 
   static const String acquisitionOverview = 'v1-acquisition-overview';
   static const String acquisitionCampaignGet = 'v1-acquisition-campaign-get';
