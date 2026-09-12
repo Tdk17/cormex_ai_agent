@@ -160,5 +160,5 @@ void setupDependencies() {
   sl.registerFactory<OpportunityFormController>(
     () => OpportunityFormController(sl(), sl(), sl(), sl()),
   );
-  sl.registerLazySingleton<AppRouter>(() => AppRouter(sl()));
+  sl.registerLazySingleton<AppRouter>(() => AppRouter(sl(), sl()));
 }
