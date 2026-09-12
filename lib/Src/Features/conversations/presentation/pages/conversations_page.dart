@@ -271,16 +271,8 @@ class _StartConversationDialogState extends State<_StartConversationDialog> {
                       child: Text('WhatsApp'),
                     ),
                     DropdownMenuItem<String>(
-                      value: ConversationChannels.instagram,
-                      child: Text('Instagram'),
-                    ),
-                    DropdownMenuItem<String>(
                       value: ConversationChannels.email,
                       child: Text('E-mail'),
-                    ),
-                    DropdownMenuItem<String>(
-                      value: ConversationChannels.webchat,
-                      child: Text('Webchat'),
                     ),
                   ],
                   onChanged: (String? value) {
@@ -298,25 +290,35 @@ class _StartConversationDialogState extends State<_StartConversationDialog> {
                 TextFormField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Telefone com DDD',
+                  decoration: InputDecoration(
+                    labelText: _channel == ConversationChannels.whatsapp
+                        ? 'Telefone com DDD *'
+                        : 'Telefone com DDD (opcional)',
                     hintText: '+55 47 99999-9999',
                   ),
+                  validator: (String? value) {
+                    if (_channel == ConversationChannels.whatsapp &&
+                        (value?.trim().isEmpty ?? true)) {
+                      return 'Informe o telefone do contato.';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'E-mail (opcional)',
+                  decoration: InputDecoration(
+                    labelText: _channel == ConversationChannels.email
+                        ? 'E-mail *'
+                        : 'E-mail (opcional)',
                   ),
-                  validator: (_) {
-                    final hasDestination =
-                        _phoneController.text.trim().isNotEmpty ||
-                        _emailController.text.trim().isNotEmpty;
-                    return hasDestination
-                        ? null
-                        : 'Informe o telefone ou o e-mail do contato.';
+                  validator: (String? value) {
+                    if (_channel == ConversationChannels.email &&
+                        (value?.trim().isEmpty ?? true)) {
+                      return 'Informe o e-mail do contato.';
+                    }
+                    return null;
                   },
                 ),
                 const SizedBox(height: 12),
