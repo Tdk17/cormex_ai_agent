@@ -57,7 +57,7 @@ class Endpoints {
 
   static const String integrationsList = 'v1-integrations-list';
   static const String integrationsConnect = 'v1-integrations-connect';
-  static const String usageCurrent = 'usage.current';
+  static const String usageCurrent = 'v1-usage-current';
   static const String teamList = 'v1-team-list';
   static const String teamInvite = 'v1-team-invite';
   static const String teamUpdateRole = 'v1-team-update-role';
@@ -71,4 +71,7 @@ class Endpoints {
 
   static const String googleAdsConnectionStatus = 'v1-google-ads-connection-status';
   static const String googleAdsOAuthStart = 'v1-google-ads-oauth-start';
+  static const String googleAdsAccounts = 'v1-google-ads-accounts';
+  static const String googleAdsSelectAccount = 'v1-google-ads-select-account';
+  static const String googleAdsDisconnect = 'v1-google-ads-disconnect';
 }
