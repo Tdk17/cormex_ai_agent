@@ -62,7 +62,8 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
     switch (result) {
       case ApiSuccess<Map<String, dynamic>>(:final data):
         if (_workspaceId != workspaceId) return;
-        final raw = data['items'] ?? data[_isCustomers ? 'customers' : 'accounts'];
+        final directoryKey = _isCustomers ? 'customers' : 'accounts';
+        final raw = data['items'] ?? data[directoryKey];
         setState(() { _items = _maps(raw).toList(growable: false); _loading = false; });
       case ApiFailure<Map<String, dynamic>>(:final error):
         if (_workspaceId != workspaceId) return;
