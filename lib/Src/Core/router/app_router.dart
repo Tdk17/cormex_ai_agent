@@ -11,6 +11,7 @@ import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/forgot_p
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/login_page.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/register_page.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/pages/splash_page.dart';
+import 'package:agente_vendas_saas/Src/Features/billing/presentation/controllers/billing_controller.dart';
 import 'package:agente_vendas_saas/Src/Features/billing/presentation/pages/billing_page.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/presentation/pages/conversations_page.dart';
 import 'package:agente_vendas_saas/Src/Features/crm/accounts/presentation/pages/accounts_page.dart';
@@ -37,8 +38,8 @@ import 'package:go_router/go_router.dart';
 import 'package:signals/signals.dart';
 
 class AppRouter {
-  AppRouter(this._authController) {
-    _refresh = _RouterRefresh(_authController);
+  AppRouter(this._authController, this._billingController) {
+    _refresh = _RouterRefresh(_authController, _billingController);
     router = GoRouter(
       initialLocation: '/',
       refreshListenable: _refresh,
@@ -160,6 +161,7 @@ class AppRouter {
   }
 
   final AuthController _authController;
+  final BillingController _billingController;
   late final _RouterRefresh _refresh;
   late final GoRouter router;
 
@@ -172,6 +174,7 @@ class AppRouter {
     final atAuth =
         path == '/login' || path == '/register' || path == '/forgot-password';
     final atOnboarding = path == '/onboarding';
+    final atBilling = path == '/billing';
     final publicRoute = atLanding || atAuth;
 
     if (atLanding) return null;
@@ -188,7 +191,14 @@ class AppRouter {
       return atOnboarding ? null : '/onboarding';
     }
 
-    if (atSplash || atAuth || atOnboarding) return '/dashboard';
+    final entitlement = _billingController.overview.value?.entitlement;
+    if (entitlement?.requiresSubscription == true && !atBilling) {
+      return '/billing';
+    }
+
+    if (atSplash || atAuth || atOnboarding) {
+      return entitlement?.requiresSubscription == true ? '/billing' : '/dashboard';
+    }
     return null;
   }
 
@@ -345,10 +355,12 @@ class AppRouter {
 }
 
 class _RouterRefresh extends ChangeNotifier {
-  _RouterRefresh(AuthController controller) {
+  _RouterRefresh(AuthController authController, BillingController billingController) {
     _disposeEffect = effect(() {
-      controller.status.value;
-      controller.session.value;
+      authController.status.value;
+      authController.session.value;
+      billingController.state.value;
+      billingController.overview.value;
       scheduleMicrotask(notifyListeners);
     });
   }
