@@ -10,10 +10,7 @@ import 'package:flutter/material.dart';
 enum CrmDirectoryType { customers, accounts }
 
 class CrmDirectoryPage extends StatefulWidget {
-  const CrmDirectoryPage({
-    required this.type,
-    super.key,
-  });
+  const CrmDirectoryPage({required this.type, super.key});
 
   final CrmDirectoryType type;
 
@@ -37,6 +34,8 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
       _isCustomers ? Endpoints.customersList : Endpoints.accountsList;
   String get _createEndpoint =>
       _isCustomers ? Endpoints.customersCreate : Endpoints.accountsCreate;
+  String get _updateEndpoint =>
+      _isCustomers ? Endpoints.customersUpdate : Endpoints.accountsUpdate;
   String? get _workspaceId => _auth.session.value?.selectedWorkspace?.id;
 
   @override
@@ -65,10 +64,7 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
 
     final result = await _http.cloudFunction(
       name: _listEndpoint,
-      parameters: <String, dynamic>{
-        'workspaceId': workspaceId,
-        'limit': 100,
-      },
+      parameters: <String, dynamic>{'workspaceId': workspaceId, 'limit': 100},
     );
 
     if (!mounted) return;
@@ -85,23 +81,31 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
         setState(() {
           _loading = false;
           _error = error.code == 'INVALID_FUNCTION'
-              ? 'O cadastro de ${_title.toLowerCase()} está pronto no aplicativo, mas a API $_listEndpoint ainda precisa ser publicada no Back4App.'
+              ? 'A API $_listEndpoint ainda precisa ser publicada no Back4App.'
               : error.userMessage;
         });
     }
   }
 
-  Future<void> _openCreateDialog() async {
-    final name = TextEditingController();
-    final email = TextEditingController();
-    final phone = TextEditingController();
-    final document = TextEditingController();
-    final extra = TextEditingController();
+  Future<void> _openEditor([Map<String, dynamic>? current]) async {
+    if (_saving) return;
+    final editing = current != null;
+    final name = TextEditingController(text: current?['name']?.toString() ?? '');
+    final email = TextEditingController(
+      text: (_isCustomers ? current?['email'] : current?['website'])?.toString() ?? '',
+    );
+    final phone = TextEditingController(text: current?['phone']?.toString() ?? '');
+    final document = TextEditingController(text: current?['document']?.toString() ?? '');
+    final extra = TextEditingController(text: current?['legalName']?.toString() ?? '');
 
     final shouldSave = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
-        title: Text('Cadastrar ${_isCustomers ? 'cliente' : 'empresa'}'),
+        title: Text(
+          editing
+              ? 'Editar ${_isCustomers ? 'cliente' : 'empresa'}'
+              : 'Cadastrar ${_isCustomers ? 'cliente' : 'empresa'}',
+        ),
         content: SizedBox(
           width: 520,
           child: SingleChildScrollView(
@@ -110,7 +114,7 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
               children: <Widget>[
                 TextField(
                   controller: name,
-                  autofocus: true,
+                  autofocus: !editing,
                   decoration: InputDecoration(
                     labelText: _isCustomers ? 'Nome *' : 'Nome fantasia *',
                   ),
@@ -159,7 +163,7 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Cadastrar'),
+            child: Text(editing ? 'Salvar' : 'Cadastrar'),
           ),
         ],
       ),
@@ -189,12 +193,11 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
 
     final payload = <String, dynamic>{
       'name': trimmedName,
-      if (phone.text.trim().isNotEmpty) 'phone': phone.text.trim(),
-      if (document.text.trim().isNotEmpty) 'document': document.text.trim(),
-      if (_isCustomers && email.text.trim().isNotEmpty) 'email': email.text.trim(),
-      if (!_isCustomers && extra.text.trim().isNotEmpty)
-        'legalName': extra.text.trim(),
-      if (!_isCustomers && email.text.trim().isNotEmpty) 'website': email.text.trim(),
+      'phone': phone.text.trim(),
+      'document': document.text.trim(),
+      if (_isCustomers) 'email': email.text.trim(),
+      if (!_isCustomers) 'legalName': extra.text.trim(),
+      if (!_isCustomers) 'website': email.text.trim(),
     };
 
     name.dispose();
@@ -202,13 +205,19 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
     phone.dispose();
     document.dispose();
     extra.dispose();
-    await _create(payload);
+
+    if (editing) {
+      final id = current['id']?.toString();
+      if (id == null || id.isEmpty) return;
+      await _update(id, payload);
+    } else {
+      await _create(payload);
+    }
   }
 
   Future<void> _create(Map<String, dynamic> entity) async {
     final workspaceId = _workspaceId;
     if (workspaceId == null || _saving) return;
-
     setState(() {
       _saving = true;
       _error = null;
@@ -223,14 +232,44 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
             'crm_${_isCustomers ? 'customer' : 'account'}_${DateTime.now().millisecondsSinceEpoch}',
       },
     );
+    await _handleSaveResult(result, workspaceId, created: true);
+  }
 
+  Future<void> _update(String id, Map<String, dynamic> entity) async {
+    final workspaceId = _workspaceId;
+    if (workspaceId == null || _saving) return;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+
+    final result = await _http.cloudFunction(
+      name: _updateEndpoint,
+      parameters: <String, dynamic>{
+        'workspaceId': workspaceId,
+        _isCustomers ? 'customerId' : 'accountId': id,
+        _isCustomers ? 'customer' : 'account': entity,
+      },
+    );
+    await _handleSaveResult(result, workspaceId, created: false);
+  }
+
+  Future<void> _handleSaveResult(
+    ApiResult<Map<String, dynamic>> result,
+    String workspaceId, {
+    required bool created,
+  }) async {
     if (!mounted) return;
     switch (result) {
       case ApiSuccess<Map<String, dynamic>>():
         if (_workspaceId != workspaceId) return;
         setState(() => _saving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${_capitalize(_entityLabel)} cadastrado com sucesso.')),
+          SnackBar(
+            content: Text(
+              '${_capitalize(_entityLabel)} ${created ? 'cadastrado' : 'atualizado'} com sucesso.',
+            ),
+          ),
         );
         await _load();
       case ApiFailure<Map<String, dynamic>>(:final error):
@@ -238,7 +277,7 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
         setState(() {
           _saving = false;
           _error = error.code == 'INVALID_FUNCTION'
-              ? 'A API $_createEndpoint ainda não está publicada no Back4App.'
+              ? 'A API ${created ? _createEndpoint : _updateEndpoint} ainda não está publicada no Back4App.'
               : error.userMessage;
         });
     }
@@ -273,7 +312,7 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
                     ],
                   ),
                   FilledButton.icon(
-                    onPressed: _saving ? null : _openCreateDialog,
+                    onPressed: _saving ? null : () => _openEditor(),
                     icon: _saving
                         ? const SizedBox.square(
                             dimension: 16,
@@ -351,12 +390,13 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
+        onTap: _saving ? null : () => _openEditor(item),
         leading: CircleAvatar(
           child: Icon(_isCustomers ? Icons.person_outline : Icons.apartment_outlined),
         ),
         title: Text(name == null || name.isEmpty ? 'Sem nome' : name),
         subtitle: secondary == null ? null : Text(secondary),
-        trailing: const Icon(Icons.chevron_right_rounded),
+        trailing: const Icon(Icons.edit_outlined),
       ),
     );
   }
