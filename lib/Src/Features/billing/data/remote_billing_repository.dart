@@ -87,8 +87,8 @@ class RemoteBillingRepository implements BillingRepository {
   static String _billingReturnUrl(String raw) {
     final uri = Uri.tryParse(raw.trim());
     if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
-      return 'https://cormexcrm.com.br/settings/billing';
+      return 'https://cormexcrm.com.br/billing';
     }
-    return uri.replace(path: '/settings/billing', query: null, fragment: null).toString();
+    return uri.replace(path: '/billing', query: null, fragment: null).toString();
   }
 }
