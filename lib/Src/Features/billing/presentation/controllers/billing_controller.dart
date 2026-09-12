@@ -15,6 +15,7 @@ class BillingController {
       _observedWorkspaceId = workspaceId;
       batch(() {
         overview.value = null;
+        catalog.value = null;
         errorMessage.value = null;
         correlationId.value = null;
         state.value = ScreenState.initial;
@@ -29,8 +30,10 @@ class BillingController {
   late final void Function() _disposeWorkspaceEffect;
 
   final Signal<ScreenState> state = signal(ScreenState.initial);
-  final Signal<BillingOverviewModel?> overview =
-      signal<BillingOverviewModel?>(null);
+  final Signal<BillingOverviewModel?> overview = signal<BillingOverviewModel?>(null);
+  final Signal<BillingCatalogModel?> catalog = signal<BillingCatalogModel?>(null);
+  final Signal<String?> busyPlanCode = signal<String?>(null);
+  final Signal<bool> isCancelling = signal(false);
   final Signal<String?> errorMessage = signal<String?>(null);
   final Signal<String?> correlationId = signal<String?>(null);
 
@@ -49,10 +52,14 @@ class BillingController {
     });
 
     try {
-      final data = await _repository.getCurrent(workspaceId: workspaceId);
+      final results = await Future.wait<dynamic>(<Future<dynamic>>[
+        _repository.getCurrent(workspaceId: workspaceId),
+        _repository.getPlans(workspaceId: workspaceId),
+      ]);
       if (_workspaceId != workspaceId) return;
       batch(() {
-        overview.value = data;
+        overview.value = results[0] as BillingOverviewModel;
+        catalog.value = results[1] as BillingCatalogModel;
         state.value = ScreenState.success;
       });
     } on ApiException catch (error) {
@@ -65,14 +72,61 @@ class BillingController {
     } on Object {
       if (_workspaceId != workspaceId) return;
       batch(() {
-        errorMessage.value = 'Não foi possível carregar o plano e o consumo.';
+        errorMessage.value = 'Não foi possível carregar os planos e a assinatura.';
         state.value = ScreenState.error;
       });
     }
   }
 
-  String? get _workspaceId =>
-      _authController.session.value?.selectedWorkspace?.id;
+  Future<String?> startCheckout(BillingPlanModel plan, String returnUrl) async {
+    final workspaceId = _workspaceId;
+    if (workspaceId == null || busyPlanCode.value != null) return null;
+    batch(() {
+      busyPlanCode.value = plan.id;
+      errorMessage.value = null;
+    });
+    try {
+      final checkout = await _repository.checkout(
+        workspaceId: workspaceId,
+        planCode: plan.id,
+        returnUrl: returnUrl,
+      );
+      return checkout.checkoutUrl.trim().isEmpty ? null : checkout.checkoutUrl.trim();
+    } on ApiException catch (error) {
+      errorMessage.value = error.userMessage;
+      correlationId.value = error.correlationId;
+      return null;
+    } on Object {
+      errorMessage.value = 'Não foi possível iniciar a assinatura.';
+      return null;
+    } finally {
+      busyPlanCode.value = null;
+    }
+  }
+
+  Future<bool> cancelSubscription() async {
+    final workspaceId = _workspaceId;
+    if (workspaceId == null || isCancelling.value) return false;
+    batch(() {
+      isCancelling.value = true;
+      errorMessage.value = null;
+    });
+    try {
+      overview.value = await _repository.cancel(workspaceId: workspaceId);
+      return true;
+    } on ApiException catch (error) {
+      errorMessage.value = error.userMessage;
+      correlationId.value = error.correlationId;
+      return false;
+    } on Object {
+      errorMessage.value = 'Não foi possível cancelar a assinatura.';
+      return false;
+    } finally {
+      isCancelling.value = false;
+    }
+  }
+
+  String? get _workspaceId => _authController.session.value?.selectedWorkspace?.id;
 
   void dispose() => _disposeWorkspaceEffect();
 }
