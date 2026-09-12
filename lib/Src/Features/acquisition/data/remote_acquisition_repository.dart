@@ -34,15 +34,10 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
       },
     );
     return switch (result) {
-      ApiSuccess<Map<String, dynamic>>(:final data, :final meta) =>
-        AcquisitionOverview(
+      ApiSuccess<Map<String, dynamic>>(:final data, :final meta) => AcquisitionOverview(
           metrics: AcquisitionMetricsModel.fromJson(_map(data['metrics'])),
-          accounts: _maps(data['accounts'])
-              .map(AcquisitionAdAccountModel.fromJson)
-              .toList(growable: false),
-          campaigns: _maps(data['campaigns'] ?? data['items'])
-              .map(AcquisitionCampaignModel.fromJson)
-              .toList(growable: false),
+          accounts: _maps(data['accounts']).map(AcquisitionAdAccountModel.fromJson).toList(growable: false),
+          campaigns: _maps(data['campaigns'] ?? data['items']).map(AcquisitionCampaignModel.fromJson).toList(growable: false),
           nextCursor: meta.nextCursor ?? data['nextCursor']?.toString(),
           correlationId: meta.correlationId,
         ),
@@ -51,82 +46,47 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
   }
 
   @override
-  Future<AcquisitionCampaignModel> getCampaign({
-    required String workspaceId,
-    required String campaignId,
-  }) async {
+  Future<AcquisitionCampaignModel> getCampaign({required String workspaceId, required String campaignId}) async {
     final result = await _httpManager.cloudFunction(
       name: Endpoints.acquisitionCampaignGet,
-      parameters: <String, dynamic>{
-        'workspaceId': workspaceId,
-        'campaignId': campaignId,
-      },
+      parameters: <String, dynamic>{'workspaceId': workspaceId, 'campaignId': campaignId},
     );
     return _campaign(result).campaign;
   }
 
   @override
-  Future<AcquisitionMutationResult> upsertCampaign({
-    required String workspaceId,
-    required AcquisitionCampaignInput input,
-    required String clientRequestId,
-    String? campaignId,
-  }) {
-    return _mutate(
-      Endpoints.acquisitionCampaignUpsert,
-      <String, dynamic>{
-        'workspaceId': workspaceId,
-        'campaignId': ?campaignId,
-        'campaign': input.toJson(),
-        'clientRequestId': clientRequestId,
-      },
-    );
+  Future<AcquisitionMutationResult> upsertCampaign({required String workspaceId, required AcquisitionCampaignInput input, required String clientRequestId, String? campaignId}) {
+    return _mutate(Endpoints.acquisitionCampaignUpsert, <String, dynamic>{
+      'workspaceId': workspaceId,
+      'campaignId': ?campaignId,
+      'campaign': input.toJson(),
+      'clientRequestId': clientRequestId,
+    });
   }
 
   @override
-  Future<AcquisitionMutationResult> publishCampaign({
-    required String workspaceId,
-    required String campaignId,
-    required int expectedVersion,
-    required String clientRequestId,
-  }) {
-    return _mutate(
-      Endpoints.acquisitionCampaignPublish,
-      <String, dynamic>{
-        'workspaceId': workspaceId,
-        'campaignId': campaignId,
-        'expectedVersion': expectedVersion,
-        'clientRequestId': clientRequestId,
-      },
-    );
+  Future<AcquisitionMutationResult> publishCampaign({required String workspaceId, required String campaignId, required int expectedVersion, required String clientRequestId}) {
+    return _mutate(Endpoints.acquisitionCampaignPublish, <String, dynamic>{
+      'workspaceId': workspaceId,
+      'campaignId': campaignId,
+      'expectedVersion': expectedVersion,
+      'clientRequestId': clientRequestId,
+    });
   }
 
   @override
-  Future<AcquisitionMutationResult> campaignAction({
-    required String workspaceId,
-    required String campaignId,
-    required String action,
-    required int expectedVersion,
-    required String clientRequestId,
-  }) {
-    return _mutate(
-      Endpoints.acquisitionCampaignAction,
-      <String, dynamic>{
-        'workspaceId': workspaceId,
-        'campaignId': campaignId,
-        'action': action,
-        'expectedVersion': expectedVersion,
-        'clientRequestId': clientRequestId,
-      },
-    );
+  Future<AcquisitionMutationResult> campaignAction({required String workspaceId, required String campaignId, required String action, required int expectedVersion, required String clientRequestId}) {
+    return _mutate(Endpoints.acquisitionCampaignAction, <String, dynamic>{
+      'workspaceId': workspaceId,
+      'campaignId': campaignId,
+      'action': action,
+      'expectedVersion': expectedVersion,
+      'clientRequestId': clientRequestId,
+    });
   }
 
   @override
-  Future<AcquisitionAiSuggestion> suggestCreative({
-    required String workspaceId,
-    required AcquisitionCampaignInput input,
-    required String clientRequestId,
-  }) async {
+  Future<AcquisitionAiSuggestion> suggestCreative({required String workspaceId, required AcquisitionCampaignInput input, required String clientRequestId}) async {
     final result = await _httpManager.cloudFunction(
       name: Endpoints.acquisitionAiSuggest,
       parameters: <String, dynamic>{
@@ -143,13 +103,9 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
             headline: suggestion['headline']?.toString() ?? '',
             primaryText: suggestion['primaryText']?.toString() ?? '',
             description: suggestion['description']?.toString() ?? '',
-            callToAction:
-                suggestion['callToAction']?.toString() ?? 'LEARN_MORE',
+            callToAction: suggestion['callToAction']?.toString() ?? 'LEARN_MORE',
             rationale: suggestion['rationale']?.toString(),
-            warnings: (suggestion['warnings'] as List<dynamic>? ??
-                    const <dynamic>[])
-                .map((dynamic item) => item.toString())
-                .toList(growable: false),
+            warnings: (suggestion['warnings'] as List<dynamic>? ?? const <dynamic>[]).map((dynamic item) => item.toString()).toList(growable: false),
             correlationId: meta.correlationId,
           );
         }(),
@@ -158,18 +114,9 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
   }
 
   @override
-  Future<String> uploadCampaignMedia({
-    required String workspaceId,
-    required String fileName,
-    required Uint8List bytes,
-    required String contentType,
-    void Function(int sent, int total)? onSendProgress,
-  }) async {
+  Future<String> uploadCampaignMedia({required String workspaceId, required String fileName, required Uint8List bytes, required String contentType, void Function(int sent, int total)? onSendProgress}) async {
     if (workspaceId.trim().isEmpty) {
-      throw const ApiException(
-        code: 'WORKSPACE_REQUIRED',
-        message: 'Workspace inválido para upload de mídia.',
-      );
+      throw const ApiException(code: 'WORKSPACE_REQUIRED', message: 'Workspace inválido para upload de mídia.');
     }
     final result = await _httpManager.uploadParseFile(
       fileName: 'campaign-${workspaceId.trim()}-$fileName',
@@ -177,15 +124,11 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
       contentType: contentType,
       onSendProgress: onSendProgress,
     );
-
     return switch (result) {
       ApiSuccess<Map<String, dynamic>>(:final data) => () {
           final url = data['url']?.toString().trim() ?? '';
           if (url.isEmpty) {
-            throw const ApiException(
-              code: 'MEDIA_UPLOAD_ERROR',
-              message: 'O armazenamento não retornou a URL da mídia.',
-            );
+            throw const ApiException(code: 'MEDIA_UPLOAD_ERROR', message: 'O armazenamento não retornou a URL da mídia.');
           }
           return url;
         }(),
@@ -194,20 +137,81 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
   }
 
   @override
-  Future<GoogleAdsConnectionStatus> googleAdsConnectionStatus({
-    required String workspaceId,
-  }) async {
+  Future<GoogleAdsConnectionStatus> googleAdsConnectionStatus({required String workspaceId}) async {
     final result = await _httpManager.cloudFunction(
       name: Endpoints.googleAdsConnectionStatus,
       parameters: <String, dynamic>{'workspaceId': workspaceId},
     );
+    return _googleStatus(result);
+  }
+
+  @override
+  Future<GoogleAdsOAuthStart> startGoogleAdsOAuth({required String workspaceId, required String returnUrl}) async {
+    final result = await _httpManager.cloudFunction(
+      name: Endpoints.googleAdsOAuthStart,
+      parameters: <String, dynamic>{'workspaceId': workspaceId, 'returnUrl': _integrationReturnUrl(returnUrl)},
+    );
+    return switch (result) {
+      ApiSuccess<Map<String, dynamic>>(:final data, :final meta) => () {
+          final authorizationUrl = data['authorizationUrl']?.toString().trim() ?? '';
+          if (authorizationUrl.isEmpty) {
+            throw const ApiException(code: 'GOOGLE_OAUTH_ERROR', message: 'A API não retornou a URL de autorização do Google.');
+          }
+          return GoogleAdsOAuthStart(authorizationUrl: authorizationUrl, correlationId: meta.correlationId);
+        }(),
+      ApiFailure<Map<String, dynamic>>(:final error) => throw error,
+    };
+  }
+
+  @override
+  Future<List<GoogleAdsAccount>> googleAdsAccounts({required String workspaceId}) async {
+    final result = await _httpManager.cloudFunction(
+      name: Endpoints.googleAdsAccounts,
+      parameters: <String, dynamic>{'workspaceId': workspaceId},
+    );
+    return switch (result) {
+      ApiSuccess<Map<String, dynamic>>(:final data) => _maps(data['accounts']).map((account) => GoogleAdsAccount(
+          customerId: account['customerId']?.toString() ?? '',
+          name: account['name']?.toString().trim().isNotEmpty == true ? account['name'].toString().trim() : 'Conta Google Ads',
+          currency: account['currency']?.toString(),
+          manager: account['manager'] == true,
+          testAccount: account['testAccount'] == true,
+          status: account['status']?.toString() ?? 'UNKNOWN',
+        )).where((account) => account.customerId.isNotEmpty).toList(growable: false),
+      ApiFailure<Map<String, dynamic>>(:final error) => throw error,
+    };
+  }
+
+  @override
+  Future<GoogleAdsConnectionStatus> selectGoogleAdsAccount({required String workspaceId, required String customerId}) async {
+    final result = await _httpManager.cloudFunction(
+      name: Endpoints.googleAdsSelectAccount,
+      parameters: <String, dynamic>{'workspaceId': workspaceId, 'customerId': customerId},
+    );
+    return _googleStatus(result);
+  }
+
+  @override
+  Future<GoogleAdsConnectionStatus> disconnectGoogleAds({required String workspaceId}) async {
+    final result = await _httpManager.cloudFunction(
+      name: Endpoints.googleAdsDisconnect,
+      parameters: <String, dynamic>{'workspaceId': workspaceId},
+    );
+    return _googleStatus(result);
+  }
+
+  Future<AcquisitionMutationResult> _mutate(String endpoint, Map<String, dynamic> parameters) async {
+    final result = await _httpManager.cloudFunction(name: endpoint, parameters: parameters);
+    return _campaign(result);
+  }
+
+  static GoogleAdsConnectionStatus _googleStatus(ApiResult<Map<String, dynamic>> result) {
     return switch (result) {
       ApiSuccess<Map<String, dynamic>>(:final data, :final meta) => () {
           final account = _map(data['account']);
           return GoogleAdsConnectionStatus(
             connected: data['connected'] == true,
-            status: data['status']?.toString() ??
-                (data['connected'] == true ? 'connected' : 'disconnected'),
+            status: data['status']?.toString() ?? (data['connected'] == true ? 'connected' : 'disconnected'),
             accountName: account['name']?.toString() ?? data['accountName']?.toString(),
             customerId: account['customerId']?.toString() ?? data['customerId']?.toString(),
             correlationId: meta.correlationId,
@@ -217,69 +221,18 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
     };
   }
 
-  @override
-  Future<GoogleAdsOAuthStart> startGoogleAdsOAuth({
-    required String workspaceId,
-    required String returnUrl,
-  }) async {
-    final result = await _httpManager.cloudFunction(
-      name: Endpoints.googleAdsOAuthStart,
-      parameters: <String, dynamic>{
-        'workspaceId': workspaceId,
-        'returnUrl': _integrationReturnUrl(returnUrl),
-      },
-    );
-    return switch (result) {
-      ApiSuccess<Map<String, dynamic>>(:final data, :final meta) => () {
-          final authorizationUrl =
-              data['authorizationUrl']?.toString().trim() ?? '';
-          if (authorizationUrl.isEmpty) {
-            throw const ApiException(
-              code: 'GOOGLE_OAUTH_ERROR',
-              message: 'A API não retornou a URL de autorização do Google.',
-            );
-          }
-          return GoogleAdsOAuthStart(
-            authorizationUrl: authorizationUrl,
-            correlationId: meta.correlationId,
-          );
-        }(),
-      ApiFailure<Map<String, dynamic>>(:final error) => throw error,
-    };
-  }
-
-  Future<AcquisitionMutationResult> _mutate(
-    String endpoint,
-    Map<String, dynamic> parameters,
-  ) async {
-    final result = await _httpManager.cloudFunction(
-      name: endpoint,
-      parameters: parameters,
-    );
-    return _campaign(result);
-  }
-
   static String _integrationReturnUrl(String raw) {
     final parsed = Uri.tryParse(raw.trim());
     if (parsed == null || !parsed.hasScheme || parsed.host.isEmpty) {
       return 'https://cormexcrm.com.br/integrations';
     }
-    return parsed.replace(
-      path: '/integrations',
-      query: null,
-      fragment: null,
-    ).toString();
+    return parsed.replace(path: '/integrations', query: null, fragment: null).toString();
   }
 
-  static AcquisitionMutationResult _campaign(
-    ApiResult<Map<String, dynamic>> result,
-  ) {
+  static AcquisitionMutationResult _campaign(ApiResult<Map<String, dynamic>> result) {
     return switch (result) {
-      ApiSuccess<Map<String, dynamic>>(:final data, :final meta) =>
-        AcquisitionMutationResult(
-          campaign: AcquisitionCampaignModel.fromJson(
-            _map(data['campaign'] ?? data),
-          ),
+      ApiSuccess<Map<String, dynamic>>(:final data, :final meta) => AcquisitionMutationResult(
+          campaign: AcquisitionCampaignModel.fromJson(_map(data['campaign'] ?? data)),
           correlationId: meta.correlationId,
         ),
       ApiFailure<Map<String, dynamic>>(:final error) => throw error,
@@ -287,9 +240,7 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
   }
 
   static Map<String, dynamic> _map(dynamic raw) {
-    return raw is Map
-        ? Map<String, dynamic>.from(raw)
-        : <String, dynamic>{};
+    return raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{};
   }
 
   static Iterable<Map<String, dynamic>> _maps(dynamic raw) {
