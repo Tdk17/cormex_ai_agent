@@ -5,6 +5,10 @@ class FormErrorBanner extends StatelessWidget {
   const FormErrorBanner({super.key, required this.message, this.correlationId});
 
   final String message;
+
+  // Mantido apenas por compatibilidade com os controllers. Identificadores de
+  // correlação são úteis para observabilidade interna, mas nunca devem ser
+  // exibidos na interface do cliente.
   final String? correlationId;
 
   @override
@@ -23,21 +27,9 @@ class FormErrorBanner extends StatelessWidget {
           const Icon(Icons.error_outline_rounded, color: AppColors.danger, size: 20),
           const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(message, style: const TextStyle(color: AppColors.danger)),
-                if (correlationId != null) ...<Widget>[
-                  const SizedBox(height: 4),
-                  Text(
-                    'Código de diagnóstico: $correlationId',
-                    style: TextStyle(
-                      color: AppColors.danger.withValues(alpha: 0.8),
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ],
+            child: Text(
+              message,
+              style: const TextStyle(color: AppColors.danger),
             ),
           ),
         ],
