@@ -5,17 +5,61 @@ import 'package:agente_vendas_saas/Src/Features/acquisition/domain/acquisition_c
 import 'package:agente_vendas_saas/Src/Shared/models/acquisition_models.dart';
 
 abstract interface class AcquisitionRepository {
-  Future<AcquisitionOverview> overview({required String workspaceId, required String period, String? channel, String? status, String? cursor});
-  Future<AcquisitionCampaignModel> getCampaign({required String workspaceId, required String campaignId});
-  Future<AcquisitionMutationResult> upsertCampaign({required String workspaceId, required AcquisitionCampaignInput input, required String clientRequestId, String? campaignId});
-  Future<AcquisitionMutationResult> publishCampaign({required String workspaceId, required String campaignId, required int expectedVersion, required String clientRequestId});
-  Future<AcquisitionMutationResult> campaignAction({required String workspaceId, required String campaignId, required String action, required int expectedVersion, required String clientRequestId});
-  Future<AcquisitionAiSuggestion> suggestCreative({required String workspaceId, required AcquisitionCampaignInput input, required String clientRequestId});
-  Future<String> uploadCampaignMedia({required String workspaceId, required String fileName, required Uint8List bytes, required String contentType, void Function(int sent, int total)? onSendProgress});
+  Future<AcquisitionOverview> overview({
+    required String workspaceId,
+    required String period,
+    String? channel,
+    String? status,
+    String? cursor,
+  });
 
-  Future<GoogleAdsConnectionStatus> googleAdsConnectionStatus({required String workspaceId});
-  Future<GoogleAdsOAuthStart> startGoogleAdsOAuth({required String workspaceId, required String returnUrl});
-  Future<GoogleAdsAccountsResult> googleAdsAccounts({required String workspaceId});
-  Future<GoogleAdsConnectionStatus> selectGoogleAdsAccount({required String workspaceId, required String customerId});
-  Future<GoogleAdsConnectionStatus> disconnectGoogleAds({required String workspaceId});
+  Future<AcquisitionCampaignModel> getCampaign({
+    required String workspaceId,
+    required String campaignId,
+  });
+
+  Future<AcquisitionMutationResult> upsertCampaign({
+    required String workspaceId,
+    required AcquisitionCampaignInput input,
+    required String clientRequestId,
+    String? campaignId,
+  });
+
+  Future<AcquisitionMutationResult> publishCampaign({
+    required String workspaceId,
+    required String campaignId,
+    required int expectedVersion,
+    required String clientRequestId,
+  });
+
+  Future<AcquisitionMutationResult> campaignAction({
+    required String workspaceId,
+    required String campaignId,
+    required String action,
+    required int expectedVersion,
+    required String clientRequestId,
+  });
+
+  Future<AcquisitionAiSuggestion> suggestCreative({
+    required String workspaceId,
+    required AcquisitionCampaignInput input,
+    required String clientRequestId,
+  });
+
+  Future<String> uploadCampaignMedia({
+    required String workspaceId,
+    required String fileName,
+    required Uint8List bytes,
+    required String contentType,
+    void Function(int sent, int total)? onSendProgress,
+  });
+
+  Future<GoogleAdsConnectionStatus> googleAdsConnectionStatus({
+    required String workspaceId,
+  });
+
+  Future<GoogleAdsOAuthStart> startGoogleAdsOAuth({
+    required String workspaceId,
+    required String returnUrl,
+  });
 }
