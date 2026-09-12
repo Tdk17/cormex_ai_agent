@@ -48,8 +48,8 @@ class Endpoints {
   static const String knowledgeCreate = 'v1-knowledge-create';
   static const String knowledgeDelete = 'v1-knowledge-delete';
 
-  static const String followupsList = 'followups.list';
-  static const String followupsUpsert = 'followups.upsert';
+  static const String followupsList = 'v1-followups-list';
+  static const String followupsUpsert = 'v1-followups-upsert';
   static const String tasksList = 'v1-tasks-list';
 
   static const String integrationsList = 'v1-integrations-list';
