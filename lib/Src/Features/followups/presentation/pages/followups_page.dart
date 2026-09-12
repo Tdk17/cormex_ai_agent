@@ -33,6 +33,7 @@ class _FollowUpsPageState extends State<FollowUpsPage> {
   Widget build(BuildContext context) {
     final state = controller.state.value;
     final rules = controller.rules.value;
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 26, 24, 48),
       children: <Widget>[
@@ -45,7 +46,10 @@ class _FollowUpsPageState extends State<FollowUpsPage> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Text('Follow-ups', style: Theme.of(context).textTheme.headlineMedium),
+                Text(
+                  'Follow-ups',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
                 const SizedBox(height: 5),
                 const Text(
                   'Programe retomadas automáticas sem insistir depois de resposta ou perda.',
@@ -54,7 +58,8 @@ class _FollowUpsPageState extends State<FollowUpsPage> {
               ],
             ),
             FilledButton.icon(
-              onPressed: controller.isMutating.value ? null : () => _openEditor(),
+              onPressed:
+                  controller.isMutating.value ? null : () => _openEditor(),
               icon: const Icon(Icons.add_alarm_rounded),
               label: const Text('Nova regra'),
             ),
@@ -159,6 +164,8 @@ class _RuleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final unsupportedLegacyChannel = rule.channel != 'whatsapp';
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -169,13 +176,16 @@ class _RuleCard extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: (rule.active ? AppColors.primary : AppColors.textSecondary)
+                color: (rule.active
+                        ? AppColors.primary
+                        : AppColors.textSecondary)
                     .withValues(alpha: 0.09),
                 borderRadius: BorderRadius.circular(13),
               ),
               child: Icon(
                 Icons.schedule_send_outlined,
-                color: rule.active ? AppColors.primary : AppColors.textSecondary,
+                color:
+                    rule.active ? AppColors.primary : AppColors.textSecondary,
               ),
             ),
             const SizedBox(width: 14),
@@ -183,7 +193,10 @@ class _RuleCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(rule.name, style: const TextStyle(fontWeight: FontWeight.w800)),
+                  Text(
+                    rule.name,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
                   const SizedBox(height: 5),
                   Text(
                     '${_delayLabel(rule.delayMinutes)} • ${_conditionLabel(rule.condition)} • ${_channelLabel(rule.channel)}',
@@ -192,9 +205,22 @@ class _RuleCard extends StatelessWidget {
                       fontSize: 12,
                     ),
                   ),
+                  if (unsupportedLegacyChannel) ...<Widget>[
+                    const SizedBox(height: 7),
+                    const Text(
+                      'Canal antigo indisponível para disparo automático. Edite a regra para usar WhatsApp.',
+                      style: TextStyle(
+                        color: AppColors.warning,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 8),
                   Text(
-                    rule.message.isEmpty ? 'Mensagem definida pelo agente de IA.' : rule.message,
+                    rule.message.isEmpty
+                        ? 'Mensagem definida pelo agente de IA.'
+                        : rule.message,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 13),
@@ -205,8 +231,10 @@ class _RuleCard extends StatelessWidget {
                     runSpacing: 6,
                     children: <Widget>[
                       _SmallBadge(label: '${rule.maxAttempts} tentativa(s)'),
-                      if (rule.stopOnReply) const _SmallBadge(label: 'Para ao responder'),
-                      if (rule.stopOnLost) const _SmallBadge(label: 'Para ao perder'),
+                      if (rule.stopOnReply)
+                        const _SmallBadge(label: 'Para ao responder'),
+                      if (rule.stopOnLost)
+                        const _SmallBadge(label: 'Para ao perder'),
                     ],
                   ),
                 ],
@@ -219,7 +247,7 @@ class _RuleCard extends StatelessWidget {
             ),
             Switch.adaptive(
               value: rule.active,
-              onChanged: disabled ? null : onToggle,
+              onChanged: disabled || unsupportedLegacyChannel ? null : onToggle,
             ),
           ],
         ),
@@ -245,12 +273,14 @@ class _FollowUpEditorState extends State<_FollowUpEditor> {
   late final TextEditingController _messageController;
   late final TextEditingController _attemptsController;
   late String _condition;
-  late String _channel;
   late bool _active;
   late bool _stopOnReply;
   late bool _stopOnLost;
   bool _saving = false;
   String? _error;
+
+  bool get _migratingLegacyChannel =>
+      widget.rule != null && widget.rule!.channel != 'whatsapp';
 
   @override
   void initState() {
@@ -265,7 +295,6 @@ class _FollowUpEditorState extends State<_FollowUpEditor> {
       text: (rule?.maxAttempts ?? 1).toString(),
     );
     _condition = rule?.condition ?? 'no_reply';
-    _channel = rule?.channel ?? 'whatsapp';
     _active = rule?.active ?? true;
     _stopOnReply = rule?.stopOnReply ?? true;
     _stopOnLost = rule?.stopOnLost ?? true;
@@ -283,7 +312,9 @@ class _FollowUpEditorState extends State<_FollowUpEditor> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(widget.rule == null ? 'Nova regra de follow-up' : 'Editar follow-up'),
+      title: Text(
+        widget.rule == null ? 'Nova regra de follow-up' : 'Editar follow-up',
+      ),
       content: SizedBox(
         width: 570,
         child: SingleChildScrollView(
@@ -292,12 +323,31 @@ class _FollowUpEditorState extends State<_FollowUpEditor> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
+                if (_migratingLegacyChannel) ...<Widget>[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.warning.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: const Text(
+                      'Esta regra foi criada com um canal que ainda não possui transporte automático. Ao salvar, ela será ajustada para WhatsApp.',
+                      style: TextStyle(fontSize: 12, height: 1.35),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(labelText: 'Nome da regra'),
-                  validator: (String? value) => (value?.trim().length ?? 0) < 3
-                      ? 'Informe um nome.'
-                      : null,
+                  validator: (String? value) =>
+                      (value?.trim().length ?? 0) < 3
+                          ? 'Informe um nome.'
+                          : null,
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -307,9 +357,18 @@ class _FollowUpEditorState extends State<_FollowUpEditor> {
                         initialValue: _condition,
                         decoration: const InputDecoration(labelText: 'Quando'),
                         items: const <DropdownMenuItem<String>>[
-                          DropdownMenuItem(value: 'no_reply', child: Text('Sem resposta')),
-                          DropdownMenuItem(value: 'lead_created', child: Text('Lead criado')),
-                          DropdownMenuItem(value: 'stage_changed', child: Text('Mudou de etapa')),
+                          DropdownMenuItem(
+                            value: 'no_reply',
+                            child: Text('Sem resposta'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'lead_created',
+                            child: Text('Lead criado'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'stage_changed',
+                            child: Text('Mudou de etapa'),
+                          ),
                         ],
                         onChanged: (String? value) {
                           if (value != null) _condition = value;
@@ -321,7 +380,9 @@ class _FollowUpEditorState extends State<_FollowUpEditor> {
                       child: TextFormField(
                         controller: _delayController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Aguardar (minutos)'),
+                        decoration: const InputDecoration(
+                          labelText: 'Aguardar (minutos)',
+                        ),
                         validator: (String? value) {
                           final number = int.tryParse(value ?? '');
                           return number == null || number < 1
@@ -335,18 +396,15 @@ class _FollowUpEditorState extends State<_FollowUpEditor> {
                 const SizedBox(height: 12),
                 Row(
                   children: <Widget>[
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _channel,
-                        decoration: const InputDecoration(labelText: 'Canal'),
-                        items: const <DropdownMenuItem<String>>[
-                          DropdownMenuItem(value: 'whatsapp', child: Text('WhatsApp')),
-                          DropdownMenuItem(value: 'email', child: Text('E-mail')),
-                          DropdownMenuItem(value: 'instagram', child: Text('Instagram')),
-                        ],
-                        onChanged: (String? value) {
-                          if (value != null) _channel = value;
-                        },
+                    const Expanded(
+                      child: TextField(
+                        enabled: false,
+                        decoration: InputDecoration(
+                          labelText: 'Canal',
+                          hintText: 'WhatsApp',
+                          helperText:
+                              'Canal disponível para follow-up automático.',
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -354,7 +412,9 @@ class _FollowUpEditorState extends State<_FollowUpEditor> {
                       child: TextFormField(
                         controller: _attemptsController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Máximo de tentativas'),
+                        decoration: const InputDecoration(
+                          labelText: 'Máximo de tentativas',
+                        ),
                         validator: (String? value) {
                           final number = int.tryParse(value ?? '');
                           return number == null || number < 1 || number > 10
@@ -395,13 +455,18 @@ class _FollowUpEditorState extends State<_FollowUpEditor> {
                   value: _stopOnLost,
                   onChanged: (bool? value) =>
                       setState(() => _stopOnLost = value ?? true),
-                  title: const Text('Parar se a oportunidade for perdida ou encerrada'),
+                  title: const Text(
+                    'Parar se a oportunidade for perdida ou encerrada',
+                  ),
                   controlAffinity: ListTileControlAffinity.leading,
                 ),
                 if (_error != null)
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(_error!, style: const TextStyle(color: AppColors.danger)),
+                    child: Text(
+                      _error!,
+                      style: const TextStyle(color: AppColors.danger),
+                    ),
                   ),
               ],
             ),
@@ -418,7 +483,10 @@ class _FollowUpEditorState extends State<_FollowUpEditor> {
           icon: _saving
               ? const SizedBox.square(
                   dimension: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : const Icon(Icons.save_outlined),
           label: const Text('Salvar regra'),
@@ -433,6 +501,7 @@ class _FollowUpEditorState extends State<_FollowUpEditor> {
       _saving = true;
       _error = null;
     });
+
     final rule = widget.rule;
     final success = await widget.controller.save(
       FollowUpRuleInput(
@@ -440,7 +509,7 @@ class _FollowUpEditorState extends State<_FollowUpEditor> {
         delayMinutes: int.parse(_delayController.text),
         condition: _condition,
         active: _active,
-        channel: _channel,
+        channel: 'whatsapp',
         message: _messageController.text,
         maxAttempts: int.parse(_attemptsController.text),
         stopOnReply: _stopOnReply,
@@ -449,6 +518,7 @@ class _FollowUpEditorState extends State<_FollowUpEditor> {
       ),
       followupId: rule?.id,
     );
+
     if (!mounted) return;
     if (success) {
       Navigator.of(context).pop();
@@ -463,6 +533,7 @@ class _FollowUpEditorState extends State<_FollowUpEditor> {
 
 class _SmallBadge extends StatelessWidget {
   const _SmallBadge({required this.label});
+
   final String label;
 
   @override
@@ -473,13 +544,17 @@ class _SmallBadge extends StatelessWidget {
         color: AppColors.primary.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700)),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+      ),
     );
   }
 }
 
 class _EmptyFollowUps extends StatelessWidget {
   const _EmptyFollowUps({required this.onAdd});
+
   final VoidCallback onAdd;
 
   @override
@@ -489,9 +564,16 @@ class _EmptyFollowUps extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 54),
         child: Column(
           children: <Widget>[
-            const Icon(Icons.schedule_send_outlined, size: 48, color: AppColors.primary),
+            const Icon(
+              Icons.schedule_send_outlined,
+              size: 48,
+              color: AppColors.primary,
+            ),
             const SizedBox(height: 14),
-            Text('Nenhuma regra configurada', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Nenhuma regra configurada',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 6),
             const Text(
               'Crie uma retomada para a IA continuar o atendimento sem perder o timing.',
@@ -513,6 +595,7 @@ class _EmptyFollowUps extends StatelessWidget {
 
 class _Feedback extends StatelessWidget {
   const _Feedback({required this.message});
+
   final String message;
 
   @override
@@ -535,8 +618,8 @@ String _conditionLabel(String value) => switch (value) {
     };
 
 String _channelLabel(String value) => switch (value) {
-      'email' => 'E-mail',
-      'instagram' => 'Instagram',
+      'email' => 'E-mail (antigo)',
+      'instagram' => 'Instagram (antigo)',
       _ => 'WhatsApp',
     };
 
