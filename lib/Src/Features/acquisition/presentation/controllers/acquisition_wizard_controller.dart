@@ -182,7 +182,7 @@ class AcquisitionWizardController {
           mediaUploadProgress.value = (sent / total).clamp(0, 1).toDouble();
         },
       );
-      final next = <String>[...mediaUrls, url].toSet().toList(growable: false);
+      final next = <String>{...mediaUrls, url}.toList(growable: false);
       batch(() {
         mediaUrlsText.value = next.join('\n');
         mediaUploadProgress.value = 1;

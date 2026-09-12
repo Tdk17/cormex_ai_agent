@@ -56,7 +56,7 @@ class RemoteIntegrationsRepository implements IntegrationsRepository {
           'returnUrl': _integrationReturnUrl(returnUrl),
         if (integrationId != null && integrationId.trim().isNotEmpty)
           'integrationId': integrationId.trim(),
-        if (expectedVersion != null) 'expectedVersion': expectedVersion,
+        'expectedVersion': ?expectedVersion,
       },
     );
 

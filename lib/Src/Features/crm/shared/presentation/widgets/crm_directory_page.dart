@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:agente_vendas_saas/Src/Core/api/api_exception.dart';
 import 'package:agente_vendas_saas/Src/Core/api/api_result.dart';
 import 'package:agente_vendas_saas/Src/Core/di/service_locator.dart';
 import 'package:agente_vendas_saas/Src/Core/http/endpoints.dart';

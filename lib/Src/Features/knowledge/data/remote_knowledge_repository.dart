@@ -24,9 +24,9 @@ class RemoteKnowledgeRepository implements KnowledgeRepository {
       parameters: <String, dynamic>{
         'workspaceId': workspaceId,
         if (search?.trim().isNotEmpty == true) 'search': search!.trim(),
-        if (type != null) 'type': type,
-        if (status != null) 'status': status,
-        if (cursor != null) 'cursor': cursor,
+        'type': ?type,
+        'status': ?status,
+        'cursor': ?cursor,
         'limit': limit,
       },
     );

@@ -22,7 +22,7 @@ class RemoteFollowUpsRepository implements FollowUpsRepository {
       parameters: <String, dynamic>{
         'workspaceId': workspaceId,
         if (search?.trim().isNotEmpty == true) 'search': search!.trim(),
-        if (cursor != null) 'cursor': cursor,
+        'cursor': ?cursor,
         'limit': limit,
       },
     );
@@ -50,7 +50,7 @@ class RemoteFollowUpsRepository implements FollowUpsRepository {
       name: Endpoints.followupsUpsert,
       parameters: <String, dynamic>{
         'workspaceId': workspaceId,
-        if (followupId != null) 'followupId': followupId,
+        'followupId': ?followupId,
         'rule': input.toJson(),
         'clientRequestId': clientRequestId,
       },

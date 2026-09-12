@@ -27,7 +27,7 @@ class RemoteConversationsRepository implements ConversationsRepository {
       parameters: <String, dynamic>{
         'workspaceId': workspaceId,
         ...filters.toParameters(),
-        if (cursor != null) 'cursor': cursor,
+        'cursor': ?cursor,
         'limit': limit,
       },
     );
@@ -63,7 +63,7 @@ class RemoteConversationsRepository implements ConversationsRepository {
       parameters: <String, dynamic>{
         'workspaceId': workspaceId,
         'conversationId': conversationId,
-        if (messagesCursor != null) 'messagesCursor': messagesCursor,
+        'messagesCursor': ?messagesCursor,
         'messagesLimit': messagesLimit,
         'markAsRead': messagesCursor == null,
       },

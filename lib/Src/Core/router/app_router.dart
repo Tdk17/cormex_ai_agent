@@ -44,48 +44,48 @@ class AppRouter {
       refreshListenable: _refresh,
       redirect: _redirect,
       routes: <RouteBase>[
-        GoRoute(path: '/', builder: (_, __) => const LandingPage()),
-        GoRoute(path: '/splash', builder: (_, __) => const SplashPage()),
-        GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
-        GoRoute(path: '/register', builder: (_, __) => const RegisterPage()),
+        GoRoute(path: '/', builder: (_, _) => const LandingPage()),
+        GoRoute(path: '/splash', builder: (_, _) => const SplashPage()),
+        GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
+        GoRoute(path: '/register', builder: (_, _) => const RegisterPage()),
         GoRoute(
           path: '/forgot-password',
-          builder: (_, __) => const ForgotPasswordPage(),
+          builder: (_, _) => const ForgotPasswordPage(),
         ),
-        GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingPage()),
+        GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingPage()),
         ShellRoute(
           builder: (BuildContext context, GoRouterState state, Widget child) {
             return AppShell(child: child);
           },
           routes: <RouteBase>[
-            GoRoute(path: '/dashboard', builder: (_, __) => const DashboardPage()),
+            GoRoute(path: '/dashboard', builder: (_, _) => const DashboardPage()),
             _leadsRoute('/crm/leads'),
             GoRoute(
               path: '/crm/customers',
-              builder: (_, __) => const CustomersPage(),
+              builder: (_, _) => const CustomersPage(),
             ),
             GoRoute(
               path: '/crm/accounts',
-              builder: (_, __) => const AccountsPage(),
+              builder: (_, _) => const AccountsPage(),
             ),
             _pipelineRoute('/crm/pipeline'),
             GoRoute(
               path: '/crm/activities',
-              builder: (_, __) => const ActivitiesPage(),
+              builder: (_, _) => const ActivitiesPage(),
             ),
             _conversationsRoute('/crm/conversations'),
             _agentRoute('/automation/agent'),
             GoRoute(
               path: '/automation/followups',
-              builder: (_, __) => const FollowUpsPage(),
+              builder: (_, _) => const FollowUpsPage(),
             ),
             GoRoute(
               path: '/acquisition',
-              builder: (_, __) => const AcquisitionPage(),
+              builder: (_, _) => const AcquisitionPage(),
               routes: <RouteBase>[
                 GoRoute(
                   path: 'new',
-                  builder: (_, __) => const AcquisitionWizardPage(),
+                  builder: (_, _) => const AcquisitionWizardPage(),
                 ),
                 GoRoute(
                   path: ':campaignId',
@@ -107,23 +107,23 @@ class AppRouter {
             ),
             GoRoute(
               path: '/integrations',
-              builder: (_, __) => const IntegrationsPage(),
+              builder: (_, _) => const IntegrationsPage(),
             ),
             GoRoute(
               path: '/knowledge',
-              builder: (_, __) => const KnowledgePage(),
+              builder: (_, _) => const KnowledgePage(),
             ),
             GoRoute(
               path: '/team',
-              builder: (_, __) => const TeamPage(),
+              builder: (_, _) => const TeamPage(),
             ),
             GoRoute(
               path: '/billing',
-              builder: (_, __) => const BillingPage(),
+              builder: (_, _) => const BillingPage(),
             ),
             GoRoute(
               path: '/settings',
-              builder: (_, __) => const SettingsPage(),
+              builder: (_, _) => const SettingsPage(),
             ),
             _legacyLeadsRoute(),
             _legacyPipelineRoute(),
@@ -131,7 +131,7 @@ class AppRouter {
             _legacyAgentRoute(),
             GoRoute(
               path: '/followups',
-              redirect: (_, __) => '/automation/followups',
+              redirect: (_, _) => '/automation/followups',
             ),
           ],
         ),
@@ -195,10 +195,10 @@ class AppRouter {
   static GoRoute _leadsRoute(String path) {
     return GoRoute(
       path: path,
-      builder: (_, __) => const LeadsListPage(),
+      builder: (_, _) => const LeadsListPage(),
       routes: <RouteBase>[
-        GoRoute(path: 'new', builder: (_, __) => const LeadFormPage()),
-        GoRoute(path: 'import', builder: (_, __) => const LeadImportPage()),
+        GoRoute(path: 'new', builder: (_, _) => const LeadFormPage()),
+        GoRoute(path: 'import', builder: (_, _) => const LeadImportPage()),
         GoRoute(
           path: ':leadId',
           builder: (_, GoRouterState state) => LeadDetailPage(
@@ -220,9 +220,9 @@ class AppRouter {
   static GoRoute _pipelineRoute(String path) {
     return GoRoute(
       path: path,
-      builder: (_, __) => const PipelinePage(),
+      builder: (_, _) => const PipelinePage(),
       routes: <RouteBase>[
-        GoRoute(path: 'new', builder: (_, __) => const OpportunityFormPage()),
+        GoRoute(path: 'new', builder: (_, _) => const OpportunityFormPage()),
         GoRoute(
           path: ':opportunityId',
           builder: (_, GoRouterState state) => OpportunityDetailPage(
@@ -244,7 +244,7 @@ class AppRouter {
   static GoRoute _conversationsRoute(String path) {
     return GoRoute(
       path: path,
-      builder: (_, __) => const ConversationsPage(),
+      builder: (_, _) => const ConversationsPage(),
       routes: <RouteBase>[
         GoRoute(
           path: ':conversationId',
@@ -259,12 +259,12 @@ class AppRouter {
   static GoRoute _agentRoute(String path) {
     return GoRoute(
       path: path,
-      builder: (_, __) => const AgentSettingsPage(),
+      builder: (_, _) => const AgentSettingsPage(),
       routes: <RouteBase>[
-        GoRoute(path: 'test', builder: (_, __) => const AgentTestPage()),
+        GoRoute(path: 'test', builder: (_, _) => const AgentTestPage()),
         GoRoute(
           path: 'operations',
-          builder: (_, __) => const OperationalAgentPage(),
+          builder: (_, _) => const OperationalAgentPage(),
         ),
       ],
     );
@@ -273,10 +273,10 @@ class AppRouter {
   static GoRoute _legacyLeadsRoute() {
     return GoRoute(
       path: '/leads',
-      redirect: (_, __) => '/crm/leads',
+      redirect: (_, _) => '/crm/leads',
       routes: <RouteBase>[
-        GoRoute(path: 'new', redirect: (_, __) => '/crm/leads/new'),
-        GoRoute(path: 'import', redirect: (_, __) => '/crm/leads/import'),
+        GoRoute(path: 'new', redirect: (_, _) => '/crm/leads/new'),
+        GoRoute(path: 'import', redirect: (_, _) => '/crm/leads/import'),
         GoRoute(
           path: ':leadId',
           redirect: (_, GoRouterState state) =>
@@ -296,9 +296,9 @@ class AppRouter {
   static GoRoute _legacyPipelineRoute() {
     return GoRoute(
       path: '/pipeline',
-      redirect: (_, __) => '/crm/pipeline',
+      redirect: (_, _) => '/crm/pipeline',
       routes: <RouteBase>[
-        GoRoute(path: 'new', redirect: (_, __) => '/crm/pipeline/new'),
+        GoRoute(path: 'new', redirect: (_, _) => '/crm/pipeline/new'),
         GoRoute(
           path: ':opportunityId',
           redirect: (_, GoRouterState state) =>
@@ -318,7 +318,7 @@ class AppRouter {
   static GoRoute _legacyConversationsRoute() {
     return GoRoute(
       path: '/conversations',
-      redirect: (_, __) => '/crm/conversations',
+      redirect: (_, _) => '/crm/conversations',
       routes: <RouteBase>[
         GoRoute(
           path: ':conversationId',
@@ -332,12 +332,12 @@ class AppRouter {
   static GoRoute _legacyAgentRoute() {
     return GoRoute(
       path: '/agent',
-      redirect: (_, __) => '/automation/agent',
+      redirect: (_, _) => '/automation/agent',
       routes: <RouteBase>[
-        GoRoute(path: 'test', redirect: (_, __) => '/automation/agent/test'),
+        GoRoute(path: 'test', redirect: (_, _) => '/automation/agent/test'),
         GoRoute(
           path: 'operations',
-          redirect: (_, __) => '/automation/agent/operations',
+          redirect: (_, _) => '/automation/agent/operations',
         ),
       ],
     );
