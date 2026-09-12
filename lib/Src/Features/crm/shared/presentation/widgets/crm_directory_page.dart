@@ -58,7 +58,7 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
         setState(() { _items = _maps(raw).toList(growable: false); _loading = false; });
       case ApiFailure<Map<String, dynamic>>(:final error):
         if (_workspaceId != workspaceId) return;
-        setState(() { _loading = false; _error = error.code == 'INVALID_FUNCTION' ? 'A API $_listEndpoint ainda precisa ser publicada no Back4App.' : error.userMessage; });
+        setState(() { _loading = false; _error = error.code == 'INVALID_FUNCTION' ? 'Este recurso ainda não está disponível no ambiente atual.' : error.userMessage; });
     }
   }
 
@@ -144,7 +144,7 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
         await _load();
       case ApiFailure<Map<String, dynamic>>(:final error):
         if (_workspaceId != workspaceId) return;
-        setState(() { _saving = false; _error = error.code == 'INVALID_FUNCTION' ? 'A API ${created ? _createEndpoint : _updateEndpoint} ainda não está publicada no Back4App.' : error.userMessage; });
+        setState(() { _saving = false; _error = error.code == 'INVALID_FUNCTION' ? 'Este recurso ainda não está disponível no ambiente atual.' : error.userMessage; });
     }
   }
 
