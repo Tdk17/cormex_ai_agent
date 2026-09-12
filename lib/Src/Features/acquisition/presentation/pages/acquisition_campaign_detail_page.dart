@@ -246,7 +246,7 @@ class _CampaignDetail extends StatelessWidget {
             ? questions.map((dynamic item) => item.toString()).join(' • ')
             : '—',
       ),
-      (label: 'Etapa do Pipeline', value: _label(_text(automation['pipelineStageId']))),
+      (label: 'Etapa do Pipeline', value: _pipelineStageLabel(automation['pipelineStageId'])),
       (
         label: 'Tags',
         value: tags is List
@@ -481,6 +481,13 @@ String _text(dynamic raw) {
   return value.isEmpty ? '—' : value;
 }
 
+String _pipelineStageLabel(dynamic raw) {
+  final value = raw?.toString().trim() ?? '';
+  if (value.isEmpty) return '—';
+  final known = _label(value);
+  return known == value ? 'Etapa configurada' : known;
+}
+
 String _label(String value) => switch (value) {
       'google' => 'Google Ads',
       'meta' => 'Meta Ads',
@@ -489,6 +496,8 @@ String _label(String value) => switch (value) {
       'conversions' => 'Gerar conversões',
       'traffic' => 'Direcionar tráfego',
       'awareness' => 'Divulgar oferta',
+      'sales' => 'Gerar vendas',
+      'engagement' => 'Gerar engajamento',
       'draft' => 'Rascunho',
       'preparing' => 'Preparando',
       'review' => 'Em revisão',
@@ -502,6 +511,7 @@ String _label(String value) => switch (value) {
       'landing_page' => 'Landing page',
       'form' => 'Formulário de lead',
       'product_page' => 'Página do produto',
+      'website' => 'Site',
       'LEARN_MORE' => 'Saiba mais',
       'CONTACT_US' => 'Fale conosco',
       'SIGN_UP' => 'Cadastre-se',
@@ -509,7 +519,10 @@ String _label(String value) => switch (value) {
       'SEND_MESSAGE' => 'Enviar mensagem',
       'new_lead' => 'Novo lead',
       'contacted' => 'Contato feito',
+      'qualified' => 'Lead qualificado',
       'proposal' => 'Proposta enviada',
+      'negotiation' => 'Negociação',
+      'closed' => 'Encerrada',
       _ => value.isEmpty ? '—' : value,
     };
 
