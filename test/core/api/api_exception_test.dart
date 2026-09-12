@@ -24,5 +24,24 @@ void main() {
 
       expect(exception.userMessage, isNot(contains('stack trace')));
     });
+
+    test('normaliza código e preserva mensagem segura do backend', () {
+      final exception = ApiException.fromMap(<String, dynamic>{
+        'code': 'channel_not_connected',
+        'message': 'Canal indisponível.',
+      });
+
+      expect(exception.code, 'CHANNEL_NOT_CONNECTED');
+      expect(exception.userMessage, contains('Conecte o canal'));
+    });
+
+    test('exibe mensagem de regra de negócio para código não mapeado', () {
+      const exception = ApiException(
+        code: 'CAMPAIGN_REVIEW_REQUIRED',
+        message: 'Revise os campos destacados antes de publicar.',
+      );
+
+      expect(exception.userMessage, contains('Revise os campos'));
+    });
   });
 }

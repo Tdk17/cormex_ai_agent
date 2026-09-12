@@ -64,6 +64,7 @@ class LeadsController {
         workspaceId: workspaceId,
         filters: filters.value,
       );
+      if (_workspaceId != workspaceId) return;
       batch(() {
         leads.value = page.items;
         nextCursor.value = page.nextCursor;
@@ -71,8 +72,10 @@ class LeadsController {
         state.value = page.items.isEmpty ? ScreenState.empty : ScreenState.success;
       });
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return;
       _setError(error.userMessage, error.correlationId);
     } on Object {
+      if (_workspaceId != workspaceId) return;
       _setError('Não foi possível carregar os leads.', null);
     }
   }
@@ -89,17 +92,24 @@ class LeadsController {
         filters: filters.value,
         cursor: cursor,
       );
+      if (_workspaceId != workspaceId) return;
+      final knownIds = leads.value.map((LeadModel item) => item.id).toSet();
       batch(() {
-        leads.value = <LeadModel>[...leads.value, ...page.items];
+        leads.value = <LeadModel>[
+          ...leads.value,
+          ...page.items.where((LeadModel item) => knownIds.add(item.id)),
+        ];
         nextCursor.value = page.nextCursor;
         correlationId.value = page.correlationId;
       });
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return;
       batch(() {
         errorMessage.value = error.userMessage;
         correlationId.value = error.correlationId;
       });
     } on Object {
+      if (_workspaceId != workspaceId) return;
       errorMessage.value = 'Não foi possível carregar mais leads.';
     } finally {
       isLoadingMore.value = false;

@@ -69,8 +69,10 @@ class TeamController {
         state.value = page.members.isEmpty ? ScreenState.empty : ScreenState.success;
       });
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return;
       _setError(error.userMessage, error.correlationId, pageError: true);
     } on Object {
+      if (_workspaceId != workspaceId) return;
       _setError('Não foi possível carregar a equipe.', null, pageError: true);
     }
   }
@@ -94,6 +96,7 @@ class TeamController {
         role: role,
         clientRequestId: 'team_invite_${DateTime.now().microsecondsSinceEpoch}',
       );
+      if (_workspaceId != workspaceId) return false;
       invitations.value = <TeamInvitationModel>[
         invitation,
         ...invitations.value.where(
@@ -103,9 +106,11 @@ class TeamController {
       successMessage.value = 'Convite enviado para ${invitation.email}.';
       return true;
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return false;
       _setError(error.userMessage, error.correlationId);
       return false;
     } on Object {
+      if (_workspaceId != workspaceId) return false;
       errorMessage.value = 'Não foi possível enviar o convite.';
       return false;
     } finally {
@@ -133,6 +138,7 @@ class TeamController {
         role: role,
         expectedVersion: member.version,
       );
+      if (_workspaceId != workspaceId) return false;
       final items = <TeamMemberModel>[...members.value];
       final index = items.indexWhere(
         (TeamMemberModel item) => item.membershipId == updated.membershipId,
@@ -142,6 +148,7 @@ class TeamController {
       successMessage.value = 'Papel de ${updated.name} atualizado.';
       return true;
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return false;
       _setError(
         error.code == 'CONFLICT'
             ? 'A equipe foi alterada em outra sessão. Atualize e tente novamente.'
@@ -150,6 +157,7 @@ class TeamController {
       );
       return false;
     } on Object {
+      if (_workspaceId != workspaceId) return false;
       errorMessage.value = 'Não foi possível alterar o papel.';
       return false;
     } finally {

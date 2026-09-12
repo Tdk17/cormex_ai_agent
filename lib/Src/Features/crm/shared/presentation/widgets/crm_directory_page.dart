@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:agente_vendas_saas/Src/Core/api/api_exception.dart';
 import 'package:agente_vendas_saas/Src/Core/api/api_result.dart';
 import 'package:agente_vendas_saas/Src/Core/di/service_locator.dart';
+import 'package:agente_vendas_saas/Src/Core/http/endpoints.dart';
 import 'package:agente_vendas_saas/Src/Core/http/http_manager.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/controllers/auth_controller.dart';
 import 'package:flutter/material.dart';
@@ -34,9 +35,9 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
   String get _title => _isCustomers ? 'Clientes' : 'Empresas / Contas';
   String get _entityLabel => _isCustomers ? 'cliente' : 'empresa';
   String get _listEndpoint =>
-      _isCustomers ? 'v1-customers-list' : 'v1-accounts-list';
+      _isCustomers ? Endpoints.customersList : Endpoints.accountsList;
   String get _createEndpoint =>
-      _isCustomers ? 'v1-customers-create' : 'v1-accounts-create';
+      _isCustomers ? Endpoints.customersCreate : Endpoints.accountsCreate;
   String? get _workspaceId => _auth.session.value?.selectedWorkspace?.id;
 
   @override
@@ -74,12 +75,14 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
     if (!mounted) return;
     switch (result) {
       case ApiSuccess<Map<String, dynamic>>(:final data):
+        if (_workspaceId != workspaceId) return;
         final raw = data['items'] ?? data[_isCustomers ? 'customers' : 'accounts'];
         setState(() {
           _items = _maps(raw).toList(growable: false);
           _loading = false;
         });
       case ApiFailure<Map<String, dynamic>>(:final error):
+        if (_workspaceId != workspaceId) return;
         setState(() {
           _loading = false;
           _error = error.code == 'INVALID_FUNCTION'
@@ -225,12 +228,14 @@ class _CrmDirectoryPageState extends State<CrmDirectoryPage> {
     if (!mounted) return;
     switch (result) {
       case ApiSuccess<Map<String, dynamic>>():
+        if (_workspaceId != workspaceId) return;
         setState(() => _saving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${_capitalize(_entityLabel)} cadastrado com sucesso.')),
         );
         await _load();
       case ApiFailure<Map<String, dynamic>>(:final error):
+        if (_workspaceId != workspaceId) return;
         setState(() {
           _saving = false;
           _error = error.code == 'INVALID_FUNCTION'

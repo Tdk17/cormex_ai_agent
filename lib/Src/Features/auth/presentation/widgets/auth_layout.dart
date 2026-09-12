@@ -1,3 +1,4 @@
+import 'package:agente_vendas_saas/Src/Shared/components/app_brand.dart';
 import 'package:flutter/material.dart';
 
 class AuthLayout extends StatelessWidget {
@@ -5,14 +6,12 @@ class AuthLayout extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.child,
-    this.logoAsset = 'assets/images/cormex_logo.png',
     super.key,
   });
 
   final String title;
   final String subtitle;
   final Widget child;
-  final String logoAsset;
 
   @override
   Widget build(BuildContext context) {
@@ -68,9 +67,7 @@ class AuthLayout extends StatelessWidget {
                             ? Row(
                                 children: <Widget>[
                                   Expanded(
-                                    child: _BrandPresentation(
-                                      logoAsset: logoAsset,
-                                    ),
+                                    child: const _BrandPresentation(),
                                   ),
                                   const SizedBox(width: 72),
                                   SizedBox(
@@ -88,7 +85,6 @@ class AuthLayout extends StatelessWidget {
                                 child: _LoginCard(
                                   title: title,
                                   subtitle: subtitle,
-                                  logoAsset: logoAsset,
                                   showLogo: true,
                                   child: child,
                                 ),
@@ -107,9 +103,7 @@ class AuthLayout extends StatelessWidget {
 }
 
 class _BrandPresentation extends StatelessWidget {
-  const _BrandPresentation({required this.logoAsset});
-
-  final String logoAsset;
+  const _BrandPresentation();
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +142,7 @@ class _BrandPresentation extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 30),
-        _BrandLogo(logoAsset: logoAsset, large: true),
+        const AppBrand(light: true),
         const SizedBox(height: 32),
         const Text(
           'Transforme oportunidades\nem vendas, todos os dias.',
@@ -203,14 +197,12 @@ class _LoginCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.child,
-    this.logoAsset,
     this.showLogo = false,
   });
 
   final String title;
   final String subtitle;
   final Widget child;
-  final String? logoAsset;
   final bool showLogo;
 
   @override
@@ -237,8 +229,8 @@ class _LoginCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          if (showLogo && logoAsset != null) ...<Widget>[
-            Center(child: _BrandLogo(logoAsset: logoAsset!)),
+          if (showLogo) ...<Widget>[
+            const Center(child: AppBrand()),
             const SizedBox(height: 26),
           ],
           Container(
@@ -290,61 +282,6 @@ class _LoginCard extends StatelessWidget {
           const SizedBox(height: 30),
           child,
         ],
-      ),
-    );
-  }
-}
-
-class _BrandLogo extends StatelessWidget {
-  const _BrandLogo({required this.logoAsset, this.large = false});
-
-  final String logoAsset;
-  final bool large;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: large ? 340 : 230,
-      height: large ? 125 : 85,
-      child: Image.asset(
-        logoAsset,
-        fit: BoxFit.contain,
-        errorBuilder: (
-          BuildContext context,
-          Object error,
-          StackTrace? stackTrace,
-        ) {
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Container(
-                width: large ? 72 : 56,
-                height: large ? 72 : 56,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: <Color>[Color(0xFF06B6D4), Color(0xFF7C3AED)],
-                  ),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Icon(
-                  Icons.smart_toy_outlined,
-                  color: Colors.white,
-                  size: large ? 40 : 30,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Text(
-                'CormeX\nCRM',
-                style: TextStyle(
-                  color: large ? Colors.white : const Color(0xFF101828),
-                  fontSize: large ? 30 : 23,
-                  height: 1.05,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          );
-        },
       ),
     );
   }

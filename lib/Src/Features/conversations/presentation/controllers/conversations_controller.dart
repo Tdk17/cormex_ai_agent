@@ -73,6 +73,7 @@ class ConversationsController {
         workspaceId: workspaceId,
         filters: filters.value,
       );
+      if (_workspaceId != workspaceId) return;
       batch(() {
         conversations.value = page.items;
         owners.value = page.owners;
@@ -81,8 +82,10 @@ class ConversationsController {
         state.value = page.items.isEmpty ? ScreenState.empty : ScreenState.success;
       });
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return;
       _setError(error.userMessage, error.correlationId);
     } on Object {
+      if (_workspaceId != workspaceId) return;
       _setError('Não foi possível carregar as conversas.', null);
     }
   }
@@ -99,6 +102,7 @@ class ConversationsController {
         filters: filters.value,
         cursor: cursor,
       );
+      if (_workspaceId != workspaceId) return;
       final knownIds = conversations.value
           .map((ConversationModel item) => item.id)
           .toSet();
@@ -112,11 +116,13 @@ class ConversationsController {
         correlationId.value = page.correlationId;
       });
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return;
       batch(() {
         errorMessage.value = error.userMessage;
         correlationId.value = error.correlationId;
       });
     } on Object {
+      if (_workspaceId != workspaceId) return;
       errorMessage.value = 'Não foi possível carregar mais conversas.';
     } finally {
       isLoadingMore.value = false;
@@ -202,17 +208,20 @@ class ConversationsController {
         input: input,
         clientRequestId: _pendingStartRequestId!,
       );
+      if (_workspaceId != workspaceId) return null;
       _pendingStartKey = null;
       _pendingStartRequestId = null;
       upsert(conversation);
       return conversation;
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return null;
       batch(() {
         errorMessage.value = error.userMessage;
         correlationId.value = error.correlationId;
       });
       return null;
     } on Object {
+      if (_workspaceId != workspaceId) return null;
       errorMessage.value = 'Não foi possível iniciar a conversa.';
       return null;
     } finally {

@@ -79,11 +79,12 @@
 - [x] Agente de IA: configuração e console de teste.
 - [x] Central de Aquisição: visão, wizard, detalhe, rascunho e publicação.
 - [x] Base de Conhecimento: texto, FAQ, arquivo, processamento e exclusão.
-- [ ] Integração de canal.
+- [x] Integração de canal: listagem, conexão OAuth/Embedded Signup, atualização e desconexão.
 - [x] Follow-ups: listar, criar, editar, ativar/desativar e regras de interrupção.
 - [x] Dashboard conectado ao contrato de métricas remotas.
 - [x] Equipe e permissões: listar, convidar e alterar papel.
-- [ ] Plano e uso.
-- [ ] Hardening, testes ponta a ponta e staging.
+- [x] Plano e uso conectado ao contrato remoto.
+- [x] Hardening estrutural, análise estática e testes unitários no pipeline de deploy.
+- [ ] Testes ponta a ponta e ambiente de staging com backend isolado.
 
-Plano/Uso e Configurações permanecem visíveis como placeholders. Conversas, Agente de IA, Base de Conhecimento, Follow-ups, Equipe e Central de Aquisição possuem telas remotas conectadas aos contratos documentados.
+Plano/Uso e Configurações possuem telas próprias. Conversas, Agente de IA, Base de Conhecimento, Follow-ups, Equipe, Integrações e Central de Aquisição usam os contratos remotos documentados, sem repositórios mock ligados à aplicação.

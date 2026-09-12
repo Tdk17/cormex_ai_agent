@@ -70,7 +70,7 @@ Cloud Function autenticada que cria uma tentativa OAuth vinculada ao usuário e 
 ```json
 {
   "workspaceId": "ws_123",
-  "returnUrl": "https://tdk17.github.io/cormex_ai_agent/integrations"
+  "returnUrl": "https://cormexcrm.com.br/integrations"
 }
 ```
 

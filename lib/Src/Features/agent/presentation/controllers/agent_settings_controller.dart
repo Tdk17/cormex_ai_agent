@@ -85,6 +85,7 @@ class AgentSettingsController {
     });
     try {
       final result = await _repository.get(workspaceId: workspaceId);
+      if (_workspaceId != workspaceId) return;
       _lastLoadedAgent = result.agent;
       _hydrate(result.agent);
       batch(() {
@@ -94,8 +95,10 @@ class AgentSettingsController {
             result.agent == null ? ScreenState.empty : ScreenState.success;
       });
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return;
       _setError(error.userMessage, error.correlationId);
     } on Object {
+      if (_workspaceId != workspaceId) return;
       _setError('Não foi possível carregar o agente de IA.', null);
     }
   }
@@ -151,6 +154,7 @@ class AgentSettingsController {
           expectedVersion: _lastLoadedAgent?.version,
         ),
       );
+      if (_workspaceId != workspaceId) return false;
       _lastLoadedAgent = result.agent;
       _hydrate(result.agent);
       batch(() {
@@ -161,6 +165,7 @@ class AgentSettingsController {
       });
       return true;
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return false;
       batch(() {
         errorMessage.value = error.code == 'CONFLICT'
             ? 'A configuração foi alterada em outra sessão. Atualize antes de salvar novamente.'
@@ -169,6 +174,7 @@ class AgentSettingsController {
       });
       return false;
     } on Object {
+      if (_workspaceId != workspaceId) return false;
       errorMessage.value = 'Não foi possível salvar as configurações.';
       return false;
     } finally {

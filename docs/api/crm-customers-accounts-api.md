@@ -172,7 +172,7 @@ O front usa `v1-google-ads-oauth-start` e envia a URL atual da tela como `return
 
 - `https://cormexcrm.com.br`
 - `https://cormexcrm.com.br/integrations`
-- opcionalmente, durante a transição: `https://tdk17.github.io/cormex_ai_agent/`
+- para desenvolvimento local, apenas as origens explicitamente autorizadas pelo backend
 
 Se a função ainda permitir apenas a origem antiga do GitHub Pages, o novo domínio será rejeitado antes de abrir o consentimento do Google, podendo aparecer ao usuário como erro de autorização/permissão.
 

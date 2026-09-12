@@ -70,8 +70,10 @@ class KnowledgeController {
       });
       _schedulePoll();
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return;
       _setError(error.userMessage, error.correlationId, pageError: true);
     } on Object {
+      if (_workspaceId != workspaceId) return;
       _setError('Não foi possível carregar a Base de Conhecimento.', null,
           pageError: true);
     }
@@ -90,6 +92,7 @@ class KnowledgeController {
         status: statusFilter.value,
         cursor: cursor,
       );
+      if (_workspaceId != workspaceId) return;
       final ids = sources.value.map((KnowledgeSourceModel item) => item.id).toSet();
       batch(() {
         sources.value = <KnowledgeSourceModel>[
@@ -100,8 +103,10 @@ class KnowledgeController {
       });
       _schedulePoll();
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return;
       _setError(error.userMessage, error.correlationId);
     } on Object {
+      if (_workspaceId != workspaceId) return;
       errorMessage.value = 'Não foi possível carregar mais fontes.';
     } finally {
       isLoadingMore.value = false;
@@ -142,14 +147,17 @@ class KnowledgeController {
         clientRequestId:
             'knowledge_${DateTime.now().microsecondsSinceEpoch}',
       );
+      if (_workspaceId != workspaceId) return false;
       _upsert(source);
       successMessage.value = 'Fonte adicionada e enviada para processamento.';
       _schedulePoll();
       return true;
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return false;
       _setError(error.userMessage, error.correlationId);
       return false;
     } on Object {
+      if (_workspaceId != workspaceId) return false;
       errorMessage.value = 'Não foi possível adicionar a fonte.';
       return false;
     } finally {
@@ -180,14 +188,17 @@ class KnowledgeController {
           if (total > 0) uploadProgress.value = sent / total;
         },
       );
+      if (_workspaceId != workspaceId) return false;
       _upsert(source);
       successMessage.value = 'Arquivo enviado e adicionado ao processamento.';
       _schedulePoll();
       return true;
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return false;
       _setError(error.userMessage, error.correlationId);
       return false;
     } on Object {
+      if (_workspaceId != workspaceId) return false;
       errorMessage.value = 'Não foi possível enviar o arquivo.';
       return false;
     } finally {
@@ -201,6 +212,7 @@ class KnowledgeController {
     isMutating.value = true;
     try {
       await _repository.delete(workspaceId: workspaceId, sourceId: sourceId);
+      if (_workspaceId != workspaceId) return false;
       sources.value = sources.value
           .where((KnowledgeSourceModel item) => item.id != sourceId)
           .toList(growable: false);
@@ -208,9 +220,11 @@ class KnowledgeController {
       successMessage.value = 'Fonte excluída.';
       return true;
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return false;
       _setError(error.userMessage, error.correlationId);
       return false;
     } on Object {
+      if (_workspaceId != workspaceId) return false;
       errorMessage.value = 'Não foi possível excluir a fonte.';
       return false;
     } finally {

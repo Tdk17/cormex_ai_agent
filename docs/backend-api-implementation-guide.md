@@ -149,8 +149,8 @@ Essas funções já existem nominalmente em `Endpoints`, mas as telas ainda pode
 | Domínio | Função | Documento |
 | --- | --- | --- |
 | Tarefas | `tasks.list` | [Tarefas](api/tasks-api.md) |
-| Integrações genéricas | `integrations.list` | [Integrações](api/integrations-api.md) |
-| Integrações genéricas | `integrations.connect` | [Integrações](api/integrations-api.md) |
+| Integrações genéricas | `v1-integrations-list` | [Integrações](api/integrations-api.md) |
+| Integrações genéricas | `v1-integrations-connect` | [Integrações](api/integrations-api.md) |
 | Plano e uso | `usage.current` | [Plano e uso](api/usage-api.md) |
 
 ### 4.4 Contratos do backend que não pertencem ao Flutter
