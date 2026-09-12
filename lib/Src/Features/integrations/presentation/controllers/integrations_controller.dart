@@ -35,6 +35,9 @@ class IntegrationsController {
   final Signal<String?> busyProvider = signal<String?>(null);
   final Signal<String?> errorMessage = signal<String?>(null);
   final Signal<String?> successMessage = signal<String?>(null);
+
+  // Diagnostics remain internal to the controller/repository layer. UI must not
+  // render request/correlation identifiers to end users.
   final Signal<String?> correlationId = signal<String?>(null);
 
   IntegrationModel? provider(String provider) {
@@ -99,10 +102,6 @@ class IntegrationsController {
           current.status == IntegrationStatuses.expired ||
           current.status == IntegrationStatuses.authorizationError;
       final isWhatsApp = provider == IntegrationProviders.whatsapp;
-
-      // O backend atual segue o contrato OAuth/Embedded Signup oficial:
-      // start, refresh e disconnect. Não envie start_qr/refresh_qr aqui,
-      // pois essas ações não fazem parte do contrato publicado da API.
       final action = isDisconnected ? 'start' : 'refresh';
 
       final result = await _repository.connect(
@@ -146,7 +145,7 @@ class IntegrationsController {
       final code = error.code.toUpperCase();
       if (code == 'FORBIDDEN' || code == 'UNAUTHORIZED' || code == 'PERMISSION_DENIED') {
         _setError(
-          'Sua sessão está autenticada, mas o backend recusou a permissão para integrar este workspace. O proprietário (owner) e administradores devem ter permissão para conectar integrações.',
+          'Sua sessão está autenticada, mas você não possui permissão para gerenciar esta integração. Solicite acesso ao proprietário ou administrador da empresa.',
           error.correlationId,
         );
       } else {
