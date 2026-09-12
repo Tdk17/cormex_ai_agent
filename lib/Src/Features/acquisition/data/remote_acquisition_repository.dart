@@ -8,6 +8,7 @@ import 'package:agente_vendas_saas/Src/Features/acquisition/domain/acquisition_c
 import 'package:agente_vendas_saas/Src/Features/acquisition/domain/acquisition_contracts.dart';
 import 'package:agente_vendas_saas/Src/Features/acquisition/domain/acquisition_repository.dart';
 import 'package:agente_vendas_saas/Src/Shared/models/acquisition_models.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RemoteAcquisitionRepository implements AcquisitionRepository {
   RemoteAcquisitionRepository(this._httpManager);
@@ -138,11 +139,48 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
 
   @override
   Future<GoogleAdsConnectionStatus> googleAdsConnectionStatus({required String workspaceId}) async {
+    await _completeGoogleAdsOAuthReturnIfNeeded();
     final result = await _httpManager.cloudFunction(
       name: Endpoints.googleAdsConnectionStatus,
       parameters: <String, dynamic>{'workspaceId': workspaceId},
     );
     return _googleStatus(result);
+  }
+
+  Future<void> _completeGoogleAdsOAuthReturnIfNeeded() async {
+    final current = Uri.base;
+    final state = current.queryParameters['state']?.trim() ?? '';
+    final code = current.queryParameters['code']?.trim() ?? '';
+    final oauthError = current.queryParameters['error']?.trim() ?? '';
+
+    if (state.isEmpty || (code.isEmpty && oauthError.isEmpty)) return;
+
+    final result = await _httpManager.cloudFunction(
+      name: 'v1-google-ads-oauth-callback',
+      parameters: <String, dynamic>{
+        'state': state,
+        if (code.isNotEmpty) 'code': code,
+        if (oauthError.isNotEmpty) 'error': oauthError,
+      },
+    );
+
+    switch (result) {
+      case ApiSuccess<Map<String, dynamic>>(:final data):
+        final rawReturnUrl = data['returnUrl']?.toString().trim() ?? '';
+        final returnUri = Uri.tryParse(rawReturnUrl);
+        if (returnUri != null &&
+            returnUri.hasScheme &&
+            returnUri.host.isNotEmpty &&
+            returnUri.origin == current.origin) {
+          await launchUrl(
+            returnUri,
+            mode: LaunchMode.platformDefault,
+            webOnlyWindowName: '_self',
+          );
+        }
+      case ApiFailure<Map<String, dynamic>>(:final error):
+        throw error;
+    }
   }
 
   @override
