@@ -31,8 +31,11 @@ class _IntegrationsPageState extends State<IntegrationsPage> {
 
   bool _googleLoading = true;
   bool _googleConnecting = false;
+  bool _googleAccountsLoading = false;
+  bool _googleMutating = false;
   bool _activatingAgent = false;
   GoogleAdsConnectionStatus? _googleAds;
+  List<GoogleAdsAccount> _googleAccounts = const <GoogleAdsAccount>[];
   String? _googleError;
 
   @override
@@ -57,7 +60,7 @@ class _IntegrationsPageState extends State<IntegrationsPage> {
       if (!mounted) return;
       setState(() {
         _googleLoading = false;
-        _googleError = 'Selecione um workspace antes de conectar o Google Ads.';
+        _googleError = 'Selecione uma empresa antes de conectar o Google Ads.';
       });
       return;
     }
@@ -76,6 +79,9 @@ class _IntegrationsPageState extends State<IntegrationsPage> {
         _googleAds = status;
         _googleLoading = false;
       });
+      if (status.status == 'account_selection_required') {
+        await _loadGoogleAdsAccounts();
+      }
     } on ApiException catch (error) {
       if (!mounted) return;
       setState(() {
@@ -91,6 +97,119 @@ class _IntegrationsPageState extends State<IntegrationsPage> {
     }
   }
 
+  Future<void> _loadGoogleAdsAccounts() async {
+    final workspaceId = _workspaceId;
+    if (workspaceId == null || _googleAccountsLoading) return;
+    setState(() {
+      _googleAccountsLoading = true;
+      _googleError = null;
+    });
+    try {
+      final accounts = await _acquisitionRepository.googleAdsAccounts(
+        workspaceId: workspaceId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _googleAccounts = accounts.where((account) => account.selectable).toList(growable: false);
+        _googleAccountsLoading = false;
+      });
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _googleAccountsLoading = false;
+        _googleError = error.userMessage;
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        _googleAccountsLoading = false;
+        _googleError = 'Não foi possível carregar as contas de anúncio disponíveis.';
+      });
+    }
+  }
+
+  Future<void> _selectGoogleAdsAccount(GoogleAdsAccount account) async {
+    final workspaceId = _workspaceId;
+    if (workspaceId == null || _googleMutating) return;
+    setState(() {
+      _googleMutating = true;
+      _googleError = null;
+    });
+    try {
+      final status = await _acquisitionRepository.selectGoogleAdsAccount(
+        workspaceId: workspaceId,
+        customerId: account.customerId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _googleAds = status;
+        _googleAccounts = const <GoogleAdsAccount>[];
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Conta Google Ads selecionada com sucesso.')),
+      );
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() => _googleError = error.userMessage);
+    } on Object {
+      if (!mounted) return;
+      setState(() => _googleError = 'Não foi possível selecionar a conta Google Ads.');
+    } finally {
+      if (mounted) setState(() => _googleMutating = false);
+    }
+  }
+
+  Future<void> _disconnectGoogleAds() async {
+    final workspaceId = _workspaceId;
+    if (workspaceId == null || _googleMutating) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Desconectar Google Ads?'),
+        content: const Text(
+          'A publicação e a leitura de resultados do Google Ads serão interrompidas até uma nova autorização.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Desconectar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() {
+      _googleMutating = true;
+      _googleError = null;
+    });
+    try {
+      final status = await _acquisitionRepository.disconnectGoogleAds(
+        workspaceId: workspaceId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _googleAds = status;
+        _googleAccounts = const <GoogleAdsAccount>[];
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Google Ads desconectado.')),
+      );
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() => _googleError = error.userMessage);
+    } on Object {
+      if (!mounted) return;
+      setState(() => _googleError = 'Não foi possível desconectar o Google Ads.');
+    } finally {
+      if (mounted) setState(() => _googleMutating = false);
+    }
+  }
+
   Future<void> _connectGoogleAds() async {
     if (_googleConnecting) return;
     final workspaceId = _workspaceId;
@@ -100,7 +219,6 @@ class _IntegrationsPageState extends State<IntegrationsPage> {
       _googleConnecting = true;
       _googleError = null;
     });
-
     try {
       final result = await _acquisitionRepository.startGoogleAdsOAuth(
         workspaceId: workspaceId,
@@ -141,7 +259,6 @@ class _IntegrationsPageState extends State<IntegrationsPage> {
       returnUrl: Uri.base.toString(),
     );
     if (!mounted || uri == null) return;
-
     final opened = await launchUrl(
       uri,
       mode: LaunchMode.platformDefault,
@@ -157,37 +274,28 @@ class _IntegrationsPageState extends State<IntegrationsPage> {
   Future<void> _disconnectWhatsApp(IntegrationModel integration) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
+      builder: (context) => AlertDialog(
         title: const Text('Desconectar WhatsApp?'),
         content: const Text(
           'Novos envios automáticos serão interrompidos. O histórico de leads e conversas será preservado.',
         ),
         actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Desconectar'),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
+          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Desconectar')),
         ],
       ),
     );
-    if (confirmed != true) return;
-    await _integrationsController.disconnect(integration);
+    if (confirmed == true) await _integrationsController.disconnect(integration);
   }
 
   Future<void> _activateAiSeller() async {
     if (_activatingAgent || _agentController.isSaving.value) return;
     setState(() => _activatingAgent = true);
-
     try {
       if (_agentController.state.value == ScreenState.initial ||
           _agentController.state.value == ScreenState.loading) {
         await _agentController.load(force: true);
       }
-
       _agentController.clearFeedback();
       if (_agentController.name.value.trim().length < 2) {
         _agentController.name.value = 'Clara';
@@ -202,17 +310,17 @@ class _IntegrationsPageState extends State<IntegrationsPage> {
       }
       if (_agentController.productOffer.value.trim().length < 3) {
         _agentController.productOffer.value =
-            'Use a oferta principal e a Base de Conhecimento cadastradas neste workspace para apresentar benefícios, condições permitidas e conduzir o lead ao fechamento.';
+            'Use a oferta principal e a Base de Conhecimento cadastradas neste workspace para apresentar benefícios e conduzir o lead ao fechamento.';
       }
       if (_agentController.initialMessage.value.trim().length < 5) {
         _agentController.initialMessage.value =
-            'Olá! Sou a Clara, consultora virtual da empresa. Vi seu interesse e quero entender o que você precisa para te indicar a melhor opção. O que você está buscando hoje?';
+            'Olá! Sou a Clara, consultora virtual da empresa. Vi seu interesse e quero entender o que você precisa para te indicar a melhor opção.';
       }
       if (_agentController.rules.value.isEmpty) {
         _agentController.rules.value = const <String>[
           'Nunca inventar preço, desconto, prazo ou condição que não esteja na oferta ou Base de Conhecimento.',
           'Entender a necessidade do lead antes de pressionar pelo fechamento.',
-          'Quando não souber uma informação, informar a limitação e encaminhar para atendimento humano.',
+          'Quando não souber uma informação, encaminhar para atendimento humano.',
           'Respeitar pedido de parar o contato e nunca insistir após opt-out.',
         ];
       }
@@ -223,23 +331,20 @@ class _IntegrationsPageState extends State<IntegrationsPage> {
           'Existe um prazo para tomar a decisão?',
         ];
       }
-
       _agentController.tone.value = AgentTones.persuasive;
       _agentController.mode.value = AgentModes.auto;
       _agentController.isActive.value = true;
       _agentController.allowPricePresentation.value = true;
       _agentController.allowFollowUp.value = true;
       _agentController.handoffOnRequest.value = true;
-
       final saved = await _agentController.save();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             saved
-                ? 'IA vendedora ativada em modo automático. Abra o teste para conversar com ela como se fosse um lead.'
-                : (_agentController.errorMessage.value ??
-                    'Não foi possível ativar a IA vendedora.'),
+                ? 'IA vendedora ativada em modo automático.'
+                : (_agentController.errorMessage.value ?? 'Não foi possível ativar a IA vendedora.'),
           ),
         ),
       );
@@ -250,458 +355,202 @@ class _IntegrationsPageState extends State<IntegrationsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final whatsapp =
-        _integrationsController.provider(IntegrationProviders.whatsapp);
+    final whatsapp = _integrationsController.provider(IntegrationProviders.whatsapp);
     final whatsappConnected = whatsapp?.connected == true;
-    final whatsappBusy = _integrationsController.busyProvider.value ==
-        IntegrationProviders.whatsapp;
-    final aiActive = _agentController.isActive.value &&
-        _agentController.mode.value == AgentModes.auto;
+    final whatsappBusy = _integrationsController.busyProvider.value == IntegrationProviders.whatsapp;
+    final aiActive = _agentController.isActive.value && _agentController.mode.value == AgentModes.auto;
     final googleConnected = _googleAds?.connected == true;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 26, 24, 48),
       children: <Widget>[
-        Text(
-          'Integrações e canais de venda',
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
+        Text('Integrações e canais de venda', style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 6),
         const Text(
-          'Conecte o canal de atendimento, ative a IA e faça um teste de venda antes de colocar a automação em produção.',
+          'Conecte canais, anúncios e a IA usando somente dados necessários para operação.',
           style: TextStyle(color: AppColors.textSecondary),
         ),
         const SizedBox(height: 24),
-        _AiSellerCard(
-          active: aiActive,
-          saving: _activatingAgent || _agentController.isSaving.value,
-          errorMessage: _agentController.errorMessage.value,
-          onActivate: _activateAiSeller,
-          onConfigure: () => context.go('/automation/agent'),
-          onTest: () => context.go('/automation/agent/test'),
-        ),
-        const SizedBox(height: 16),
-        _WhatsAppCard(
-          integration: whatsapp,
-          loading: _integrationsController.state.value == ScreenState.loading,
-          busy: whatsappBusy,
-          controllerError: _integrationsController.errorMessage.value,
-          correlationId: _integrationsController.correlationId.value,
-          onConnect: _connectWhatsApp,
-          onRefresh: () => _integrationsController.load(force: true),
-          onDisconnect: whatsapp == null
-              ? null
-              : () => _disconnectWhatsApp(whatsapp),
-          onOpenConversations: whatsappConnected
-              ? () => context.go('/crm/conversations')
-              : null,
-        ),
-        const SizedBox(height: 16),
-        const _EmailCard(),
-        const SizedBox(height: 16),
-        _GoogleAdsCard(
-          status: _googleAds,
-          loading: _googleLoading,
-          connecting: _googleConnecting,
-          error: _googleError,
-          connected: googleConnected,
-          onConnect: _connectGoogleAds,
-          onRefresh: _loadGoogleAds,
-        ),
-        const SizedBox(height: 16),
-        const _MetaAdsCard(),
-      ],
-    );
-  }
-}
-
-class _AiSellerCard extends StatelessWidget {
-  const _AiSellerCard({
-    required this.active,
-    required this.saving,
-    required this.errorMessage,
-    required this.onActivate,
-    required this.onConfigure,
-    required this.onTest,
-  });
-
-  final bool active;
-  final bool saving;
-  final String? errorMessage;
-  final VoidCallback onActivate;
-  final VoidCallback onConfigure;
-  final VoidCallback onTest;
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionCard(
-      icon: Icons.auto_awesome_rounded,
-      iconColor: const Color(0xFF7C3AED),
-      title: 'IA vendedora',
-      subtitle:
-          'Ative o agente em modo automático e teste a abordagem no sandbox antes de falar com clientes reais.',
-      status: _StatusBadge(
-        connected: active,
-        label: active ? 'Ativa · modo auto' : 'Inativa',
-      ),
-      children: <Widget>[
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: const Color(0xFF7C3AED).withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: const Color(0xFF7C3AED).withValues(alpha: 0.16),
-            ),
-          ),
-          child: const Text(
-            'O teste usa a configuração salva no backend e chama a IA de verdade, mas não envia mensagem para WhatsApp ou e-mail. Assim você consegue avaliar se ela qualifica, contorna objeções e conduz a venda sem risco.',
-            style: TextStyle(fontSize: 12, height: 1.45),
-          ),
-        ),
-        if (errorMessage != null) ...<Widget>[
-          const SizedBox(height: 12),
-          Text(
-            errorMessage!,
-            style: const TextStyle(color: AppColors.danger, fontSize: 12),
-          ),
-        ],
-        const SizedBox(height: 14),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
+        _IntegrationCard(
+          icon: Icons.auto_awesome_rounded,
+          iconColor: const Color(0xFF7C3AED),
+          title: 'IA vendedora',
+          subtitle: 'Ative e teste o agente comercial antes de usar canais externos.',
+          status: _StatusBadge(connected: aiActive, label: aiActive ? 'Ativa · modo auto' : 'Inativa'),
           children: <Widget>[
-            FilledButton.icon(
-              onPressed: saving ? null : onActivate,
-              icon: saving
-                  ? const SizedBox.square(
-                      dimension: 17,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.power_settings_new_rounded),
-              label: Text(active ? 'Revalidar IA vendedora' : 'Ativar IA vendedora'),
-            ),
-            OutlinedButton.icon(
-              onPressed: onTest,
-              icon: const Icon(Icons.science_outlined),
-              label: const Text('Testar venda agora'),
-            ),
-            TextButton.icon(
-              onPressed: onConfigure,
-              icon: const Icon(Icons.tune_rounded),
-              label: const Text('Configurar oferta'),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _WhatsAppCard extends StatelessWidget {
-  const _WhatsAppCard({
-    required this.integration,
-    required this.loading,
-    required this.busy,
-    required this.controllerError,
-    required this.correlationId,
-    required this.onConnect,
-    required this.onRefresh,
-    required this.onDisconnect,
-    required this.onOpenConversations,
-  });
-
-  final IntegrationModel? integration;
-  final bool loading;
-  final bool busy;
-  final String? controllerError;
-  final String? correlationId;
-  final VoidCallback onConnect;
-  final VoidCallback onRefresh;
-  final VoidCallback? onDisconnect;
-  final VoidCallback? onOpenConversations;
-
-  @override
-  Widget build(BuildContext context) {
-    final connected = integration?.connected == true;
-    final account = integration?.maskedAccount ?? integration?.displayName;
-    return _SectionCard(
-      icon: Icons.chat_rounded,
-      iconColor: const Color(0xFF16A34A),
-      title: 'WhatsApp Business',
-      subtitle:
-          'Autorize sua conta pela página oficial da Meta. Depois a IA poderá '
-          'iniciar e responder conversas em modo automático.',
-      status: _StatusBadge(
-        connected: connected,
-        loading: loading,
-        label: integration == null ? null : _integrationStatusLabel(integration!.status),
-      ),
-      children: <Widget>[
-        if (loading) const LinearProgressIndicator(minHeight: 2),
-        if (connected) ...<Widget>[
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.07),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.accent.withValues(alpha: 0.18),
-              ),
-            ),
-            child: Row(
+            if (_agentController.errorMessage.value != null)
+              _ErrorBox(message: _agentController.errorMessage.value!),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
               children: <Widget>[
-                const Icon(Icons.verified_rounded, color: AppColors.accent),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        integration?.displayName ?? 'WhatsApp conectado',
-                        style: const TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      if (account != null)
-                        Text(
-                          account,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      if (integration!.capabilities.isNotEmpty)
-                        Text(
-                          integration!.capabilities.join(' · '),
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 11,
-                          ),
-                        ),
-                    ],
-                  ),
+                FilledButton.icon(
+                  onPressed: _activatingAgent || _agentController.isSaving.value ? null : _activateAiSeller,
+                  icon: const Icon(Icons.power_settings_new_rounded),
+                  label: Text(aiActive ? 'Revalidar IA' : 'Ativar IA vendedora'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => context.go('/automation/agent/test'),
+                  icon: const Icon(Icons.science_outlined),
+                  label: const Text('Testar venda'),
+                ),
+                TextButton.icon(
+                  onPressed: () => context.go('/automation/agent'),
+                  icon: const Icon(Icons.tune_rounded),
+                  label: const Text('Configurar'),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 12),
-        ],
-        if (controllerError != null) ...<Widget>[
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.danger.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(11),
-              border: Border.all(
-                color: AppColors.danger.withValues(alpha: 0.16),
-              ),
-            ),
-            child: Text(
-              correlationId == null
-                  ? controllerError!
-                  : '$controllerError\nID: $correlationId',
-              style: const TextStyle(color: AppColors.danger, fontSize: 12),
-            ),
-          ),
-          const SizedBox(height: 12),
-        ],
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: <Widget>[
-            if (!connected)
-              FilledButton.icon(
-                onPressed: loading || busy ? null : onConnect,
-                icon: busy
-                    ? const SizedBox.square(
-                        dimension: 17,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.link_rounded),
-                label: const Text('Conectar WhatsApp'),
-              ),
-            if (connected)
-              FilledButton.tonalIcon(
-                onPressed: onOpenConversations,
-                icon: const Icon(Icons.auto_awesome_rounded),
-                label: const Text('Iniciar venda com IA'),
-              ),
-            if (connected)
-              OutlinedButton.icon(
-                onPressed: busy ? null : onConnect,
-                icon: const Icon(Icons.sync_lock_rounded),
-                label: const Text('Renovar autorização Meta'),
-              ),
-            OutlinedButton.icon(
-              onPressed: loading || busy ? null : onRefresh,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Atualizar status'),
-            ),
-            if (connected && onDisconnect != null)
-              TextButton.icon(
-                onPressed: busy ? null : onDisconnect,
-                icon: const Icon(Icons.link_off_rounded),
-                label: const Text('Desconectar'),
-              ),
           ],
         ),
-        const SizedBox(height: 12),
-        const Text(
-          'O CormeX não solicita sua senha do WhatsApp/Meta. A autorização '
-          'acontece na Meta; tokens e segredos permanecem somente no backend '
-          'e o front recebe apenas o status sanitizado da conexão.',
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 11,
-            height: 1.45,
+        const SizedBox(height: 16),
+        _IntegrationCard(
+          icon: Icons.chat_rounded,
+          iconColor: const Color(0xFF16A34A),
+          title: 'WhatsApp Business',
+          subtitle: 'Autorize sua conta pela Meta para permitir atendimento e automações.',
+          status: _StatusBadge(
+            connected: whatsappConnected,
+            loading: _integrationsController.state.value == ScreenState.loading,
+            label: whatsapp == null ? null : _integrationStatusLabel(whatsapp.status),
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _EmailCard extends StatelessWidget {
-  const _EmailCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return const _SectionCard(
-      icon: Icons.alternate_email_rounded,
-      iconColor: AppColors.blue,
-      title: 'E-mail',
-      subtitle:
-          'O motor de conversas já prevê o canal e-mail, mas o contrato de conexão de integrações ainda não registra um provider de e-mail. Por isso o front não simula uma conexão inexistente.',
-      status: _StatusBadge(connected: false, label: 'Backend pendente'),
-      children: <Widget>[
-        Text(
-          'Para envio real por e-mail ainda é necessário registrar no backend o provedor escolhido (Google/Microsoft/SMTP), OAuth/credenciais seguras, renovação e status. O WhatsApp acima já usa o contrato existente e é o canal indicado para o primeiro teste externo.',
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 12,
-            height: 1.45,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _GoogleAdsCard extends StatelessWidget {
-  const _GoogleAdsCard({
-    required this.status,
-    required this.loading,
-    required this.connecting,
-    required this.error,
-    required this.connected,
-    required this.onConnect,
-    required this.onRefresh,
-  });
-
-  final GoogleAdsConnectionStatus? status;
-  final bool loading;
-  final bool connecting;
-  final String? error;
-  final bool connected;
-  final VoidCallback onConnect;
-  final VoidCallback onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionCard(
-      icon: Icons.ads_click_rounded,
-      iconColor: AppColors.blue,
-      title: 'Google Ads',
-      subtitle:
-          'Autorize o CormeX pela página oficial do Google para publicar campanhas e receber resultados.',
-      status: _StatusBadge(connected: connected, loading: loading),
-      children: <Widget>[
-        if (loading) const LinearProgressIndicator(minHeight: 2),
-        if (!loading && connected) ...<Widget>[
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.07),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              status?.accountName?.trim().isNotEmpty == true
-                  ? status!.accountName!
-                  : 'Conta Google Ads conectada',
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-          ),
-          const SizedBox(height: 12),
-        ],
-        if (error != null) ...<Widget>[
-          Text(
-            error!,
-            style: const TextStyle(color: AppColors.danger, fontSize: 12),
-          ),
-          const SizedBox(height: 12),
-        ],
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
           children: <Widget>[
-            if (!connected)
-              FilledButton.icon(
-                onPressed: loading || connecting ? null : onConnect,
-                icon: connecting
-                    ? const SizedBox.square(
-                        dimension: 17,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.login_rounded),
-                label: const Text('Entrar com Google'),
+            if (whatsappConnected)
+              _SafeAccountBox(
+                title: whatsapp?.displayName ?? 'WhatsApp conectado',
+                subtitle: whatsapp?.maskedAccount,
               ),
-            OutlinedButton.icon(
-              onPressed: loading ? null : onRefresh,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Atualizar status'),
+            if (_integrationsController.errorMessage.value != null)
+              _ErrorBox(message: _integrationsController.errorMessage.value!),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: <Widget>[
+                if (!whatsappConnected)
+                  FilledButton.icon(
+                    onPressed: whatsappBusy ? null : _connectWhatsApp,
+                    icon: const Icon(Icons.link_rounded),
+                    label: const Text('Conectar WhatsApp'),
+                  ),
+                if (whatsappConnected)
+                  FilledButton.tonalIcon(
+                    onPressed: () => context.go('/crm/conversations'),
+                    icon: const Icon(Icons.auto_awesome_rounded),
+                    label: const Text('Iniciar venda com IA'),
+                  ),
+                OutlinedButton.icon(
+                  onPressed: whatsappBusy ? null : () => _integrationsController.load(force: true),
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Atualizar status'),
+                ),
+                if (whatsappConnected && whatsapp != null)
+                  TextButton.icon(
+                    onPressed: whatsappBusy ? null : () => _disconnectWhatsApp(whatsapp),
+                    icon: const Icon(Icons.link_off_rounded),
+                    label: const Text('Desconectar'),
+                  ),
+              ],
+            ),
+            const Text(
+              'Tokens, credenciais e identificadores técnicos permanecem no backend e não são exibidos nesta tela.',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
             ),
           ],
         ),
-      ],
-    );
-  }
-}
-
-class _MetaAdsCard extends StatelessWidget {
-  const _MetaAdsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return const _SectionCard(
-      icon: Icons.campaign_outlined,
-      iconColor: AppColors.primary,
-      title: 'Meta Ads',
-      subtitle: 'Facebook e Instagram serão conectados pelo fluxo OAuth da Meta.',
-      status: _StatusBadge(connected: false, label: 'Em configuração'),
-      children: <Widget>[
-        Text(
-          'A conexão de anúncios da Meta continua separada do WhatsApp Business para evitar misturar permissões de mídia e mensageria.',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+        const SizedBox(height: 16),
+        _IntegrationCard(
+          icon: Icons.ads_click_rounded,
+          iconColor: AppColors.blue,
+          title: 'Google Ads',
+          subtitle: 'Autorize, escolha a conta anunciante e gerencie a conexão usada pelas campanhas.',
+          status: _StatusBadge(
+            connected: googleConnected,
+            loading: _googleLoading,
+            label: _googleAds?.status == 'account_selection_required' ? 'Escolha a conta' : null,
+          ),
+          children: <Widget>[
+            if (_googleLoading) const LinearProgressIndicator(minHeight: 2),
+            if (googleConnected)
+              _SafeAccountBox(
+                title: _googleAds?.accountName?.trim().isNotEmpty == true
+                    ? _googleAds!.accountName!
+                    : 'Conta Google Ads conectada',
+              ),
+            if (_googleError != null) _ErrorBox(message: _googleError!),
+            if (_googleAds?.status == 'account_selection_required' || _googleAccounts.isNotEmpty) ...<Widget>[
+              const Text(
+                'Selecione a conta de anunciante que o CormeX deve usar. Contas administradoras não são disponibilizadas para seleção.',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              ),
+              if (_googleAccountsLoading) const LinearProgressIndicator(minHeight: 2),
+              if (!_googleAccountsLoading && _googleAccounts.isEmpty)
+                OutlinedButton.icon(
+                  onPressed: _googleMutating ? null : _loadGoogleAdsAccounts,
+                  icon: const Icon(Icons.list_alt_rounded),
+                  label: const Text('Carregar contas'),
+                ),
+              for (final account in _googleAccounts)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.campaign_rounded),
+                  title: Text(account.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  subtitle: account.currency == null ? null : Text('Moeda: ${account.currency}'),
+                  trailing: FilledButton(
+                    onPressed: _googleMutating ? null : () => _selectGoogleAdsAccount(account),
+                    child: const Text('Selecionar'),
+                  ),
+                ),
+            ],
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: <Widget>[
+                if (!googleConnected && _googleAds?.status != 'account_selection_required')
+                  FilledButton.icon(
+                    onPressed: _googleLoading || _googleConnecting ? null : _connectGoogleAds,
+                    icon: const Icon(Icons.login_rounded),
+                    label: const Text('Entrar com Google'),
+                  ),
+                OutlinedButton.icon(
+                  onPressed: _googleLoading ? null : _loadGoogleAds,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Atualizar status'),
+                ),
+                if (googleConnected)
+                  TextButton.icon(
+                    onPressed: _googleMutating ? null : _disconnectGoogleAds,
+                    icon: const Icon(Icons.link_off_rounded),
+                    label: const Text('Desconectar'),
+                  ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        const _IntegrationCard(
+          icon: Icons.alternate_email_rounded,
+          iconColor: AppColors.blue,
+          title: 'E-mail',
+          subtitle: 'O canal existe no motor de conversas, mas a conexão do provedor ainda depende de backend.',
+          status: _StatusBadge(connected: false, label: 'Backend pendente'),
+          children: <Widget>[],
+        ),
+        const SizedBox(height: 16),
+        const _IntegrationCard(
+          icon: Icons.campaign_outlined,
+          iconColor: AppColors.primary,
+          title: 'Meta Ads',
+          subtitle: 'Facebook e Instagram permanecem separados do WhatsApp Business.',
+          status: _StatusBadge(connected: false, label: 'Em configuração'),
+          children: <Widget>[],
         ),
       ],
     );
   }
 }
 
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({
+class _IntegrationCard extends StatelessWidget {
+  const _IntegrationCard({
     required this.icon,
     required this.iconColor,
     required this.title,
@@ -719,72 +568,103 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 920),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: iconColor.withValues(alpha: 0.09),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(icon, color: iconColor),
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.09),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          subtitle,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
-                            height: 1.35,
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: Icon(icon, color: iconColor),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.35),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  status,
-                ],
-              ),
-              if (children.isNotEmpty) ...<Widget>[
-                const SizedBox(height: 18),
-                ...children,
+                ),
+                const SizedBox(width: 12),
+                status,
               ],
+            ),
+            if (children.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 18),
+              ...children.expand((widget) => <Widget>[widget, const SizedBox(height: 12)]),
             ],
-          ),
+          ],
         ),
       ),
     );
   }
 }
 
+class _SafeAccountBox extends StatelessWidget {
+  const _SafeAccountBox({required this.title, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.accent.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+          if (subtitle?.trim().isNotEmpty == true)
+            Text(subtitle!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorBox extends StatelessWidget {
+  const _ErrorBox({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.danger.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: AppColors.danger.withValues(alpha: 0.16)),
+      ),
+      child: Text(message, style: const TextStyle(color: AppColors.danger, fontSize: 12)),
+    );
+  }
+}
+
 class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({
-    required this.connected,
-    this.loading = false,
-    this.label,
-  });
+  const _StatusBadge({required this.connected, this.loading = false, this.label});
 
   final bool connected;
   final bool loading;
@@ -793,22 +673,14 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = connected ? AppColors.accent : AppColors.textSecondary;
-    final text = label ??
-        (loading ? 'Verificando' : connected ? 'Conectado' : 'Desconectado');
+    final text = label ?? (loading ? 'Verificando' : connected ? 'Conectado' : 'Desconectado');
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.09),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
+      child: Text(text, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w800)),
     );
   }
 }
