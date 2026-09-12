@@ -52,16 +52,27 @@ class BillingController {
     });
 
     try {
-      final results = await Future.wait<dynamic>(<Future<dynamic>>[
-        _repository.getCurrent(workspaceId: workspaceId),
-        _repository.getPlans(workspaceId: workspaceId),
-      ]);
+      final current = await _repository.getCurrent(workspaceId: workspaceId);
       if (_workspaceId != workspaceId) return;
       batch(() {
-        overview.value = results[0] as BillingOverviewModel;
-        catalog.value = results[1] as BillingCatalogModel;
+        overview.value = current;
         state.value = ScreenState.success;
       });
+
+      try {
+        final plans = await _repository.getPlans(workspaceId: workspaceId);
+        if (_workspaceId == workspaceId) catalog.value = plans;
+      } on ApiException catch (error) {
+        if (_workspaceId != workspaceId) return;
+        // A assinatura atual continua utilizável mesmo se o catálogo ainda não
+        // tiver sido configurado no servidor. O erro fica visível na própria tela.
+        errorMessage.value = error.userMessage;
+        correlationId.value = error.correlationId;
+      } on Object {
+        if (_workspaceId == workspaceId) {
+          errorMessage.value = 'O catálogo de planos ainda não está disponível.';
+        }
+      }
     } on ApiException catch (error) {
       if (_workspaceId != workspaceId) return;
       batch(() {
@@ -72,7 +83,7 @@ class BillingController {
     } on Object {
       if (_workspaceId != workspaceId) return;
       batch(() {
-        errorMessage.value = 'Não foi possível carregar os planos e a assinatura.';
+        errorMessage.value = 'Não foi possível carregar o estado da assinatura.';
         state.value = ScreenState.error;
       });
     }
