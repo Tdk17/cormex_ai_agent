@@ -36,8 +36,7 @@ class Endpoints {
 
   static const String conversationsList = 'v1-conversations-list';
   static const String conversationsGet = 'v1-conversations-get';
-  static const String conversationsSendMessage =
-      'v1-conversations-send-message';
+  static const String conversationsSendMessage = 'v1-conversations-send-message';
   static const String conversationsAssign = 'v1-conversations-assign';
   static const String conversationsSetMode = 'v1-conversations-set-mode';
   static const String conversationsStart = 'v1-conversations-start';
@@ -45,12 +44,17 @@ class Endpoints {
   static const String agentUpdate = 'v1-agent-update';
   static const String agentTestReply = 'v1-agent-test-reply';
 
-  static const String knowledgeList = 'knowledge.list';
-  static const String knowledgeCreate = 'knowledge.create';
-  static const String knowledgeDelete = 'knowledge.delete';
+  // Knowledge uses the canonical v1 contract implemented by mvp-services.js.
+  static const String knowledgeList = 'v1-knowledge-list';
+  static const String knowledgeCreate = 'v1-knowledge-create';
+  static const String knowledgeDelete = 'v1-knowledge-delete';
+
+  // Follow-up automation rules intentionally use followups.*. The v1-followups-*
+  // functions represent scheduled CRM activities and are a different domain model.
   static const String followupsList = 'followups.list';
   static const String followupsUpsert = 'followups.upsert';
-  static const String tasksList = 'tasks.list';
+  static const String tasksList = 'v1-tasks-list';
+
   static const String integrationsList = 'v1-integrations-list';
   static const String integrationsConnect = 'v1-integrations-connect';
   static const String usageCurrent = 'usage.current';
@@ -60,15 +64,11 @@ class Endpoints {
 
   static const String acquisitionOverview = 'v1-acquisition-overview';
   static const String acquisitionCampaignGet = 'v1-acquisition-campaign-get';
-  static const String acquisitionCampaignUpsert =
-      'v1-acquisition-campaign-upsert';
-  static const String acquisitionCampaignPublish =
-      'v1-acquisition-campaign-publish';
-  static const String acquisitionCampaignAction =
-      'v1-acquisition-campaign-action';
+  static const String acquisitionCampaignUpsert = 'v1-acquisition-campaign-upsert';
+  static const String acquisitionCampaignPublish = 'v1-acquisition-campaign-publish';
+  static const String acquisitionCampaignAction = 'v1-acquisition-campaign-action';
   static const String acquisitionAiSuggest = 'v1-acquisition-ai-suggest';
 
-  static const String googleAdsConnectionStatus =
-      'v1-google-ads-connection-status';
+  static const String googleAdsConnectionStatus = 'v1-google-ads-connection-status';
   static const String googleAdsOAuthStart = 'v1-google-ads-oauth-start';
 }
