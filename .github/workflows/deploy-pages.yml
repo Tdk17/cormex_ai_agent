@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -50,14 +53,17 @@ jobs:
             --dart-define=PARSE_REST_API_KEY="$PARSE_REST_API_KEY"
 
       - name: Configure GitHub Pages
+        if: github.event_name == 'push'
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
+        if: github.event_name == 'push'
         uses: actions/upload-pages-artifact@v4
         with:
           path: build/web
 
   deploy:
+    if: github.event_name == 'push'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
