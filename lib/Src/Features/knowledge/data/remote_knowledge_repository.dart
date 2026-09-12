@@ -49,11 +49,18 @@ class RemoteKnowledgeRepository implements KnowledgeRepository {
     required KnowledgeSourceInput input,
     required String clientRequestId,
   }) async {
+    final source = input.toJson();
     final result = await _httpManager.cloudFunction(
       name: Endpoints.knowledgeCreate,
       parameters: <String, dynamic>{
         'workspaceId': workspaceId,
-        'source': input.toJson(),
+        'type': input.type,
+        'title': input.name.trim(),
+        if (source['content'] != null) 'content': source['content'],
+        if (source['fileName'] != null) 'fileName': source['fileName'],
+        if (source['fileUrl'] != null) 'sourceUrl': source['fileUrl'],
+        if (input.type == 'url' && source['content'] != null)
+          'sourceUrl': source['content'],
         'clientRequestId': clientRequestId,
       },
     );
@@ -105,7 +112,7 @@ class RemoteKnowledgeRepository implements KnowledgeRepository {
       name: Endpoints.knowledgeDelete,
       parameters: <String, dynamic>{
         'workspaceId': workspaceId,
-        'sourceId': sourceId,
+        'documentId': sourceId,
       },
     );
     switch (result) {
@@ -121,7 +128,9 @@ class RemoteKnowledgeRepository implements KnowledgeRepository {
   ) {
     return switch (result) {
       ApiSuccess<Map<String, dynamic>>(:final data) =>
-        KnowledgeSourceModel.fromJson(_map(data['source'] ?? data)),
+        KnowledgeSourceModel.fromJson(
+          _map(data['document'] ?? data['source'] ?? data),
+        ),
       ApiFailure<Map<String, dynamic>>(:final error) => throw error,
     };
   }
