@@ -1,4 +1,13 @@
-enum MembershipRole { owner, admin, seller }
+enum MembershipRole {
+  owner,
+  admin,
+  manager,
+  salesManager,
+  seller,
+  salesRep,
+  member,
+  viewer,
+}
 
 class MembershipModel {
   const MembershipModel({
@@ -18,10 +27,7 @@ class MembershipModel {
       id: (json['id'] ?? json['objectId'] ?? '').toString(),
       userId: json['userId']?.toString() ?? '',
       workspaceId: json['workspaceId']?.toString() ?? '',
-      role: MembershipRole.values.firstWhere(
-        (MembershipRole item) => item.name == json['role'],
-        orElse: () => MembershipRole.seller,
-      ),
+      role: _roleFromApi(json['role']),
     );
   }
 
@@ -29,6 +35,32 @@ class MembershipModel {
         'id': id,
         'userId': userId,
         'workspaceId': workspaceId,
-        'role': role.name,
+        'role': _roleToApi(role),
+      };
+
+  static MembershipRole _roleFromApi(dynamic raw) {
+    final role = raw?.toString().trim().toLowerCase() ?? '';
+    return switch (role) {
+      'owner' => MembershipRole.owner,
+      'admin' || 'administrator' || 'administrador' => MembershipRole.admin,
+      'manager' || 'gestor' => MembershipRole.manager,
+      'sales_manager' => MembershipRole.salesManager,
+      'seller' || 'sales' || 'salesperson' || 'vendedor' => MembershipRole.seller,
+      'sales_rep' => MembershipRole.salesRep,
+      'member' => MembershipRole.member,
+      'viewer' => MembershipRole.viewer,
+      _ => MembershipRole.member,
+    };
+  }
+
+  static String _roleToApi(MembershipRole role) => switch (role) {
+        MembershipRole.owner => 'owner',
+        MembershipRole.admin => 'admin',
+        MembershipRole.manager => 'manager',
+        MembershipRole.salesManager => 'sales_manager',
+        MembershipRole.seller => 'seller',
+        MembershipRole.salesRep => 'sales_rep',
+        MembershipRole.member => 'member',
+        MembershipRole.viewer => 'viewer',
       };
 }
