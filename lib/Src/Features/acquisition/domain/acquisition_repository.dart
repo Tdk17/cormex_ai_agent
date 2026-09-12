@@ -62,4 +62,17 @@ abstract interface class AcquisitionRepository {
     required String workspaceId,
     required String returnUrl,
   });
+
+  Future<List<GoogleAdsAccount>> googleAdsAccounts({
+    required String workspaceId,
+  });
+
+  Future<GoogleAdsConnectionStatus> selectGoogleAdsAccount({
+    required String workspaceId,
+    required String customerId,
+  });
+
+  Future<GoogleAdsConnectionStatus> disconnectGoogleAds({
+    required String workspaceId,
+  });
 }
