@@ -27,9 +27,9 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
       parameters: <String, dynamic>{
         'workspaceId': workspaceId,
         'period': period,
-        if (channel != null) 'channel': channel,
-        if (status != null) 'status': status,
-        if (cursor != null) 'cursor': cursor,
+        'channel': ?channel,
+        'status': ?status,
+        'cursor': ?cursor,
         'limit': 20,
       },
     );
@@ -76,7 +76,7 @@ class RemoteAcquisitionRepository implements AcquisitionRepository {
       Endpoints.acquisitionCampaignUpsert,
       <String, dynamic>{
         'workspaceId': workspaceId,
-        if (campaignId != null) 'campaignId': campaignId,
+        'campaignId': ?campaignId,
         'campaign': input.toJson(),
         'clientRequestId': clientRequestId,
       },

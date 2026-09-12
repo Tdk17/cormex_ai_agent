@@ -198,7 +198,7 @@ class _OwnerSelector extends SignalWidget {
       (ConversationOwnerModel item) => item.id == conversation.assignedUserId,
     );
     return DropdownButtonFormField<String>(
-      value: knownOwner ? conversation.assignedUserId : '',
+      initialValue: knownOwner ? conversation.assignedUserId : '',
       isExpanded: true,
       decoration: const InputDecoration(
         isDense: true,

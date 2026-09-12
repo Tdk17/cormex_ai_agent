@@ -653,7 +653,7 @@ class _CampaignMediaTile extends StatelessWidget {
                   ? Image.network(
                       url,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const ColoredBox(
+                      errorBuilder: (_, _, _) => const ColoredBox(
                         color: AppColors.background,
                         child: Icon(
                           Icons.image_outlined,
@@ -1425,7 +1425,7 @@ class _StepSection extends StatelessWidget {
                 ],
               ),
             ),
-            if (trailing != null) trailing!,
+            ?trailing,
           ],
         ),
         const SizedBox(height: 24),
@@ -1544,7 +1544,7 @@ class _SelectCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
         ),

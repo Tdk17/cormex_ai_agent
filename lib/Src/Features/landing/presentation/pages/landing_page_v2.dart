@@ -1,3 +1,4 @@
+import 'package:agente_vendas_saas/Src/Shared/components/app_brand.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -606,17 +607,9 @@ class _Logo extends StatelessWidget {
     return SizedBox(
       width: width,
       height: height,
-      child: Image.asset(
-        'assets/images/cormex_logo.png',
-        fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(Icons.smart_toy_outlined, color: _LandingPageState._cyanLight),
-            SizedBox(width: 9),
-            Text('CormeX CRM', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
-          ],
-        ),
+      child: const Align(
+        alignment: Alignment.centerLeft,
+        child: AppBrand(light: true),
       ),
     );
   }

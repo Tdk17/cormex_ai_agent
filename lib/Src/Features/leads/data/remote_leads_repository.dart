@@ -25,7 +25,7 @@ class RemoteLeadsRepository implements LeadsRepository {
       parameters: <String, dynamic>{
         'workspaceId': workspaceId,
         ...filters.toParameters(),
-        if (cursor != null) 'cursor': cursor,
+        'cursor': ?cursor,
         'limit': limit,
       },
     );

@@ -40,6 +40,8 @@ As funções lógicas são chamadas por `POST /functions/<nome>` no Parse Server
 | Sessão e workspace | `v1-auth-me`, `v1-workspaces-create` |
 | Dashboard | `v1-dashboard-metrics` |
 | Leads | `v1-leads-list`, `v1-leads-get`, `v1-leads-create`, `v1-leads-update`, `v1-leads-import` |
+| Clientes | `v1-customers-list`, `v1-customers-create`, `v1-customers-get`, `v1-customers-update` |
+| Empresas / Contas | `v1-accounts-list`, `v1-accounts-create`, `v1-accounts-get`, `v1-accounts-update` |
 | Pipeline | `v1-pipeline-list`, `v1-pipeline-get`, `v1-pipeline-create`, `v1-pipeline-update`, `v1-pipeline-move` |
 | Conversas | `v1-conversations-list`, `v1-conversations-get`, `v1-conversations-send-message`, `v1-conversations-assign`, `v1-conversations-set-mode`, `v1-conversations-start` |
 | Agente | `v1-agent-get`, `v1-agent-update`, `v1-agent-test-reply` |
@@ -47,7 +49,7 @@ As funções lógicas são chamadas por `POST /functions/<nome>` no Parse Server
 | Google Ads | `v1-google-ads-connection-status`, `v1-google-ads-oauth-start` |
 | Conhecimento | `knowledge.list`, `knowledge.create`, `knowledge.delete` |
 | Follow-ups e tarefas | `followups.list`, `followups.upsert`, `tasks.list` |
-| Integrações | `integrations.list`, `integrations.connect` |
+| Integrações | `v1-integrations-list`, `v1-integrations-connect` |
 | SaaS | `usage.current`, `v1-team-list`, `v1-team-invite`, `v1-team-update-role` |
 
 ## Contratos detalhados por módulo

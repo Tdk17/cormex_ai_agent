@@ -1,7 +1,7 @@
 # API — Integrações de canais
 
 Tela: `/integrations`  
-Funções genéricas preservadas: `integrations.list` e `integrations.connect`
+Funções do aplicativo: `v1-integrations-list` e `v1-integrations-connect`
 
 O front atual do Google Ads usa também `v1-google-ads-connection-status` e `v1-google-ads-oauth-start`, detalhadas em [Google Ads OAuth](google-ads-oauth-api.md). As funções genéricas atendem a tela consolidada de canais.
 
@@ -31,7 +31,7 @@ Valores mínimos:
 
 O DTO é sanitizado. Nunca retornar access token, refresh token, client secret, webhook secret, app secret, cookie, localStorage, credencial de sessão do WhatsApp Web ou qualquer segredo de sistema.
 
-## 1. `integrations.list`
+## 1. `v1-integrations-list`
 
 ### Request
 
@@ -69,7 +69,7 @@ O DTO é sanitizado. Nunca retornar access token, refresh token, client secret, 
 }
 ```
 
-## 2. `integrations.connect`
+## 2. `v1-integrations-connect`
 
 Função de comando genérica. O campo `action` define a operação.
 
@@ -92,7 +92,7 @@ Request:
   "workspaceId": "ws_01J...",
   "provider": "whatsapp",
   "action": "start",
-  "returnUrl": "https://tdk17.github.io/cormex_ai_agent/integrations",
+  "returnUrl": "https://cormexcrm.com.br/integrations",
   "clientRequestId": "integration_whatsapp_1788872400000"
 }
 ```
@@ -111,7 +111,7 @@ Response esperado enquanto aguarda autorização na Meta:
 }
 ```
 
-Depois que o usuário concluir a autorização na Meta e o callback for processado, `integrations.list` deve retornar `status: connected` para aquele workspace.
+Depois que o usuário concluir a autorização na Meta e o callback for processado, `v1-integrations-list` deve retornar `status: connected` para aquele workspace.
 
 ### Response para OAuth/Embedded Signup
 
@@ -184,14 +184,14 @@ Uma credencial nunca pode ser compartilhada entre workspaces.
 ### Fluxo
 
 1. usuário autenticado abre Integrações;
-2. front chama `integrations.connect` com `provider=whatsapp` e `action=start`;
+2. front chama `v1-integrations-connect` com `provider=whatsapp` e `action=start`;
 3. backend cria um `OAuthState` curto, aleatório e vinculado ao usuário e workspace;
 4. backend devolve a `authorizationUrl` oficial da Meta;
 5. front abre essa URL no navegador;
 6. usuário autoriza a conta e o número do WhatsApp Business;
 7. callback troca o código por token, valida WABA e `phoneNumberId` e assina os webhooks;
 8. backend criptografa a credencial em `IntegrationCredential` e grava somente metadados públicos em `Integration`;
-9. `integrations.list` passa para `connected`;
+9. `v1-integrations-list` passa para `connected`;
 10. o motor de conversas passa a usar a credencial daquele workspace para receber e enviar mensagens.
 
 ### Requisitos obrigatórios do backend
@@ -238,7 +238,7 @@ Para o Google Ads, o contrato especializado é a fonte de verdade:
 - `v1-google-ads-select-account`;
 - `v1-google-ads-disconnect`.
 
-`integrations.list` pode agregar o estado sanitizado dessa conexão, mas não substitui as funções de seleção de conta.
+`v1-integrations-list` pode agregar o estado sanitizado dessa conexão, mas não substitui as funções de seleção de conta.
 
 ## 5. Autorização
 

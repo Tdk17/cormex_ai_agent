@@ -76,6 +76,11 @@ class AppShell extends SignalWidget {
     final session = authController.session.value;
     final workspace = session?.selectedWorkspace;
 
+    Future<void> selectWorkspace(String workspaceId) async {
+      await authController.selectWorkspace(workspaceId);
+      if (context.mounted) context.go('/dashboard');
+    }
+
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final desktop = constraints.maxWidth >= 960;
@@ -118,7 +123,7 @@ class AppShell extends SignalWidget {
                               padding: const EdgeInsets.symmetric(horizontal: 14),
                               child: _WorkspaceSelector(
                                 name: workspace?.name ?? 'Workspace',
-                                onSelected: authController.selectWorkspace,
+                                onSelected: selectWorkspace,
                                 lightContent: true,
                               ),
                             ),
@@ -204,6 +209,15 @@ class AppShell extends SignalWidget {
                           child: AppBrand(light: true),
                         ),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        child: _WorkspaceSelector(
+                          name: workspace?.name ?? 'Workspace',
+                          onSelected: selectWorkspace,
+                          lightContent: true,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 18),
                         child: _ProductIdentity(),

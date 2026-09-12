@@ -300,7 +300,7 @@ class _IdentitySection extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         DropdownButtonFormField<String>(
-          value: controller.tone.value,
+          initialValue: controller.tone.value,
           decoration: const InputDecoration(
             labelText: 'Tom de voz',
             prefixIcon: Icon(Icons.record_voice_over_outlined),
@@ -877,8 +877,9 @@ class _PoliciesSection extends SignalWidget {
               keyboardType: TextInputType.number,
               onChanged: (String value) {
                 final parsed = int.tryParse(value);
-                if (parsed != null)
+                if (parsed != null) {
                   controller.followUpDelayMinutes.value = parsed;
+                }
               },
               decoration: const InputDecoration(
                 labelText: 'Aguardar antes do follow-up (minutos)',
@@ -1100,7 +1101,7 @@ class _SectionCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (trailing != null) trailing!,
+                ?trailing,
               ],
             ),
             const SizedBox(height: 18),

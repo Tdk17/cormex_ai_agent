@@ -20,7 +20,8 @@ class ApiException implements Exception {
         'NETWORK_ERROR' => 'Sem conexão com o servidor. Verifique sua internet.',
         'TIMEOUT' => 'O servidor demorou para responder. Tente novamente.',
         'UNAUTHENTICATED' => 'Sua sessão expirou. Entre novamente.',
-        'FORBIDDEN' => 'Você não tem permissão para realizar esta ação.',
+        'FORBIDDEN' || 'PERMISSION_DENIED' || 'UNAUTHORIZED' =>
+          'Você não tem permissão para realizar esta ação.',
         'WORKSPACE_NOT_FOUND' => 'O workspace solicitado não foi encontrado.',
         'VALIDATION_ERROR' => message,
         'NOT_FOUND' => 'O conteúdo solicitado não foi encontrado.',
@@ -29,6 +30,8 @@ class ApiException implements Exception {
         'RATE_LIMITED' => 'Muitas tentativas. Aguarde um instante e tente novamente.',
         'INTEGRATION_NOT_CONNECTED' =>
           'Conecte a integração antes de continuar.',
+        'CHANNEL_NOT_CONNECTED' =>
+          'Conecte o canal antes de iniciar ou enviar mensagens.',
         'ADS_ACCOUNT_NOT_CONNECTED' =>
           'Conecte sua conta de anúncios antes de publicar.',
         'AUTHORIZATION_ERROR' =>
@@ -64,7 +67,9 @@ class ApiException implements Exception {
             ? 'A IA respondeu em um formato inválido. Tente gerar novamente.'
             : message,
         'EXTERNAL_PROVIDER_ERROR' => 'Um serviço externo não respondeu como esperado.',
-        _ => 'Não foi possível concluir a operação. Tente novamente.',
+        _ => message.trim().isEmpty || code == 'INTERNAL_ERROR'
+            ? 'Não foi possível concluir a operação. Tente novamente.'
+            : message,
       };
 
   factory ApiException.fromMap(
@@ -73,7 +78,7 @@ class ApiException implements Exception {
   }) {
     final rawDetails = map['details'];
     return ApiException(
-      code: map['code']?.toString() ?? 'INTERNAL_ERROR',
+      code: (map['code']?.toString() ?? 'INTERNAL_ERROR').toUpperCase(),
       message: map['message']?.toString() ?? 'Erro interno',
       correlationId: map['correlationId']?.toString(),
       details: rawDetails is Map

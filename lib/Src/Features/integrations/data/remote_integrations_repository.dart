@@ -53,10 +53,10 @@ class RemoteIntegrationsRepository implements IntegrationsRepository {
         'action': action,
         'clientRequestId': clientRequestId,
         if (returnUrl != null && returnUrl.trim().isNotEmpty)
-          'returnUrl': returnUrl.trim(),
+          'returnUrl': _integrationReturnUrl(returnUrl),
         if (integrationId != null && integrationId.trim().isNotEmpty)
           'integrationId': integrationId.trim(),
-        if (expectedVersion != null) 'expectedVersion': expectedVersion,
+        'expectedVersion': ?expectedVersion,
       },
     );
 
@@ -96,5 +96,17 @@ class RemoteIntegrationsRepository implements IntegrationsRepository {
       if (iso != null) return DateTime.tryParse(iso);
     }
     return null;
+  }
+
+  static String _integrationReturnUrl(String raw) {
+    final parsed = Uri.tryParse(raw.trim());
+    if (parsed == null || !parsed.hasScheme || parsed.host.isEmpty) {
+      return 'https://cormexcrm.com.br/integrations';
+    }
+    return parsed.replace(
+      path: '/integrations',
+      query: null,
+      fragment: null,
+    ).toString();
   }
 }

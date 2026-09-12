@@ -413,11 +413,13 @@ class _DesktopBoard extends StatelessWidget {
               child: SizedBox(
                 width: 310,
                 child: DragTarget<OpportunityModel>(
-                  onWillAccept: (OpportunityModel? item) =>
-                      item != null &&
-                      item.stageId != stage.id &&
-                      !controller.movingIds.value.contains(item.id),
-                  onAccept: (OpportunityModel item) => onDrop(item, stage.id),
+                  onWillAcceptWithDetails:
+                      (DragTargetDetails<OpportunityModel> details) =>
+                          details.data.stageId != stage.id &&
+                          !controller.movingIds.value.contains(details.data.id),
+                  onAcceptWithDetails:
+                      (DragTargetDetails<OpportunityModel> details) =>
+                          onDrop(details.data, stage.id),
                   builder: (
                     BuildContext context,
                     List<OpportunityModel?> candidates,
@@ -520,7 +522,7 @@ class _KanbanColumn extends StatelessWidget {
                 ? const _EmptyColumn()
                 : ListView.separated(
                     itemCount: opportunities.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 9),
+                    separatorBuilder: (_, _) => const SizedBox(height: 9),
                     itemBuilder: (BuildContext context, int index) {
                       final opportunity = opportunities[index];
                       final card = OpportunityCard(

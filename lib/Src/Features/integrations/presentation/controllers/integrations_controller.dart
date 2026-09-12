@@ -61,6 +61,7 @@ class IntegrationsController {
 
     try {
       final result = await _repository.list(workspaceId: workspaceId);
+      if (_workspaceId != workspaceId) return;
       batch(() {
         items.value = result.items;
         correlationId.value = result.correlationId;
@@ -68,8 +69,10 @@ class IntegrationsController {
             result.items.isEmpty ? ScreenState.empty : ScreenState.success;
       });
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return;
       _setError(error.userMessage, error.correlationId);
     } on Object {
+      if (_workspaceId != workspaceId) return;
       _setError('Não foi possível consultar as integrações.', null);
     }
   }
@@ -110,6 +113,7 @@ class IntegrationsController {
         clientRequestId:
             'integration_${provider}_${DateTime.now().millisecondsSinceEpoch}',
       );
+      if (_workspaceId != workspaceId) return null;
       if (result.integration != null) _upsert(result.integration!);
       correlationId.value = result.correlationId;
 
@@ -138,6 +142,7 @@ class IntegrationsController {
           : 'Conclua a autorização na página do provedor.';
       return uri;
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return null;
       final code = error.code.toUpperCase();
       if (code == 'FORBIDDEN' || code == 'UNAUTHORIZED' || code == 'PERMISSION_DENIED') {
         _setError(
@@ -149,6 +154,7 @@ class IntegrationsController {
       }
       return null;
     } on Object {
+      if (_workspaceId != workspaceId) return null;
       _setError('Não foi possível iniciar a conexão com o canal.', null);
       return null;
     } finally {
@@ -178,15 +184,18 @@ class IntegrationsController {
         clientRequestId:
             'integration_disconnect_${DateTime.now().millisecondsSinceEpoch}',
       );
+      if (_workspaceId != workspaceId) return false;
       if (result.integration != null) _upsert(result.integration!);
       correlationId.value = result.correlationId;
       successMessage.value = 'Integração desconectada.';
       await load(force: true);
       return true;
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return false;
       _setError(error.userMessage, error.correlationId);
       return false;
     } on Object {
+      if (_workspaceId != workspaceId) return false;
       _setError('Não foi possível desconectar a integração.', null);
       return false;
     } finally {

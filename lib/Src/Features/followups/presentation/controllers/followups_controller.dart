@@ -60,8 +60,10 @@ class FollowUpsController {
         state.value = page.items.isEmpty ? ScreenState.empty : ScreenState.success;
       });
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return;
       _setError(error.userMessage, error.correlationId, pageError: true);
     } on Object {
+      if (_workspaceId != workspaceId) return;
       _setError('Não foi possível carregar os follow-ups.', null, pageError: true);
     }
   }
@@ -90,12 +92,14 @@ class FollowUpsController {
         followupId: followupId,
         clientRequestId: 'followup_${DateTime.now().microsecondsSinceEpoch}',
       );
+      if (_workspaceId != workspaceId) return false;
       _upsert(rule);
       successMessage.value = followupId == null
           ? 'Follow-up criado.'
           : 'Follow-up atualizado.';
       return true;
     } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return false;
       _setError(
         error.code == 'CONFLICT'
             ? 'Esta regra foi alterada em outra sessão. Atualize e tente novamente.'
@@ -104,6 +108,7 @@ class FollowUpsController {
       );
       return false;
     } on Object {
+      if (_workspaceId != workspaceId) return false;
       errorMessage.value = 'Não foi possível salvar o follow-up.';
       return false;
     } finally {
