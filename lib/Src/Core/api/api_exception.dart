@@ -22,7 +22,7 @@ class ApiException implements Exception {
         'UNAUTHENTICATED' => 'Sua sessão expirou. Entre novamente.',
         'FORBIDDEN' || 'PERMISSION_DENIED' || 'UNAUTHORIZED' =>
           'Você não tem permissão para realizar esta ação.',
-        'WORKSPACE_NOT_FOUND' => 'O workspace solicitado não foi encontrado.',
+        'WORKSPACE_NOT_FOUND' => 'A empresa selecionada não foi encontrada.',
         'VALIDATION_ERROR' => message,
         'NOT_FOUND' => 'O conteúdo solicitado não foi encontrado.',
         'CONFLICT' => message,
@@ -40,32 +40,41 @@ class ApiException implements Exception {
           'O provedor não conseguiu publicar a campanha. Tente novamente.',
         'PAYMENT_ISSUE' =>
           'Revise a forma de pagamento da conta de anúncios.',
-        'GOOGLE_OAUTH_ERROR' => message,
-        'GOOGLE_ADS_NOT_CONFIGURED' => message,
-        'GOOGLE_OAUTH_NETWORK_ERROR' => message,
-        'GOOGLE_OAUTH_STATE_INVALID' => message,
-        'GOOGLE_OAUTH_STATE_EXPIRED' => message,
-        'GOOGLE_OAUTH_STATE_USED' => message,
-        'GOOGLE_OAUTH_CODE_MISSING' => message,
-        'GOOGLE_OAUTH_CODE_EXCHANGE_FAILED' => message,
-        'GOOGLE_REFRESH_TOKEN_MISSING' => message,
-        'GOOGLE_ADS_ACCOUNT_NOT_FOUND' => message,
-        'GOOGLE_ADS_ACCOUNT_NOT_ACCESSIBLE' => message,
-        'GOOGLE_ADS_AUTHORIZATION_ERROR' => message,
-        'GOOGLE_ADS_PERMISSION_ERROR' => message,
-        'GOOGLE_ADS_DEVELOPER_TOKEN_ERROR' => message,
-        'GOOGLE_ADS_API_ERROR' => message,
-        'GOOGLE_ADS_PUBLICATION_ERROR' => message,
-        'INVALID_FUNCTION' => message,
-        'AI_PROVIDER_ERROR' => message.trim().isEmpty
-            ? 'O agente de IA está temporariamente indisponível.'
-            : message,
-        'AI_NOT_CONFIGURED' => message.trim().isEmpty
-            ? 'Configure o provedor de IA no backend antes de gerar o anúncio.'
-            : message,
-        'AI_INVALID_RESPONSE' => message.trim().isEmpty
-            ? 'A IA respondeu em um formato inválido. Tente gerar novamente.'
-            : message,
+        'GOOGLE_OAUTH_ERROR' =>
+          'Não foi possível iniciar a autorização do Google. Tente novamente.',
+        'GOOGLE_ADS_NOT_CONFIGURED' =>
+          'A integração com Google Ads ainda não está configurada no ambiente atual.',
+        'GOOGLE_OAUTH_NETWORK_ERROR' =>
+          'Não foi possível comunicar com o Google. Tente novamente.',
+        'GOOGLE_OAUTH_STATE_INVALID' ||
+        'GOOGLE_OAUTH_STATE_EXPIRED' ||
+        'GOOGLE_OAUTH_STATE_USED' =>
+          'A sessão de autorização do Google não é mais válida. Inicie a conexão novamente.',
+        'GOOGLE_OAUTH_CODE_MISSING' =>
+          'O Google não retornou a autorização esperada. Inicie a conexão novamente.',
+        'GOOGLE_OAUTH_CODE_EXCHANGE_FAILED' ||
+        'GOOGLE_REFRESH_TOKEN_MISSING' =>
+          'Não foi possível concluir a autorização do Google. Reconecte a conta.',
+        'GOOGLE_ADS_ACCOUNT_NOT_FOUND' =>
+          'A conta de anúncios selecionada não foi encontrada.',
+        'GOOGLE_ADS_ACCOUNT_NOT_ACCESSIBLE' ||
+        'GOOGLE_ADS_PERMISSION_ERROR' =>
+          'A conta Google atual não possui acesso suficiente para esta operação.',
+        'GOOGLE_ADS_AUTHORIZATION_ERROR' =>
+          'A autorização do Google Ads expirou ou foi revogada. Reconecte a conta.',
+        'GOOGLE_ADS_DEVELOPER_TOKEN_ERROR' ||
+        'GOOGLE_ADS_API_ERROR' =>
+          'O Google Ads não conseguiu concluir a operação. Tente novamente mais tarde.',
+        'GOOGLE_ADS_PUBLICATION_ERROR' =>
+          'O Google Ads não conseguiu publicar a campanha. Revise a conta e tente novamente.',
+        'INVALID_FUNCTION' =>
+          'Este recurso ainda não está disponível no ambiente atual.',
+        'AI_PROVIDER_ERROR' =>
+          'O agente de IA está temporariamente indisponível. Tente novamente.',
+        'AI_NOT_CONFIGURED' =>
+          'O agente de IA ainda não está configurado no ambiente atual.',
+        'AI_INVALID_RESPONSE' =>
+          'A IA respondeu em um formato inválido. Tente novamente.',
         'EXTERNAL_PROVIDER_ERROR' => 'Um serviço externo não respondeu como esperado.',
         _ => message.trim().isEmpty || code == 'INTERNAL_ERROR'
             ? 'Não foi possível concluir a operação. Tente novamente.'
