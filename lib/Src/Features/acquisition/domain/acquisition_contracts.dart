@@ -58,8 +58,31 @@ class GoogleAdsConnectionStatus {
   final bool connected;
   final String status;
   final String? accountName;
+
+  // Technical identifier used only for API operations. Never render this value.
   final String? customerId;
   final String? correlationId;
+}
+
+class GoogleAdsAccount {
+  const GoogleAdsAccount({
+    required this.customerId,
+    required this.name,
+    this.currency,
+    this.manager = false,
+    this.testAccount = false,
+    this.status = 'UNKNOWN',
+  });
+
+  // Technical identifier required by v1-google-ads-select-account. Never render it.
+  final String customerId;
+  final String name;
+  final String? currency;
+  final bool manager;
+  final bool testAccount;
+  final String status;
+
+  bool get selectable => !manager && status.toUpperCase() == 'ENABLED';
 }
 
 class GoogleAdsOAuthStart {
