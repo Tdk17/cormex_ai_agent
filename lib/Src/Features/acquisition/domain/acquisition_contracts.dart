@@ -17,7 +17,11 @@ class AcquisitionOverview {
 }
 
 class AcquisitionMutationResult {
-  const AcquisitionMutationResult({required this.campaign, this.correlationId});
+  const AcquisitionMutationResult({
+    required this.campaign,
+    this.correlationId,
+  });
+
   final AcquisitionCampaignModel campaign;
   final String? correlationId;
 }
@@ -32,6 +36,7 @@ class AcquisitionAiSuggestion {
     this.warnings = const <String>[],
     this.correlationId,
   });
+
   final String headline;
   final String primaryText;
   final String description;
@@ -49,6 +54,7 @@ class GoogleAdsConnectionStatus {
     this.customerId,
     this.correlationId,
   });
+
   final bool connected;
   final String status;
   final String? accountName;
@@ -57,34 +63,12 @@ class GoogleAdsConnectionStatus {
 }
 
 class GoogleAdsOAuthStart {
-  const GoogleAdsOAuthStart({required this.authorizationUrl, this.correlationId});
-  final String authorizationUrl;
-  final String? correlationId;
-}
-
-class GoogleAdsAccountOption {
-  const GoogleAdsAccountOption({
-    required this.customerId,
-    required this.name,
-    this.manager = false,
+  const GoogleAdsOAuthStart({
+    required this.authorizationUrl,
+    this.correlationId,
   });
 
-  final String customerId;
-  final String name;
-  final bool manager;
-
-  factory GoogleAdsAccountOption.fromJson(Map<String, dynamic> json) {
-    return GoogleAdsAccountOption(
-      customerId: (json['customerId'] ?? json['id'] ?? '').toString(),
-      name: (json['name'] ?? json['descriptiveName'] ?? json['customerId'] ?? '').toString(),
-      manager: json['manager'] == true || json['managerAccount'] == true,
-    );
-  }
-}
-
-class GoogleAdsAccountsResult {
-  const GoogleAdsAccountsResult({required this.accounts, this.correlationId});
-  final List<GoogleAdsAccountOption> accounts;
+  final String authorizationUrl;
   final String? correlationId;
 }
 
@@ -100,8 +84,15 @@ abstract final class AcquisitionCampaignStatus {
   static const String paymentIssue = 'payment_issue';
 
   static const List<String> values = <String>[
-    draft, preparing, review, active, paused, finished,
-    authorizationError, publicationError, paymentIssue,
+    draft,
+    preparing,
+    review,
+    active,
+    paused,
+    finished,
+    authorizationError,
+    publicationError,
+    paymentIssue,
   ];
 }
 
