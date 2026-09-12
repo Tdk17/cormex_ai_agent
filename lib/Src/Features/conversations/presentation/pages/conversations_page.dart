@@ -187,7 +187,6 @@ class _StartConversationDialogState extends State<_StartConversationDialog> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
-  final _leadIdController = TextEditingController();
   late final TextEditingController _messageController;
   String _channel = ConversationChannels.whatsapp;
   String _mode = ConversationModes.auto;
@@ -203,7 +202,6 @@ class _StartConversationDialogState extends State<_StartConversationDialog> {
     _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
-    _leadIdController.dispose();
     _messageController.dispose();
     super.dispose();
   }
@@ -258,7 +256,7 @@ class _StartConversationDialogState extends State<_StartConversationDialog> {
                       ),
                     ),
                     child: const Text(
-                      'O agente salvo está marcado como inativo. A conversa pode ser criada, mas o backend pode impedir respostas automáticas até você ativá-lo em Agente de IA.',
+                      'O agente salvo está marcado como inativo. A conversa pode ser criada, mas as respostas automáticas ficarão indisponíveis até você ativá-lo em Agente de IA.',
                       style: TextStyle(fontSize: 11, height: 1.35),
                     ),
                   ),
@@ -312,21 +310,13 @@ class _StartConversationDialogState extends State<_StartConversationDialog> {
                   decoration: const InputDecoration(
                     labelText: 'E-mail (opcional)',
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _leadIdController,
-                  decoration: const InputDecoration(
-                    labelText: 'ID de um lead existente (opcional)',
-                  ),
                   validator: (_) {
                     final hasDestination =
-                        _leadIdController.text.trim().isNotEmpty ||
                         _phoneController.text.trim().isNotEmpty ||
                         _emailController.text.trim().isNotEmpty;
                     return hasDestination
                         ? null
-                        : 'Informe telefone, e-mail ou ID do lead.';
+                        : 'Informe o telefone ou o e-mail do contato.';
                   },
                 ),
                 const SizedBox(height: 12),
@@ -388,7 +378,6 @@ class _StartConversationDialogState extends State<_StartConversationDialog> {
       ConversationStartInput(
         channel: _channel,
         mode: _mode,
-        leadId: _leadIdController.text,
         contactName: _nameController.text,
         phone: _phoneController.text,
         email: _emailController.text,
