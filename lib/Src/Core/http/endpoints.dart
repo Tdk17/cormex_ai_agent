@@ -68,10 +68,14 @@ class Endpoints {
   static const String acquisitionCampaignPublish = 'v1-acquisition-campaign-publish';
   static const String acquisitionCampaignAction = 'v1-acquisition-campaign-action';
   static const String acquisitionAiSuggest = 'v1-acquisition-ai-suggest';
+  static const String acquisitionBindGoogleClick = 'v1-acquisition-attribution-bind-google-click';
 
   static const String googleAdsConnectionStatus = 'v1-google-ads-connection-status';
   static const String googleAdsOAuthStart = 'v1-google-ads-oauth-start';
   static const String googleAdsAccounts = 'v1-google-ads-accounts';
   static const String googleAdsSelectAccount = 'v1-google-ads-select-account';
   static const String googleAdsDisconnect = 'v1-google-ads-disconnect';
+
+  static const String googleDataManagerStatus = 'v1-google-data-manager-status';
+  static const String googleDataManagerOAuthStart = 'v1-google-data-manager-oauth-start';
 }
