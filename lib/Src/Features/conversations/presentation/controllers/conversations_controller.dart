@@ -175,8 +175,7 @@ class ConversationsController {
         input.phone?.trim().isNotEmpty == true ||
         input.email?.trim().isNotEmpty == true;
     if (!hasDestination) {
-      errorMessage.value =
-          'Informe o telefone, o e-mail ou o identificador de um lead.';
+      errorMessage.value = 'Informe o telefone ou o e-mail do contato.';
       return null;
     }
 
