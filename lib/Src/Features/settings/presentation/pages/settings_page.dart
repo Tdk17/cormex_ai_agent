@@ -37,12 +37,6 @@ class SettingsPage extends SignalWidget {
                   label: 'Workspace',
                   value: workspace?.name ?? 'Não selecionado',
                 ),
-                const Divider(height: 28),
-                _SettingRow(
-                  icon: Icons.badge_outlined,
-                  label: 'Identificador',
-                  value: workspace?.id ?? '—',
-                ),
               ],
             ),
           ),
