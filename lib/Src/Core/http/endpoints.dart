@@ -43,6 +43,7 @@ class Endpoints {
   static const String agentGet = 'v1-agent-get';
   static const String agentUpdate = 'v1-agent-update';
   static const String agentTestReply = 'v1-agent-test-reply';
+  static const String aiOperationsHealth = 'v1-ai-operations-health';
 
   static const String knowledgeList = 'v1-knowledge-list';
   static const String knowledgeCreate = 'v1-knowledge-create';
