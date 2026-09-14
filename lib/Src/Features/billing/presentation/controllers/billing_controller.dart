@@ -34,6 +34,7 @@ class BillingController {
   final Signal<BillingCatalogModel?> catalog = signal<BillingCatalogModel?>(null);
   final Signal<String?> busyPlanCode = signal<String?>(null);
   final Signal<bool> isCancelling = signal(false);
+  final Signal<bool> isSyncing = signal(false);
   final Signal<String?> errorMessage = signal<String?>(null);
   final Signal<String?> correlationId = signal<String?>(null);
 
@@ -64,8 +65,6 @@ class BillingController {
         if (_workspaceId == workspaceId) catalog.value = plans;
       } on ApiException catch (error) {
         if (_workspaceId != workspaceId) return;
-        // A assinatura atual continua utilizável mesmo se o catálogo ainda não
-        // tiver sido configurado no servidor. O erro fica visível na própria tela.
         errorMessage.value = error.userMessage;
         correlationId.value = error.correlationId;
       } on Object {
@@ -86,6 +85,37 @@ class BillingController {
         errorMessage.value = 'Não foi possível carregar o estado da assinatura.';
         state.value = ScreenState.error;
       });
+    }
+  }
+
+  Future<bool> syncSubscription() async {
+    final workspaceId = _workspaceId;
+    if (workspaceId == null || isSyncing.value) return false;
+
+    batch(() {
+      isSyncing.value = true;
+      errorMessage.value = null;
+      correlationId.value = null;
+    });
+
+    try {
+      final current = await _repository.sync(workspaceId: workspaceId);
+      if (_workspaceId != workspaceId) return false;
+      overview.value = current;
+      state.value = ScreenState.success;
+      return true;
+    } on ApiException catch (error) {
+      if (_workspaceId != workspaceId) return false;
+      errorMessage.value = error.userMessage;
+      correlationId.value = error.correlationId;
+      return false;
+    } on Object {
+      if (_workspaceId == workspaceId) {
+        errorMessage.value = 'Não foi possível sincronizar a assinatura com o Mercado Pago.';
+      }
+      return false;
+    } finally {
+      isSyncing.value = false;
     }
   }
 
