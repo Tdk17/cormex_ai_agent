@@ -121,13 +121,15 @@ class _BillingPageState extends State<BillingPage> {
               onCancel: overview.entitlement.status == 'active' ? _cancel : null,
             ),
             const SizedBox(height: 16),
+            const _PaymentMethodsCard(),
+            const SizedBox(height: 16),
             _UsageSection(usage: overview.usage),
             const SizedBox(height: 24),
             if (catalog != null && catalog.items.isNotEmpty) ...<Widget>[
               Text('Escolha seu plano', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 5),
               Text(
-                'Novas contas têm ${catalog.trialDays} dias de teste. A assinatura é processada com segurança pelo Mercado Pago.',
+                'Novas contas têm ${catalog.trialDays} dias de teste. O pagamento é processado com segurança pelo Mercado Pago via Pix, cartão de crédito ou débito, conforme disponibilidade da conta.',
                 style: const TextStyle(color: AppColors.textSecondary),
               ),
               const SizedBox(height: 14),
@@ -269,6 +271,93 @@ class _CurrentPlanCard extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _PaymentMethodsCard extends StatelessWidget {
+  const _PaymentMethodsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text('Formas de pagamento', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 6),
+            const Text(
+              'A cobrança é processada pelo Mercado Pago. As opções exibidas no checkout dependem da disponibilidade para a conta e para a assinatura.',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            const Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: <Widget>[
+                _PaymentMethodChip(
+                  icon: Icons.pix_rounded,
+                  title: 'Pix',
+                  subtitle: 'Pix / Pix Automático quando disponível',
+                ),
+                _PaymentMethodChip(
+                  icon: Icons.credit_card_rounded,
+                  title: 'Cartão de crédito',
+                  subtitle: 'Cobrança recorrente',
+                ),
+                _PaymentMethodChip(
+                  icon: Icons.payment_rounded,
+                  title: 'Cartão de débito',
+                  subtitle: 'Quando habilitado pelo Mercado Pago',
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PaymentMethodChip extends StatelessWidget {
+  const _PaymentMethodChip({required this.icon, required this.title, required this.subtitle});
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 210),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Theme.of(context).dividerColor),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 22, color: AppColors.primary),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
