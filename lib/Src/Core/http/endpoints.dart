@@ -66,6 +66,7 @@ class Endpoints {
   static const String billingPlans = 'v1-billing-plans';
   static const String billingCheckout = 'v1-billing-checkout';
   static const String billingCancel = 'v1-billing-cancel';
+  static const String billingSync = 'v1-billing-sync';
 
   static const String acquisitionOverview = 'v1-acquisition-overview';
   static const String acquisitionCampaignGet = 'v1-acquisition-campaign-get';
