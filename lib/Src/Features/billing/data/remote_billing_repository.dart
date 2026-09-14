@@ -20,19 +20,21 @@ class RemoteBillingRepository implements BillingRepository {
       ApiFailure<Map<String, dynamic>>(:final error) => throw error,
     };
 
-    final usageResult = await _httpManager.cloudFunction(
-      name: Endpoints.usageCurrent,
+    return _withUsage(current, workspaceId);
+  }
+
+  @override
+  Future<BillingOverviewModel> sync({required String workspaceId}) async {
+    final result = await _httpManager.cloudFunction(
+      name: Endpoints.billingSync,
       parameters: <String, dynamic>{'workspaceId': workspaceId},
     );
-    return switch (usageResult) {
-      ApiSuccess<Map<String, dynamic>>(:final data) => current.copyWith(
-          usage: BillingUsageModel.fromJson(<String, dynamic>{
-            ..._map(data['usage']),
-            'period': data['period'],
-          }),
-        ),
+    final current = switch (result) {
+      ApiSuccess<Map<String, dynamic>>(:final data) => BillingOverviewModel.fromJson(data),
       ApiFailure<Map<String, dynamic>>(:final error) => throw error,
     };
+
+    return _withUsage(current, workspaceId);
   }
 
   @override
@@ -77,8 +79,27 @@ class RemoteBillingRepository implements BillingRepository {
       case ApiFailure<Map<String, dynamic>>(:final error):
         throw error;
       case ApiSuccess<Map<String, dynamic>>() :
-        return getCurrent(workspaceId: workspaceId);
+        return sync(workspaceId: workspaceId);
     }
+  }
+
+  Future<BillingOverviewModel> _withUsage(
+    BillingOverviewModel current,
+    String workspaceId,
+  ) async {
+    final usageResult = await _httpManager.cloudFunction(
+      name: Endpoints.usageCurrent,
+      parameters: <String, dynamic>{'workspaceId': workspaceId},
+    );
+    return switch (usageResult) {
+      ApiSuccess<Map<String, dynamic>>(:final data) => current.copyWith(
+          usage: BillingUsageModel.fromJson(<String, dynamic>{
+            ..._map(data['usage']),
+            'period': data['period'],
+          }),
+        ),
+      ApiFailure<Map<String, dynamic>>(:final error) => throw error,
+    };
   }
 
   static Map<String, dynamic> _map(dynamic raw) =>
