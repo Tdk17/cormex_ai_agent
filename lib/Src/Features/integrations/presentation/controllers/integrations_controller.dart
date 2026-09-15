@@ -102,7 +102,9 @@ class IntegrationsController {
           current.status == IntegrationStatuses.expired ||
           current.status == IntegrationStatuses.authorizationError;
       final isWhatsApp = provider == IntegrationProviders.whatsapp;
-      final action = isDisconnected ? 'start' : 'refresh';
+      final action = isWhatsApp
+          ? (isDisconnected ? 'start_qr' : 'refresh_qr')
+          : (isDisconnected ? 'start' : 'refresh');
 
       final result = await _repository.connect(
         workspaceId: workspaceId,
@@ -124,7 +126,7 @@ class IntegrationsController {
           return null;
         }
         errorMessage.value = isWhatsApp
-            ? 'O backend não retornou a URL de autorização do WhatsApp.'
+            ? 'O backend não retornou o QR Code do WhatsApp.'
             : 'O backend não retornou a URL de autorização do provedor.';
         return null;
       }
@@ -132,12 +134,12 @@ class IntegrationsController {
       final uri = Uri.tryParse(authorizationUrl);
       if (uri == null || !uri.hasScheme) {
         errorMessage.value = isWhatsApp
-            ? 'A URL de autorização do WhatsApp retornada pelo backend é inválida.'
+            ? 'A URL do QR Code do WhatsApp retornada pelo backend é inválida.'
             : 'A URL de autorização retornada é inválida.';
         return null;
       }
       successMessage.value = isWhatsApp
-          ? 'Conclua a autorização do WhatsApp na página oficial aberta.'
+          ? 'Escaneie o QR Code para conectar o WhatsApp.'
           : 'Conclua a autorização na página do provedor.';
       return uri;
     } on ApiException catch (error) {
