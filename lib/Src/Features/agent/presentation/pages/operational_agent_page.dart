@@ -4,6 +4,7 @@ import 'package:agente_vendas_saas/Src/Core/di/service_locator.dart';
 import 'package:agente_vendas_saas/Src/Core/http/endpoints.dart';
 import 'package:agente_vendas_saas/Src/Core/http/http_manager.dart';
 import 'package:agente_vendas_saas/Src/Features/agent/presentation/widgets/agent_page_header.dart';
+import 'package:agente_vendas_saas/Src/Features/agent/presentation/widgets/operational_agent_activity_panel.dart';
 import 'package:agente_vendas_saas/Src/Features/auth/presentation/controllers/auth_controller.dart';
 import 'package:flutter/material.dart';
 
@@ -243,6 +244,11 @@ class _OperationalAgentPageState extends State<OperationalAgentPage> {
                                   ],
                                 );
                               },
+                            ),
+                            const SizedBox(height: 22),
+                            OperationalAgentActivityPanel(
+                              workspaceId: _workspaceId,
+                              enabled: _enabled,
                             ),
                             const SizedBox(height: 18),
                             _FooterActions(
