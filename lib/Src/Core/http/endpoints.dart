@@ -45,6 +45,7 @@ class Endpoints {
   static const String agentTestReply = 'v1-agent-test-reply';
   static const String operationalAgentGet = 'v1-operational-agent-get';
   static const String operationalAgentUpdate = 'v1-operational-agent-update';
+  static const String operationalAgentActivity = 'v1-operational-agent-activity';
   static const String aiOperationsHealth = 'v1-ai-operations-health';
 
   static const String knowledgeList = 'v1-knowledge-list';
