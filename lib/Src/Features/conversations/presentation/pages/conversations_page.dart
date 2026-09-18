@@ -77,9 +77,32 @@ class _ConversationsPageState extends State<ConversationsPage> {
   Future<void> _showStartConversation() async {
     conversationsController.clearActionError();
 
-    final workspaceId =
-        sl<AuthController>().session.value?.selectedWorkspace?.id;
-    if (workspaceId == null) return;
+    final authController = sl<AuthController>();
+    final workspaceId = authController.session.value?.selectedWorkspace?.id;
+    if (workspaceId == null) {
+      if (!mounted) return;
+      final configure = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Selecione uma empresa'),
+          content: const Text(
+            'Para iniciar uma conversa, primeiro é necessário ter uma empresa/workspace selecionado.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Configurar empresa'),
+            ),
+          ],
+        ),
+      );
+      if (configure == true && mounted) context.go('/onboarding');
+      return;
+    }
 
     try {
       final integrations = await sl<IntegrationsRepository>().list(

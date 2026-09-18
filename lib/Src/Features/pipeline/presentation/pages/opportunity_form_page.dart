@@ -115,7 +115,7 @@ class _OpportunityFormPageState extends State<OpportunityFormPage> {
                       )
                     : controller.leads.value.isEmpty
                         ? _NoLeadsState(
-                            onCreateLead: () => context.go('/leads/new'),
+                            onCreateLead: () => context.go('/crm/leads/new'),
                           )
                         : _buildForm(context),
           ),
@@ -473,14 +473,14 @@ class _OpportunityFormPageState extends State<OpportunityFormPage> {
         ),
       ),
     );
-    context.go('/pipeline/${saved.id}');
+    context.go('/crm/pipeline/${saved.id}');
   }
 
   void _back() {
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go('/pipeline');
+      context.go('/crm/pipeline');
     }
   }
 

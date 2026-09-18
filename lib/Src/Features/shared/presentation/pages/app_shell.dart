@@ -73,8 +73,26 @@ class AppShell extends SignalWidget {
   Widget build(BuildContext context) {
     final currentPath = GoRouterState.of(context).uri.path;
     final authController = sl<AuthController>();
+    final authStatus = authController.status.value;
     final session = authController.session.value;
-    final workspace = session?.selectedWorkspace;
+
+    // O shell não deve renderizar placeholders como "Usuário" e "Workspace"
+    // enquanto v1-auth-me ainda está hidratando a sessão.
+    if (authStatus == AuthStatus.initial ||
+        authStatus == AuthStatus.loading ||
+        session == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.shellStart,
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
+
+    final workspace = session.selectedWorkspace;
+    final userName = session.user.name.trim().isNotEmpty
+        ? session.user.name.trim()
+        : session.user.email.split('@').first;
 
     Future<void> selectWorkspace(String workspaceId) async {
       await authController.selectWorkspace(workspaceId);
@@ -122,7 +140,7 @@ class AppShell extends SignalWidget {
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 14),
                               child: _WorkspaceSelector(
-                                name: workspace?.name ?? 'Workspace',
+                                name: workspace == null ? 'Nenhuma empresa selecionada' : workspace.name,
                                 onSelected: selectWorkspace,
                                 lightContent: true,
                               ),
@@ -141,8 +159,8 @@ class AppShell extends SignalWidget {
                               ),
                             ),
                             _UserFooter(
-                              name: session?.user.name ?? 'Usuário',
-                              email: session?.user.email ?? '',
+                              name: userName,
+                              email: session.user.email,
                               onLogout: authController.signOut,
                               lightContent: true,
                             ),
@@ -170,7 +188,7 @@ class AppShell extends SignalWidget {
               scrolledUnderElevation: 0,
               titleSpacing: 4,
               title: Text(
-                workspace?.name ?? 'CormeX CRM',
+                workspace == null ? 'CormeX CRM' : workspace.name,
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               actions: <Widget>[
@@ -180,7 +198,7 @@ class AppShell extends SignalWidget {
                     radius: 17,
                     backgroundColor: AppColors.shellCyan.withValues(alpha: 0.14),
                     foregroundColor: AppColors.shellCyan,
-                    child: Text(_initials(session?.user.name ?? 'U')),
+                    child: Text(_initials(userName)),
                   ),
                 ),
               ],
@@ -212,7 +230,7 @@ class AppShell extends SignalWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 14),
                         child: _WorkspaceSelector(
-                          name: workspace?.name ?? 'Workspace',
+                          name: workspace == null ? 'Nenhuma empresa selecionada' : workspace.name,
                           onSelected: selectWorkspace,
                           lightContent: true,
                         ),
@@ -235,8 +253,8 @@ class AppShell extends SignalWidget {
                         ),
                       ),
                       _UserFooter(
-                        name: session?.user.name ?? 'Usuário',
-                        email: session?.user.email ?? '',
+                        name: userName,
+                        email: session.user.email,
                         onLogout: authController.signOut,
                         lightContent: true,
                       ),

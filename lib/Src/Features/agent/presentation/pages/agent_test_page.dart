@@ -21,6 +21,7 @@ class _AgentTestPageState extends State<AgentTestPage> {
   late final TextEditingController _messageController;
   late final ScrollController _scrollController;
   int _lastMessageCount = 0;
+  String? _messageError;
 
   @override
   void initState() {
@@ -31,7 +32,13 @@ class _AgentTestPageState extends State<AgentTestPage> {
   }
 
   Future<void> _send() async {
-    final sent = await controller.send(_messageController.text);
+    final message = _messageController.text.trim();
+    if (message.isEmpty) {
+      setState(() => _messageError = 'Escreva uma mensagem para testar a IA.');
+      return;
+    }
+    setState(() => _messageError = null);
+    final sent = await controller.send(message);
     if (!mounted || !sent) return;
     _messageController.clear();
     _scrollToBottom();
@@ -91,6 +98,12 @@ class _AgentTestPageState extends State<AgentTestPage> {
                   errorMessage: controller.errorMessage.value,
                   correlationId: controller.correlationId.value,
                   usage: controller.lastUsage.value,
+                  messageError: _messageError,
+                  onMessageChanged: () {
+                    if (_messageError != null) {
+                      setState(() => _messageError = null);
+                    }
+                  },
                   onSend: _send,
                   onClear: controller.clearConversation,
                   onDismissError: controller.clearError,
@@ -299,6 +312,8 @@ class _SandboxChat extends StatelessWidget {
     required this.errorMessage,
     required this.correlationId,
     required this.usage,
+    required this.messageError,
+    required this.onMessageChanged,
     required this.onSend,
     required this.onClear,
     required this.onDismissError,
@@ -311,6 +326,8 @@ class _SandboxChat extends StatelessWidget {
   final String? errorMessage;
   final String? correlationId;
   final Map<String, dynamic>? usage;
+  final String? messageError;
+  final VoidCallback onMessageChanged;
   final VoidCallback onSend;
   final VoidCallback onClear;
   final VoidCallback onDismissError;
@@ -421,9 +438,11 @@ class _SandboxChat extends StatelessWidget {
                     maxLines: 5,
                     maxLength: 4000,
                     textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(
+                    onChanged: (_) => onMessageChanged(),
+                    decoration: InputDecoration(
                       hintText: 'Escreva como se fosse o lead…',
                       counterText: '',
+                      errorText: messageError,
                     ),
                   ),
                 ),

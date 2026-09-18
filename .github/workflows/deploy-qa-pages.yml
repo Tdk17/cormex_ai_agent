@@ -44,18 +44,12 @@ jobs:
           flutter analyze
           flutter test
 
-      - name: Require isolated QA credentials
-        env:
-          QA_PARSE_APPLICATION_ID: ${{ secrets.QA_PARSE_APPLICATION_ID }}
-          QA_PARSE_REST_API_KEY: ${{ secrets.QA_PARSE_REST_API_KEY }}
-        run: |
-          test -n "$QA_PARSE_APPLICATION_ID" || (echo "QA_PARSE_APPLICATION_ID ausente" && exit 1)
-          test -n "$QA_PARSE_REST_API_KEY" || (echo "QA_PARSE_REST_API_KEY ausente" && exit 1)
-
+      # Temporário: QA usa o mesmo Back4App da produção.
+      # Quando houver um app de homologação separado, trocar novamente para QA_PARSE_*.
       - name: Build QA
         env:
-          QA_PARSE_APPLICATION_ID: ${{ secrets.QA_PARSE_APPLICATION_ID }}
-          QA_PARSE_REST_API_KEY: ${{ secrets.QA_PARSE_REST_API_KEY }}
+          QA_PARSE_APPLICATION_ID: ${{ secrets.PARSE_APPLICATION_ID }}
+          QA_PARSE_REST_API_KEY: ${{ secrets.PARSE_REST_API_KEY }}
         run: |
           flutter build web --release \
             --pwa-strategy=none \
