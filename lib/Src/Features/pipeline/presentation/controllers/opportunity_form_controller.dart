@@ -51,13 +51,54 @@ class OpportunityFormController {
   }
 
   Future<void> initialize({String? opportunityId}) async {
-    final workspaceId = _workspaceId;
-    if (workspaceId == null) return;
+    var workspaceId = _workspaceId;
+
+    // A página pode ser construída enquanto a sessão ainda está sendo
+    // hidratada. Aguarda brevemente para não deixar o formulário preso no
+    // estado initial quando o workspace chega alguns instantes depois.
+    if (workspaceId == null && _authController.isLoading.value) {
+      for (var attempt = 0; attempt < 50 && workspaceId == null; attempt++) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        workspaceId = _workspaceId;
+        if (!_authController.isLoading.value && workspaceId == null) break;
+      }
+    }
+
+    if (workspaceId == null) {
+      batch(() {
+        errorMessage.value =
+            'Nenhuma empresa está selecionada. Selecione ou cadastre uma empresa antes de criar uma oportunidade.';
+        correlationId.value = null;
+        loadState.value = ScreenState.error;
+      });
+      return;
+    }
+
     batch(() {
       loadState.value = ScreenState.loading;
       errorMessage.value = null;
+      correlationId.value = null;
     });
+
     try {
+      // Em uma base vazia não precisamos esperar o pipeline para descobrir que
+      // ainda não há um lead elegível. Isso evita spinner infinito no primeiro uso.
+      final leadPage = await _leadsRepository.list(
+        workspaceId: workspaceId,
+        filters: const LeadFilters(),
+        limit: 100,
+      );
+      final loadedLeads = <LeadModel>[...leadPage.items];
+
+      if (opportunityId == null && loadedLeads.isEmpty) {
+        batch(() {
+          leads.value = const <LeadModel>[];
+          opportunity.value = null;
+          loadState.value = ScreenState.success;
+        });
+        return;
+      }
+
       if (_pipelineController.stages.value.isEmpty) {
         await _pipelineController.load(force: true);
       }
@@ -69,12 +110,7 @@ class OpportunityFormController {
           correlationId: _pipelineController.correlationId.value,
         );
       }
-      final leadPage = await _leadsRepository.list(
-        workspaceId: workspaceId,
-        filters: const LeadFilters(),
-        limit: 100,
-      );
-      final loadedLeads = <LeadModel>[...leadPage.items];
+
       OpportunityModel? current;
       if (opportunityId != null) {
         final currentOpportunity =
@@ -96,6 +132,7 @@ class OpportunityFormController {
           );
         }
       }
+
       batch(() {
         leads.value = loadedLeads;
         opportunity.value = current;
