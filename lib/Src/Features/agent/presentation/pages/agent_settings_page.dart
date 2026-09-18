@@ -225,7 +225,7 @@ class _AgentOverview extends SignalWidget {
             ],
           );
           final action = FilledButton.tonalIcon(
-            onPressed: () => context.go('/agent/test'),
+            onPressed: () => context.go('/automation/agent/test'),
             icon: const Icon(Icons.science_outlined),
             label: const Text('Abrir console de teste'),
           );
