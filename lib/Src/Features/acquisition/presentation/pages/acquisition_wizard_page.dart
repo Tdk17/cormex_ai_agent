@@ -393,6 +393,7 @@ class _ProductStep extends SignalWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showValidation = controller.errorMessage.value != null;
     return _StepSection(
       title: 'O que você quer anunciar?',
       subtitle:
@@ -402,13 +403,26 @@ class _ProductStep extends SignalWidget {
           label: 'Nome da campanha',
           initialValue: controller.name.value,
           hint: 'Ex.: Lançamento Consultoria Setembro',
-          onChanged: (String value) => controller.name.value = value,
+          errorText: showValidation && controller.name.value.trim().length < 3
+              ? 'Informe pelo menos 3 caracteres.'
+              : null,
+          onChanged: (String value) {
+            controller.name.value = value;
+            if (value.trim().length >= 3) controller.clearFieldError();
+          },
         ),
         _TextField(
           label: 'Produto ou serviço',
           initialValue: controller.productName.value,
           hint: 'Ex.: CormeX CRM',
-          onChanged: (String value) => controller.productName.value = value,
+          errorText:
+              showValidation && controller.productName.value.trim().length < 2
+                  ? 'Informe o produto ou serviço.'
+                  : null,
+          onChanged: (String value) {
+            controller.productName.value = value;
+            if (value.trim().length >= 2) controller.clearFieldError();
+          },
         ),
         _TextField(
           label: 'Descrição comercial',
@@ -1445,6 +1459,7 @@ class _TextField extends StatelessWidget {
     this.maxLines = 1,
     this.maxLength,
     this.keyboardType,
+    this.errorText,
   }) : helper = null;
 
   final String label;
@@ -1455,6 +1470,7 @@ class _TextField extends StatelessWidget {
   final int maxLines;
   final int? maxLength;
   final TextInputType? keyboardType;
+  final String? errorText;
   final ValueChanged<String> onChanged;
 
   @override
@@ -1470,6 +1486,7 @@ class _TextField extends StatelessWidget {
         labelText: label,
         hintText: hint,
         helperText: helper,
+        errorText: errorText,
         alignLabelWithHint: maxLines > 1,
       ),
     );
