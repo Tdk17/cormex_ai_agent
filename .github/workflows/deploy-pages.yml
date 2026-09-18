@@ -59,48 +59,6 @@ jobs:
           mkdir -p site
           cp -R build/web/. site/
 
-      - name: Checkout QA branch
-        if: github.event_name == 'push'
-        uses: actions/checkout@v4
-        with:
-          ref: qa
-          path: qa-src
-
-      - name: Install QA dependencies
-        if: github.event_name == 'push'
-        working-directory: qa-src
-        run: flutter pub get
-
-      - name: Require isolated QA credentials
-        if: github.event_name == 'push'
-        env:
-          QA_PARSE_APPLICATION_ID: ${{ secrets.QA_PARSE_APPLICATION_ID }}
-          QA_PARSE_REST_API_KEY: ${{ secrets.QA_PARSE_REST_API_KEY }}
-        run: |
-          test -n "$QA_PARSE_APPLICATION_ID" || (echo "QA_PARSE_APPLICATION_ID ausente" && exit 1)
-          test -n "$QA_PARSE_REST_API_KEY" || (echo "QA_PARSE_REST_API_KEY ausente" && exit 1)
-
-      - name: Build QA under /qa/
-        if: github.event_name == 'push'
-        working-directory: qa-src
-        env:
-          QA_PARSE_APPLICATION_ID: ${{ secrets.QA_PARSE_APPLICATION_ID }}
-          QA_PARSE_REST_API_KEY: ${{ secrets.QA_PARSE_REST_API_KEY }}
-        run: |
-          flutter build web --release \
-            --pwa-strategy=none \
-            --base-href "/qa/" \
-            --dart-define=APP_ENV=staging \
-            --dart-define=PARSE_SERVER_URL=https://parseapi.back4app.com \
-            --dart-define=PARSE_APPLICATION_ID="$QA_PARSE_APPLICATION_ID" \
-            --dart-define=PARSE_REST_API_KEY="$QA_PARSE_REST_API_KEY"
-
-      - name: Add QA site to Pages artifact
-        if: github.event_name == 'push'
-        run: |
-          mkdir -p site/qa
-          cp -R qa-src/build/web/. site/qa/
-
       - name: Configure GitHub Pages
         if: github.event_name == 'push'
         uses: actions/configure-pages@v5
