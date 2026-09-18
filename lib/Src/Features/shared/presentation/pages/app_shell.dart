@@ -140,7 +140,7 @@ class AppShell extends SignalWidget {
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 14),
                               child: _WorkspaceSelector(
-                                name: workspace?.name ?? 'Nenhuma empresa selecionada',
+                                name: workspace == null ? 'Nenhuma empresa selecionada' : workspace.name,
                                 onSelected: selectWorkspace,
                                 lightContent: true,
                               ),
@@ -188,7 +188,7 @@ class AppShell extends SignalWidget {
               scrolledUnderElevation: 0,
               titleSpacing: 4,
               title: Text(
-                workspace?.name ?? 'CormeX CRM',
+                workspace == null ? 'CormeX CRM' : workspace.name,
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
               ),
               actions: <Widget>[
@@ -230,7 +230,7 @@ class AppShell extends SignalWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 14),
                         child: _WorkspaceSelector(
-                          name: workspace?.name ?? 'Nenhuma empresa selecionada',
+                          name: workspace == null ? 'Nenhuma empresa selecionada' : workspace.name,
                           onSelected: selectWorkspace,
                           lightContent: true,
                         ),
