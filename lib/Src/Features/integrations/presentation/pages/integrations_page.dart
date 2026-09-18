@@ -210,6 +210,62 @@ class _IntegrationsPageState extends State<IntegrationsPage> {
     }
   }
 
+  Future<void> _switchGoogleAdsAccount() async {
+    final workspaceId = _workspaceId;
+    if (workspaceId == null || _googleMutating || _googleConnecting) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Trocar conta Google Ads?'),
+        content: const Text(
+          'A conta atual será desconectada e a autorização do Google será aberta novamente para você escolher outra conta.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Trocar conta'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    setState(() {
+      _googleMutating = true;
+      _googleError = null;
+    });
+
+    var disconnected = false;
+    try {
+      final status = await _acquisitionRepository.disconnectGoogleAds(
+        workspaceId: workspaceId,
+      );
+      disconnected = true;
+      if (!mounted) return;
+      setState(() {
+        _googleAds = status;
+        _googleAccounts = const <GoogleAdsAccount>[];
+      });
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() => _googleError = error.userMessage);
+    } on Object {
+      if (!mounted) return;
+      setState(() => _googleError = 'Não foi possível desconectar a conta atual do Google Ads.');
+    } finally {
+      if (mounted) setState(() => _googleMutating = false);
+    }
+
+    if (disconnected && mounted) {
+      await _connectGoogleAds();
+    }
+  }
+
   Future<void> _connectGoogleAds() async {
     if (_googleConnecting) return;
     final workspaceId = _workspaceId;
@@ -517,10 +573,20 @@ class _IntegrationsPageState extends State<IntegrationsPage> {
                   label: const Text('Atualizar status'),
                 ),
                 if (googleConnected)
+                  OutlinedButton.icon(
+                    onPressed: _googleMutating || _googleConnecting
+                        ? null
+                        : _switchGoogleAdsAccount,
+                    icon: const Icon(Icons.switch_account_rounded),
+                    label: const Text('Trocar conta'),
+                  ),
+                if (googleConnected || _googleAds?.status == 'account_selection_required')
                   TextButton.icon(
                     onPressed: _googleMutating ? null : _disconnectGoogleAds,
                     icon: const Icon(Icons.link_off_rounded),
-                    label: const Text('Desconectar'),
+                    label: Text(
+                      googleConnected ? 'Desconectar' : 'Cancelar conexão',
+                    ),
                   ),
               ],
             ),
