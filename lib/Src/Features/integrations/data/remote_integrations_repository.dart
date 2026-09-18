@@ -101,12 +101,20 @@ class RemoteIntegrationsRepository implements IntegrationsRepository {
   static String _integrationReturnUrl(String raw) {
     final parsed = Uri.tryParse(raw.trim());
     if (parsed == null || !parsed.hasScheme || parsed.host.isEmpty) {
-      return 'https://cormexcrm.com.br/integrations';
+      return 'https://cormexcrm.com.br/#/integrations';
     }
-    return parsed.replace(
-      path: '/integrations',
-      query: null,
-      fragment: null,
-    ).toString();
+
+    // Mantém a base do build atual. Em QA, por exemplo, /qa/ não pode
+    // ser descartado pelo callback OAuth/WhatsApp.
+    var basePath = parsed.path;
+    if (!basePath.endsWith('/')) {
+      final slash = basePath.lastIndexOf('/');
+      basePath = slash >= 0 ? basePath.substring(0, slash + 1) : '/';
+    }
+    if (basePath.isEmpty) basePath = '/';
+
+    return parsed
+        .replace(path: basePath, query: null, fragment: '/integrations')
+        .toString();
   }
 }
