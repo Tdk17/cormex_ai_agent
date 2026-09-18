@@ -179,12 +179,17 @@ class AppRouter {
 
     if (atLanding) return null;
 
+    // Não abandona deep links enquanto a sessão está sendo restaurada.
+    // Redirecionar para /splash aqui fazia /crm/.../edit e outros destinos
+    // autenticados se perderem durante um reload.
     if (status == AuthStatus.initial || status == AuthStatus.loading) {
-      return publicRoute || atSplash ? null : '/splash';
+      return null;
     }
 
     if (session == null) {
-      return publicRoute ? null : '/login';
+      if (publicRoute) return null;
+      final from = Uri.encodeComponent(state.uri.toString());
+      return '/login?from=$from';
     }
 
     if (!session.hasWorkspace) {
@@ -196,7 +201,14 @@ class AppRouter {
       return '/billing';
     }
 
-    if (atSplash || atAuth || atOnboarding) {
+    if (atAuth) {
+      final from = state.uri.queryParameters['from'];
+      if (from != null && from.startsWith('/') && !from.startsWith('//')) {
+        return entitlement?.requiresSubscription == true ? '/billing' : from;
+      }
+      return entitlement?.requiresSubscription == true ? '/billing' : '/dashboard';
+    }
+    if (atSplash || atOnboarding) {
       return entitlement?.requiresSubscription == true ? '/billing' : '/dashboard';
     }
     return null;
@@ -283,7 +295,7 @@ class AppRouter {
   static GoRoute _legacyLeadsRoute() {
     return GoRoute(
       path: '/leads',
-      redirect: (_, _) => '/crm/leads',
+      redirect: (_, state) => state.uri.path == '/leads' ? '/crm/leads' : null,
       routes: <RouteBase>[
         GoRoute(path: 'new', redirect: (_, _) => '/crm/leads/new'),
         GoRoute(path: 'import', redirect: (_, _) => '/crm/leads/import'),
@@ -306,7 +318,7 @@ class AppRouter {
   static GoRoute _legacyPipelineRoute() {
     return GoRoute(
       path: '/pipeline',
-      redirect: (_, _) => '/crm/pipeline',
+      redirect: (_, state) => state.uri.path == '/pipeline' ? '/crm/pipeline' : null,
       routes: <RouteBase>[
         GoRoute(path: 'new', redirect: (_, _) => '/crm/pipeline/new'),
         GoRoute(
@@ -328,7 +340,7 @@ class AppRouter {
   static GoRoute _legacyConversationsRoute() {
     return GoRoute(
       path: '/conversations',
-      redirect: (_, _) => '/crm/conversations',
+      redirect: (_, state) => state.uri.path == '/conversations' ? '/crm/conversations' : null,
       routes: <RouteBase>[
         GoRoute(
           path: ':conversationId',
@@ -342,7 +354,7 @@ class AppRouter {
   static GoRoute _legacyAgentRoute() {
     return GoRoute(
       path: '/agent',
-      redirect: (_, _) => '/automation/agent',
+      redirect: (_, state) => state.uri.path == '/agent' ? '/automation/agent' : null,
       routes: <RouteBase>[
         GoRoute(path: 'test', redirect: (_, _) => '/automation/agent/test'),
         GoRoute(
