@@ -160,7 +160,7 @@ class AppShell extends SignalWidget {
                             ),
                             _UserFooter(
                               name: userName,
-                              email: session?.user.email ?? '',
+                              email: session.user.email,
                               onLogout: authController.signOut,
                               lightContent: true,
                             ),
@@ -254,7 +254,7 @@ class AppShell extends SignalWidget {
                       ),
                       _UserFooter(
                         name: userName,
-                        email: session?.user.email ?? '',
+                        email: session.user.email,
                         onLogout: authController.signOut,
                         lightContent: true,
                       ),
