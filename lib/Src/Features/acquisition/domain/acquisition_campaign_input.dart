@@ -82,7 +82,7 @@ class AcquisitionCampaignInput {
           'broad': broadAudience,
         },
         'budget': <String, dynamic>{
-          'type': budgetType,
+          'type': _budgetTypeForApi(budgetType),
           'amount': budgetAmount,
           'currency': 'BRL',
         },
@@ -95,7 +95,7 @@ class AcquisitionCampaignInput {
           'callToAction': callToAction,
         },
         'destination': <String, dynamic>{
-          'type': destinationType,
+          'type': _destinationTypeForApi(destinationType),
           'url': destinationUrl.trim(),
           'captureFields': captureFields,
           'consentText': consentText.trim(),
@@ -108,5 +108,14 @@ class AcquisitionCampaignInput {
           'onlyRegisterLead': onlyRegisterLead,
         },
         if (expectedVersion != null) 'expectedVersion': expectedVersion,
+      };
+
+  static String _budgetTypeForApi(String value) =>
+      value == 'total' ? 'lifetime' : value;
+
+  static String _destinationTypeForApi(String value) => switch (value) {
+        'landing_page' || 'product_page' => 'website',
+        'form' => 'lead_form',
+        _ => value,
       };
 }
