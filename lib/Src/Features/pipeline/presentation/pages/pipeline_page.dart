@@ -54,7 +54,7 @@ class _PipelinePageState extends State<PipelinePage> {
             padding: const EdgeInsets.fromLTRB(22, 24, 22, 40),
             children: <Widget>[
               _PipelineHeader(
-                onCreate: () => context.go('/pipeline/new'),
+                onCreate: () => context.go('/crm/pipeline/new'),
               ),
               const SizedBox(height: 20),
               _SummaryCards(summary: summary),
@@ -87,7 +87,7 @@ class _PipelinePageState extends State<PipelinePage> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 14),
                     child: _EmptyPipelineBanner(
-                      onCreate: () => context.go('/pipeline/new'),
+                      onCreate: () => context.go('/crm/pipeline/new'),
                     ),
                   ),
                 if (desktop)
@@ -120,10 +120,10 @@ class _PipelinePageState extends State<PipelinePage> {
   ) {
     switch (action) {
       case OpportunityCardAction.view:
-        context.go('/pipeline/${opportunity.id}');
+        context.go('/crm/pipeline/${opportunity.id}');
         return;
       case OpportunityCardAction.edit:
-        context.go('/pipeline/${opportunity.id}/edit');
+        context.go('/crm/pipeline/${opportunity.id}/edit');
         return;
       case OpportunityCardAction.move:
         unawaited(_chooseAndMove(opportunity));
