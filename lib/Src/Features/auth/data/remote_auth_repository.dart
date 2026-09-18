@@ -46,8 +46,6 @@ class RemoteAuthRepository implements AuthRepository {
         queryParameters: <String, dynamic>{
           'username': email.trim().toLowerCase(),
           'password': password,
-          'termsAccepted': acceptedTerms,
-          'termsVersion': termsVersion,
         },
         requiresAuth: false,
       );
@@ -84,6 +82,8 @@ class RemoteAuthRepository implements AuthRepository {
           'username': normalizedEmail,
           'email': normalizedEmail,
           'password': password,
+          'termsAccepted': acceptedTerms,
+          'termsVersion': termsVersion,
         },
         requiresAuth: false,
       );
