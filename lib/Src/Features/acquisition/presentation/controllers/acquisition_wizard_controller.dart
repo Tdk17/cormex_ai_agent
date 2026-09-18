@@ -604,6 +604,10 @@ class AcquisitionWizardController {
       'Informe uma faixa etária válida entre 18 e 65 anos.',
     4 when budgetAmount.value <= 0 => 'Informe um orçamento maior que zero.',
     4 when startAt.value == null => 'Informe a data de início.',
+    4
+        when startAt.value != null &&
+            _dateOnly(startAt.value!).isBefore(_dateOnly(DateTime.now())) =>
+      'A campanha não pode iniciar em uma data passada.',
     4 when endAt.value != null && endAt.value!.isBefore(startAt.value!) =>
       'A data final não pode ser anterior ao início.',
     5 when headline.value.trim().length < 3 =>
@@ -614,7 +618,7 @@ class AcquisitionWizardController {
         when destinationType.value != 'whatsapp' &&
             destinationUrl.value.trim().isEmpty =>
       'Informe o endereço de destino.',
-    6 when destinationType.value == 'form' && captureFields.value.isEmpty =>
+    6 when destinationType.value == 'lead_form' && captureFields.value.isEmpty =>
       'Selecione pelo menos um campo para o formulário.',
     7 when !onlyRegisterLead.value && initialMessage.value.trim().length < 5 =>
       'Informe a mensagem inicial da automação.',
@@ -666,7 +670,8 @@ class AcquisitionWizardController {
       ageMax.value = (audience['ageMax'] as num?)?.toInt() ?? 65;
       interestsText.value = _list(audience['interests']).join('\n');
       broadAudience.value = audience['broad'] as bool? ?? true;
-      budgetType.value = _text(budget['type'], fallback: value.budgetType);
+      final storedBudgetType = _text(budget['type'], fallback: value.budgetType);
+      budgetType.value = storedBudgetType == 'total' ? 'lifetime' : storedBudgetType;
       budgetAmount.value =
           (budget['amount'] as num?)?.toDouble() ?? value.budgetAmount;
       startAt.value =
@@ -680,7 +685,12 @@ class AcquisitionWizardController {
         creative['callToAction'],
         fallback: 'LEARN_MORE',
       );
-      destinationType.value = _text(destination['type'], fallback: 'whatsapp');
+      final storedDestination = _text(destination['type'], fallback: 'whatsapp');
+      destinationType.value = switch (storedDestination) {
+        'landing_page' || 'product_page' => 'website',
+        'form' => 'lead_form',
+        _ => storedDestination,
+      };
       destinationUrl.value = _text(destination['url']);
       captureFields.value = _list(destination['captureFields']).isEmpty
           ? <String>['name', 'phone']
@@ -717,6 +727,9 @@ class AcquisitionWizardController {
       if (asPageError) state.value = ScreenState.error;
     });
   }
+
+  static DateTime _dateOnly(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
 
   static Map<String, dynamic> _map(dynamic raw) =>
       raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{};

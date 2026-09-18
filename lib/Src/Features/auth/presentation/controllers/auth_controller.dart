@@ -56,10 +56,18 @@ class AuthController {
     required String name,
     required String email,
     required String password,
+    required bool acceptedTerms,
+    required String termsVersion,
   }) async {
     if (isLoading.value) return false;
     return _execute(
-      () => _repository.signUp(name: name, email: email, password: password),
+      () => _repository.signUp(
+        name: name,
+        email: email,
+        password: password,
+        acceptedTerms: acceptedTerms,
+        termsVersion: termsVersion,
+      ),
     );
   }
 

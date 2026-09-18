@@ -2,6 +2,9 @@ import 'package:agente_vendas_saas/Src/App/theme/app_colors.dart';
 import 'package:agente_vendas_saas/Src/Core/di/service_locator.dart';
 import 'package:agente_vendas_saas/Src/Core/utils/screen_state.dart';
 import 'package:agente_vendas_saas/Src/Features/agent/presentation/controllers/agent_settings_controller.dart';
+import 'package:agente_vendas_saas/Src/Features/auth/presentation/controllers/auth_controller.dart';
+import 'package:agente_vendas_saas/Src/Features/integrations/domain/integration_models.dart';
+import 'package:agente_vendas_saas/Src/Features/integrations/domain/integrations_repository.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_constants.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/domain/conversation_start_input.dart';
 import 'package:agente_vendas_saas/Src/Features/conversations/presentation/controllers/conversation_thread_controller.dart';
@@ -73,6 +76,56 @@ class _ConversationsPageState extends State<ConversationsPage> {
 
   Future<void> _showStartConversation() async {
     conversationsController.clearActionError();
+
+    final workspaceId =
+        sl<AuthController>().session.value?.selectedWorkspace?.id;
+    if (workspaceId == null) return;
+
+    try {
+      final integrations = await sl<IntegrationsRepository>().list(
+        workspaceId: workspaceId,
+        type: 'messaging',
+      );
+      final whatsappConnected = integrations.items.any(
+        (item) =>
+            item.provider == IntegrationProviders.whatsapp &&
+            item.status == IntegrationStatuses.connected,
+      );
+      if (!whatsappConnected) {
+        if (!mounted) return;
+        final configure = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('WhatsApp desconectado'),
+            content: const Text(
+              'Conecte o WhatsApp antes de iniciar uma conversa. Isso evita criar atendimentos que não podem enviar mensagens.',
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Configurar WhatsApp'),
+              ),
+            ],
+          ),
+        );
+        if (configure == true && mounted) context.go('/integrations');
+        return;
+      }
+    } on Object {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Não foi possível confirmar a conexão do WhatsApp. Atualize as integrações e tente novamente.',
+          ),
+        ),
+      );
+      return;
+    }
 
     final agentSettings = sl<AgentSettingsController>();
     await agentSettings.load(force: true);

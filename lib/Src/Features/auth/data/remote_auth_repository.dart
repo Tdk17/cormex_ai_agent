@@ -68,6 +68,8 @@ class RemoteAuthRepository implements AuthRepository {
     required String name,
     required String email,
     required String password,
+    required bool acceptedTerms,
+    required String termsVersion,
   }) async {
     await _sessionStorage.clear();
     try {
@@ -80,6 +82,8 @@ class RemoteAuthRepository implements AuthRepository {
           'username': normalizedEmail,
           'email': normalizedEmail,
           'password': password,
+          'termsAccepted': acceptedTerms,
+          'termsVersion': termsVersion,
         },
         requiresAuth: false,
       );

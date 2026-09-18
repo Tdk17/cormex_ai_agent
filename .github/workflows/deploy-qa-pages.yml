@@ -1,0 +1,99 @@
+name: Deploy QA to GitHub Pages
+
+on:
+  push:
+    branches:
+      - qa
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: qa-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout QA
+        uses: actions/checkout@v4
+
+      - name: Checkout production main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: prod-src
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Validate QA
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+
+      - name: Require isolated QA credentials
+        env:
+          QA_PARSE_APPLICATION_ID: ${{ secrets.QA_PARSE_APPLICATION_ID }}
+          QA_PARSE_REST_API_KEY: ${{ secrets.QA_PARSE_REST_API_KEY }}
+        run: |
+          test -n "$QA_PARSE_APPLICATION_ID" || (echo "QA_PARSE_APPLICATION_ID ausente" && exit 1)
+          test -n "$QA_PARSE_REST_API_KEY" || (echo "QA_PARSE_REST_API_KEY ausente" && exit 1)
+
+      - name: Build QA
+        env:
+          QA_PARSE_APPLICATION_ID: ${{ secrets.QA_PARSE_APPLICATION_ID }}
+          QA_PARSE_REST_API_KEY: ${{ secrets.QA_PARSE_REST_API_KEY }}
+        run: |
+          flutter build web --release \
+            --pwa-strategy=none \
+            --base-href "/qa/" \
+            --dart-define=APP_ENV=staging \
+            --dart-define=PARSE_SERVER_URL=https://parseapi.back4app.com \
+            --dart-define=PARSE_APPLICATION_ID="$QA_PARSE_APPLICATION_ID" \
+            --dart-define=PARSE_REST_API_KEY="$QA_PARSE_REST_API_KEY"
+
+      - name: Build production root from main
+        working-directory: prod-src
+        env:
+          PARSE_APPLICATION_ID: ${{ secrets.PARSE_APPLICATION_ID }}
+          PARSE_REST_API_KEY: ${{ secrets.PARSE_REST_API_KEY }}
+        run: |
+          flutter pub get
+          flutter build web --release \
+            --pwa-strategy=none \
+            --base-href "/" \
+            --dart-define=APP_ENV=production \
+            --dart-define=PARSE_SERVER_URL=https://parseapi.back4app.com \
+            --dart-define=PARSE_APPLICATION_ID="$PARSE_APPLICATION_ID" \
+            --dart-define=PARSE_REST_API_KEY="$PARSE_REST_API_KEY"
+
+      - name: Compose Pages artifact
+        run: |
+          mkdir -p site/qa
+          cp -R prod-src/build/web/. site/
+          cp -R build/web/. site/qa/
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - name: Deploy combined production + QA site
+        id: deployment
+        uses: actions/deploy-pages@v4
