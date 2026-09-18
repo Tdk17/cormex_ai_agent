@@ -148,6 +148,7 @@ class _OperationalAgentActivityPanelState extends State<OperationalAgentActivity
     final monitor = _map(_activity['monitor']);
     final events = _list(_activity['events']);
     final dependencies = _map(_health['dependencies']);
+    final dependencyStates = _map(_health['dependencyStates']);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -199,7 +200,10 @@ class _OperationalAgentActivityPanelState extends State<OperationalAgentActivity
         const SizedBox(height: 14),
         LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
-            final connections = _ConnectionsCard(dependencies: dependencies);
+            final connections = _ConnectionsCard(
+              dependencies: dependencies,
+              states: dependencyStates,
+            );
             final monitorCard = _MonitorCard(
               lastObserved: _timeAgo(monitor['lastObservedAt']),
               eventCount: _num(monitor['eventCount']).toInt(),
@@ -300,8 +304,12 @@ class _MetricCard extends StatelessWidget {
 }
 
 class _ConnectionsCard extends StatelessWidget {
-  const _ConnectionsCard({required this.dependencies});
+  const _ConnectionsCard({
+    required this.dependencies,
+    required this.states,
+  });
   final Map<String, dynamic> dependencies;
+  final Map<String, dynamic> states;
 
   @override
   Widget build(BuildContext context) {
@@ -319,13 +327,38 @@ class _ConnectionsCard extends StatelessWidget {
       subtitle: 'A IA só consegue executar ações quando o serviço correspondente está disponível.',
       child: Column(
         children: labels.entries.map((entry) {
-          final ok = dependencies[entry.key] == true;
+          final state = states[entry.key] is Map
+              ? Map<String, dynamic>.from(states[entry.key] as Map)
+              : <String, dynamic>{};
+          final operational =
+              state['operational'] == true || dependencies[entry.key] == true;
+          final configured = state['configured'] == true;
+          final connected = state['connected'];
+          final label = operational
+              ? 'Operacional'
+              : connected == false
+                  ? 'Desconectado'
+                  : configured
+                      ? 'Configurado'
+                      : 'Pendente';
           return ListTile(
             dense: true,
             contentPadding: EdgeInsets.zero,
-            leading: Icon(ok ? Icons.check_circle : Icons.error_outline, color: ok ? Colors.green : Colors.orange),
-            title: Text(entry.value, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-            trailing: Text(ok ? 'Pronto' : 'Pendente', style: TextStyle(fontWeight: FontWeight.w800, color: ok ? Colors.green : Colors.orange)),
+            leading: Icon(
+              operational ? Icons.check_circle : Icons.error_outline,
+              color: operational ? Colors.green : Colors.orange,
+            ),
+            title: Text(
+              entry.value,
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            ),
+            trailing: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: operational ? Colors.green : Colors.orange,
+              ),
+            ),
           );
         }).toList(growable: false),
       ),
