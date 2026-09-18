@@ -103,6 +103,22 @@
     <a href="https://cormexcrm.com.br/terms.html">Termos de Serviço</a>
   </nav>
 
+  <script>
+    // Os links permanecem visíveis na homepage pública para verificadores de
+    // OAuth, mas não flutuam sobre as telas internas do CRM.
+    (function () {
+      const legal = document.getElementById('cormex-legal-links');
+      function syncLegalLinks() {
+        if (!legal) return;
+        const hash = window.location.hash || '';
+        legal.style.display = (hash === '' || hash === '#' || hash === '#/')
+          ? 'flex'
+          : 'none';
+      }
+      window.addEventListener('hashchange', syncLegalLinks);
+      syncLegalLinks();
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
