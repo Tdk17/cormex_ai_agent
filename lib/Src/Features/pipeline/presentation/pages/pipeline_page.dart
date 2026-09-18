@@ -210,7 +210,7 @@ class _SummaryCards extends StatelessWidget {
   Widget build(BuildContext context) {
     final cards = <_SummaryData>[
       _SummaryData(
-        label: 'Leads',
+        label: 'Oportunidades',
         count: summary.leadsCount,
         value: summary.leadsValue,
         icon: Icons.groups_2_outlined,
