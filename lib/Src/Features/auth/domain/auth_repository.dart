@@ -12,6 +12,8 @@ abstract interface class AuthRepository {
     required String name,
     required String email,
     required String password,
+    required bool acceptedTerms,
+    required String termsVersion,
   });
 
   Future<void> requestPasswordReset(String email);
