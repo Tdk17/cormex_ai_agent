@@ -927,7 +927,7 @@ class _BudgetStep extends SignalWidget {
         SegmentedButton<String>(
           segments: const <ButtonSegment<String>>[
             ButtonSegment<String>(value: 'daily', label: Text('Por dia')),
-            ButtonSegment<String>(value: 'total', label: Text('Total')),
+            ButtonSegment<String>(value: 'lifetime', label: Text('Total')),
           ],
           selected: <String>{controller.budgetType.value},
           showSelectedIcon: false,
@@ -1108,16 +1108,16 @@ class _DestinationStep extends SignalWidget {
               child: Text('Conversa / WhatsApp'),
             ),
             DropdownMenuItem<String>(
-              value: 'landing_page',
-              child: Text('Landing page'),
+              value: 'website',
+              child: Text('Landing page / site'),
             ),
             DropdownMenuItem<String>(
-              value: 'form',
+              value: 'lead_form',
               child: Text('Formulário de lead'),
             ),
             DropdownMenuItem<String>(
-              value: 'product_page',
-              child: Text('Página do produto'),
+              value: 'instagram',
+              child: Text('Instagram'),
             ),
           ],
           onChanged: (String? value) {
@@ -1133,7 +1133,7 @@ class _DestinationStep extends SignalWidget {
             onChanged: (String value) =>
                 controller.destinationUrl.value = value,
           ),
-        if (controller.destinationType.value == 'form') ...<Widget>[
+        if (controller.destinationType.value == 'lead_form') ...<Widget>[
           const Text(
             'Campos do formulário',
             style: TextStyle(fontWeight: FontWeight.w700),
@@ -1146,9 +1146,7 @@ class _DestinationStep extends SignalWidget {
                       (value: 'name', label: 'Nome'),
                       (value: 'phone', label: 'Telefone'),
                       (value: 'email', label: 'E-mail'),
-                      (value: 'region', label: 'Região'),
-                      (value: 'interest', label: 'Interesse'),
-                      (value: 'qualification', label: 'Qualificação'),
+                      (value: 'company', label: 'Empresa'),
                     ]
                     .map(
                       (item) => FilterChip(
