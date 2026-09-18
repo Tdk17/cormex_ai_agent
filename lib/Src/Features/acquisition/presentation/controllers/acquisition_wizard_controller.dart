@@ -641,6 +641,12 @@ class AcquisitionWizardController {
     });
   }
 
+  void clearFieldError() {
+    if (validateStep(currentStep.value) == null) {
+      errorMessage.value = null;
+    }
+  }
+
   void _hydrate(AcquisitionCampaignModel value) {
     final data = value.input ?? const <String, dynamic>{};
     final audience = _map(data['audience']);
