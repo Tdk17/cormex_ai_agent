@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:agente_vendas_saas/Src/Core/utils/screen_state.dart';
 import 'package:agente_vendas_saas/Src/Features/acquisition/presentation/pages/acquisition_campaign_detail_page.dart';
 import 'package:agente_vendas_saas/Src/Features/acquisition/presentation/pages/acquisition_page.dart';
 import 'package:agente_vendas_saas/Src/Features/acquisition/presentation/pages/acquisition_wizard_page.dart';
@@ -197,19 +198,21 @@ class AppRouter {
     }
 
     final entitlement = _billingController.overview.value?.entitlement;
-    if (entitlement?.requiresSubscription == true && !atBilling) {
+    final requiresSubscription = entitlement?.requiresSubscription == true;
+    final billingUnavailable = _billingController.state.value == ScreenState.error;
+    if ((requiresSubscription || billingUnavailable) && !atBilling) {
       return '/billing';
     }
 
     if (atAuth) {
       final from = state.uri.queryParameters['from'];
       if (from != null && from.startsWith('/') && !from.startsWith('//')) {
-        return entitlement?.requiresSubscription == true ? '/billing' : from;
+        return requiresSubscription ? '/billing' : from;
       }
-      return entitlement?.requiresSubscription == true ? '/billing' : '/dashboard';
+      return requiresSubscription ? '/billing' : '/dashboard';
     }
     if (atSplash || atOnboarding) {
-      return entitlement?.requiresSubscription == true ? '/billing' : '/dashboard';
+      return requiresSubscription ? '/billing' : '/dashboard';
     }
     return null;
   }
