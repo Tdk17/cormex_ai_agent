@@ -35,6 +35,25 @@ void main() {
       expect(exception.userMessage, contains('Conecte o canal'));
     });
 
+    test('orienta contratação quando o trial termina', () {
+      const exception = ApiException(
+        code: 'SUBSCRIPTION_REQUIRED',
+        message: 'Mensagem interna do backend.',
+      );
+
+      expect(exception.userMessage, contains('Escolha um plano'));
+      expect(exception.userMessage, isNot(contains('interna')));
+    });
+
+    test('informa quando o recurso não pertence ao plano', () {
+      const exception = ApiException(
+        code: 'PLAN_FEATURE_REQUIRED',
+        message: 'Feature crm ausente.',
+      );
+
+      expect(exception.userMessage, contains('não está incluído'));
+    });
+
     test('exibe mensagem de regra de negócio para código não mapeado', () {
       const exception = ApiException(
         code: 'CAMPAIGN_REVIEW_REQUIRED',

@@ -27,6 +27,10 @@ class ApiException implements Exception {
         'NOT_FOUND' => 'O conteúdo solicitado não foi encontrado.',
         'CONFLICT' => message,
         'PLAN_LIMIT_REACHED' => 'O limite do seu plano foi atingido.',
+        'SUBSCRIPTION_REQUIRED' =>
+          'Seu período de teste terminou. Escolha um plano para continuar.',
+        'PLAN_FEATURE_REQUIRED' =>
+          'Este recurso não está incluído no plano atual.',
         'RATE_LIMITED' => 'Muitas tentativas. Aguarde um instante e tente novamente.',
         'INTEGRATION_NOT_CONNECTED' =>
           'Conecte a integração antes de continuar.',
