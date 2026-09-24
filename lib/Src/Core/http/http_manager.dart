@@ -109,11 +109,13 @@ class HttpManager {
   Future<ApiResult<Map<String, dynamic>>> cloudFunction({
     required String name,
     Map<String, dynamic> parameters = const <String, dynamic>{},
+    bool requiresAuth = true,
   }) {
     return restRequest(
       endpoint: Endpoints.cloudFunction(name),
       method: HttpMethod.post,
       body: parameters,
+      requiresAuth: requiresAuth,
     );
   }
 
