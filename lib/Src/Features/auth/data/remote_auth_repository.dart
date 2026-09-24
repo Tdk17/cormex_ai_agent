@@ -40,11 +40,10 @@ class RemoteAuthRepository implements AuthRepository {
   }) async {
     await _sessionStorage.clear();
     try {
-      final result = await _httpManager.restRequest(
-        endpoint: Endpoints.login,
-        method: HttpMethod.get,
-        queryParameters: <String, dynamic>{
-          'username': email.trim().toLowerCase(),
+      final result = await _httpManager.cloudFunction(
+        name: Endpoints.authLogin,
+        parameters: <String, dynamic>{
+          'email': email.trim().toLowerCase(),
           'password': password,
         },
         requiresAuth: false,
