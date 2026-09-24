@@ -54,6 +54,17 @@ void main() {
       expect(exception.userMessage, contains('não está incluído'));
     });
 
+    test('exibe o tempo de espera informado no bloqueio de login', () {
+      const exception = ApiException(
+        code: 'RATE_LIMITED',
+        message:
+            'RATE_LIMITED: Muitas tentativas de acesso. Tente novamente em 15 minuto(s).',
+      );
+
+      expect(exception.userMessage, contains('15 minuto'));
+      expect(exception.userMessage, isNot(startsWith('RATE_LIMITED:')));
+    });
+
     test('exibe mensagem de regra de negócio para código não mapeado', () {
       const exception = ApiException(
         code: 'CAMPAIGN_REVIEW_REQUIRED',

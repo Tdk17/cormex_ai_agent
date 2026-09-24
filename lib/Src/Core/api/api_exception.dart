@@ -31,7 +31,9 @@ class ApiException implements Exception {
           'Seu período de teste terminou. Escolha um plano para continuar.',
         'PLAN_FEATURE_REQUIRED' =>
           'Este recurso não está incluído no plano atual.',
-        'RATE_LIMITED' => 'Muitas tentativas. Aguarde um instante e tente novamente.',
+        'RATE_LIMITED' => message.startsWith('RATE_LIMITED:')
+            ? message.substring('RATE_LIMITED:'.length).trim()
+            : 'Muitas tentativas. Aguarde um instante e tente novamente.',
         'INTEGRATION_NOT_CONNECTED' =>
           'Conecte a integração antes de continuar.',
         'CHANNEL_NOT_CONNECTED' =>
@@ -116,10 +118,11 @@ class ApiException implements Exception {
         final parseCode = int.tryParse(body['code'].toString());
         return ApiException(
           code: switch (parseCode) {
-            101 => 'INVALID_CREDENTIALS',
+            101 || 9008 => 'INVALID_CREDENTIALS',
             141 => 'INVALID_FUNCTION',
             202 || 203 => 'CONFLICT',
-            209 => 'UNAUTHENTICATED',
+            209 || 9001 => 'UNAUTHENTICATED',
+            9007 => 'RATE_LIMITED',
             _ => _codeForStatus(exception.response?.statusCode),
           },
           message: rawError?.toString() ?? 'Falha na requisição',
