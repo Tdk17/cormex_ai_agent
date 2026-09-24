@@ -11,27 +11,53 @@ Contrato usado por `LoginPage`, `LoginController`, `AuthController` e `RemoteAut
 5. Em logins futuros, nunca solicitar novamente a criação da empresa já vinculada.
 6. Nunca liberar as rotas internas usando apenas uma sessão salva no dispositivo.
 
-## 1. Login Parse
+## 1. Login protegido
 
 ```http
-GET /login?username=pedro@empresa.com&password=<senha>
+POST /functions/v1-auth-login
 X-Parse-Application-Id: <application-id>
 X-Parse-REST-API-Key: <rest-api-key>
+Content-Type: application/json
 ```
-
-Resposta padrão do Parse:
 
 ```json
 {
-  "objectId": "user_01J...",
-  "name": "Pedro Henrique",
-  "username": "pedro@empresa.com",
   "email": "pedro@empresa.com",
-  "sessionToken": "r:session-token",
-  "createdAt": "2026-08-24T18:00:00.000Z",
-  "updatedAt": "2026-08-24T18:00:00.000Z"
+  "password": "<senha>"
 }
 ```
+
+Resposta:
+
+```json
+{
+  "result": {
+    "ok": true,
+    "data": {
+      "id": "user_01J...",
+      "objectId": "user_01J...",
+      "name": "Pedro Henrique",
+      "email": "pedro@empresa.com",
+      "username": "pedro@empresa.com",
+      "sessionToken": "r:session-token"
+    },
+    "meta": {
+      "correlationId": "req_01J..."
+    }
+  }
+}
+```
+
+Proteções obrigatórias:
+
+- 5 falhas para o mesmo e-mail em 15 minutos bloqueiam a conta por 15 minutos;
+- 20 falhas pelo mesmo IP em 15 minutos bloqueiam a origem por 30 minutos;
+- e-mail e IP são persistidos apenas como hash na classe `AuthLoginAttempt`;
+- usuário inexistente e senha incorreta sempre devolvem a mesma mensagem;
+- um login correto limpa o contador da conta;
+- o front não informa se o bloqueio ocorreu por conta ou IP;
+- o endpoint nativo `/login` não deve ser usado pelo Flutter;
+- o `accountLockout` nativo do Parse Server também deve ser ativado no Back4App para proteger chamadas diretas a `/login`.
 
 O token é salvo pelo Flutter no armazenamento seguro e enviado nas chamadas seguintes em `X-Parse-Session-Token`.
 
@@ -100,10 +126,10 @@ Esse guard está centralizado em `lib/Src/Core/router/app_router.dart`.
 
 Antes de considerar o usuário autenticado, o Flutter exige duas confirmações reais:
 
-1. `/login` precisa devolver `objectId` e `sessionToken` não vazios;
+1. `v1-auth-login` precisa devolver `objectId` e `sessionToken` não vazios;
 2. `v1-auth-me` precisa devolver o mesmo usuário da sessão e memberships válidas.
 
-Se `/login`, `v1-auth-me`, a rede ou a validação falhar, a sessão segura é apagada e o usuário permanece no Login. Sessões antigas da fase de desenvolvimento usam uma chave anterior e são descartadas automaticamente.
+Se `v1-auth-login`, `v1-auth-me`, a rede ou a validação falhar, a sessão segura é apagada e o usuário permanece no Login. Sessões antigas da fase de desenvolvimento usam uma chave anterior e são descartadas automaticamente.
 
 ## 4. Logout
 
