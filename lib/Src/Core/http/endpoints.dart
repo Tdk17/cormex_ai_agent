@@ -8,6 +8,7 @@ class Endpoints {
 
   static String cloudFunction(String name) => '/functions/$name';
 
+  static const String authLogin = 'v1-auth-login';
   static const String authMe = 'v1-auth-me';
   static const String workspacesCreate = 'v1-workspaces-create';
   static const String dashboardMetrics = 'v1-dashboard-metrics';
