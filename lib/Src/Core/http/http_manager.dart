@@ -159,10 +159,11 @@ class HttpManager {
       return ApiFailure<Map<String, dynamic>>(
         ApiException(
           code: switch (parseCode) {
-            101 => 'INVALID_CREDENTIALS',
+            101 || 9008 => 'INVALID_CREDENTIALS',
             141 => 'INVALID_FUNCTION',
             202 || 203 => 'CONFLICT',
-            209 => 'UNAUTHENTICATED',
+            209 || 9001 => 'UNAUTHENTICATED',
+            9007 => 'RATE_LIMITED',
             _ => 'INTERNAL_ERROR',
           },
           message: body['error']?.toString() ?? 'Falha na requisição.',
